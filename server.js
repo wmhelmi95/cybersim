@@ -265,6 +265,7 @@ app.use('/api/', apiLimiter);
 app.use('/api/login', loginLimiter);
 app.use('/api/generate-conclusion', aiLimiter);
 app.use('/api/generate-scenario', aiLimiter);
+app.use('/api/grade-response', aiLimiter);
 
 // ─────────────────────────────────────────────
 // A07 — SERVER-SIDE AUTH with JWT
@@ -598,7 +599,8 @@ app.post('/api/generate-scenario', requireAuth, aiLimiter, async (req, res) => {
 
     // Build playbook injection block
     const playbookBlock = playbookText
-      ? `\n\nCLIENT PLAYBOOK / INCIDENT RESPONSE PROCEDURE:\n${'='.repeat(60)}\n${playbookText.slice(0,10000)}\n${'='.repeat(60)}\n\nPLAYBOOK USAGE RULES:\n- The scenario MUST be grounded in the steps, roles, timelines and procedures described in this playbook\n- Decision options must include: (1) the correct playbook-compliant action, and (2) common real-world deviations from the playbook as wrong answers\n- Good feedback must reference the specific playbook step or procedure that was correctly followed\n- Bad feedback must explain exactly which playbook step was skipped or violated\n- The scenario title, briefing and timeline should reflect the incident type the playbook covers\n- Objectives should map directly to the playbook\'s stated goals`
+      ? `\n\nCLIENT PLAYBOOK / INCIDENT RESPONSE PROCEDURE:\n${'='.repeat(60)}\n${playbookText.slice(0,10000)}\n${'='.repeat(60)}\n\nPLAYBOOK USAGE RULES:\n- The scenario MUST be grounded in the steps, roles, timelines and procedures described in this playbook\n- Decision options must include: (1) the correct playbook-compliant action, and (2) common real-world deviations from the playbook as wrong answers\n- Good feedback must reference the specific playbook step or procedure that was correctly followed\n- Bad feedback must explain exactly which playbook step was skipped or violated\n- The scenario title, briefing and timeline should reflect the incident type the playbook covers\n- Objectives should map directly to the playbook\'s stated goals
+- Each decision's expectedActions must be derived from the playbook where possible`
       : '';
 
     const systemPrompt = `You are an expert cybersecurity training scenario designer for NexaCyberSim.
@@ -628,6 +630,7 @@ The JSON must strictly follow this schema:
       "alertLabel": "string — e.g. INCIDENT UPDATE",
       "alertText": "string — see alert text rules below",
       "question": "string — the specific decision question the participant must answer",
+      "expectedActions": "string — semicolon-separated ideal free-text response actions, e.g. isolate affected systems; preserve logs; notify IR lead; escalate to CISO",
       "timeLimit": 60,
       "decTeams": ["team names involved in this decision"],
       "skillTested": "technical"|"communication"|"decision"|"leadership"|"compliance"|"coordination",
@@ -644,6 +647,9 @@ Rules:
 - Generate EXACTLY ${numDecisions} decisions — no more, no less
 - Each decision must have exactly 4 options, exactly 1 marked correct:true
 - The "question" field is REQUIRED and must be a clear, specific question the participant must answer
+- Every decision MUST include "expectedActions"
+- "expectedActions" must describe the ideal free-text response as semicolon-separated actions
+- The expectedActions field is used to grade typed participant answers against the playbook or scenario objective
 - badge: "r"=red/critical, "a"=amber/warning, "b"=blue/info
 - alertType: "cr"=critical/red alert, "wa"=warning/amber alert, "in"=info/blue alert
 - timeline must have 4-6 events spanning the incident progression
@@ -1312,94 +1318,98 @@ app.post('/api/export-word', requireAuth, async (req, res) => {
   }
 });
 
-// =========================================================================
-// AI FEATURES: GENERATE SCENARIO & GRADE RESPONSES
-// =========================================================================
+// ─────────────────────────────────────────────
+// AI FREE-TEXT RESPONSE GRADER — protected + rate limited
+// ─────────────────────────────────────────────
+app.post('/api/grade-response', requireAuth, aiLimiter, async (req, res) => {
+  try {
+    const answer = sanitiseString(req.body.answer || '', 2000);
+    const question = sanitiseString(req.body.question || '', 800);
+    const correctFeedback = sanitiseString(req.body.correctFeedback || req.body.expectedActions || '', 2000);
 
-const openaiClient = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY // Ensure you have this in your .env file
-});
-
-// 1. AI Scenario Builder Route
-app.post('/api/generate-scenario', async (req, res) => {
-    try {
-        const { prompt } = req.body;
-        if (!prompt) return res.status(400).json({ error: 'Prompt is required' });
-
-        const response = await openaiClient.chat.completions.create({
-            model: "gpt-4o", // or gpt-3.5-turbo
-            messages: [{
-                role: "system",
-                content: `You are a cybersecurity expert building crisis simulations. 
-                Output ONLY valid JSON matching this structure: 
-                {
-                  "title": "...", "desc": "...", "overview": "...", "objectives": "...",
-                  "decisions": {
-                    "management": [
-                      {
-                        "id": "db-1", "type": "mcq", "alertType": "cr", "alertLabel": "...", "alertText": "...",
-                        "question": "...", "timeLimit": 60, "skillTested": "decision",
-                        "options": [
-                          { "text": "...", "nextId": "db-2", "correct": true },
-                          { "text": "...", "nextId": "db-2", "correct": false }
-                        ],
-                        "goodFeedback": "...", "badFeedback": "..."
-                      }
-                      // Add 2-3 more blocks, ensure IDs map correctly for branching
-                    ],
-                    "working": []
-                  }
-                }`
-            }, {
-                role: "user",
-                content: `Create a scenario based on this prompt: ${prompt}`
-            }],
-            response_format: { type: "json_object" }
-        });
-
-        const scenarioJSON = JSON.parse(response.choices[0].message.content);
-        res.json(scenarioJSON);
-
-    } catch (error) {
-        console.error("AI Generation Error:", error);
-        res.status(500).json({ error: 'Failed to generate scenario.' });
+    if (!answer) {
+      return res.status(400).json({ error: 'answer is required' });
     }
-});
 
-// 2. AI Free-Text Grader Route
-app.post('/api/grade-response', async (req, res) => {
+    const completion = await openai.chat.completions.create({
+      model: 'gpt-4o-mini',
+      temperature: 0.2,
+      max_tokens: 700,
+      messages: [
+        {
+          role: 'system',
+          content: `You are a strict but fair cybersecurity tabletop exercise evaluator.
+Evaluate the participant's free-text response against the ideal expected actions.
+Return ONLY valid JSON:
+{
+  "score": 0-100,
+  "branch": "strong" | "partial" | "weak",
+  "matchedActions": ["..."],
+  "missingActions": ["..."],
+  "riskyActions": ["..."],
+  "feedback": "short professional feedback"
+}`
+        },
+        {
+          role: 'user',
+          content: `Question:
+${question}
+
+Expected / playbook-aligned actions:
+${correctFeedback}
+
+Participant response:
+${answer}
+
+Scoring guide:
+80-100 = strong branch
+50-79 = partial branch
+0-49 = weak branch`
+        }
+      ],
+      response_format: { type: 'json_object' }
+    });
+
+    let result = {};
     try {
-        const { answer, question, correctFeedback } = req.body;
-        
-        const response = await openaiClient.chat.completions.create({
-            model: "gpt-4o",
-            messages: [{
-                role: "system",
-                content: `You are a strict but fair cybersecurity grader. 
-                Evaluate the user's response based on the ideal correct feedback. 
-                Return ONLY JSON: { "score": number (0-100), "feedback": "Brief explanation of why" }`
-            }, {
-                role: "user",
-                content: `Question: ${question}\nIdeal Answer Elements: ${correctFeedback}\nUser's Answer: ${answer}`
-            }],
-            response_format: { type: "json_object" }
-        });
-
-        res.json(JSON.parse(response.choices[0].message.content));
-
-    } catch (error) {
-        console.error("AI Grader Error:", error);
-        res.status(500).json({ error: 'Failed to grade response.' });
+      result = JSON.parse(completion.choices[0]?.message?.content || '{}');
+    } catch (parseErr) {
+      console.error('Grade response JSON parse error:', parseErr.message);
     }
+
+    const score = Math.max(0, Math.min(100, Number(result.score || 0)));
+    const branch = ['strong','partial','weak'].includes(result.branch)
+      ? result.branch
+      : (score >= 80 ? 'strong' : score >= 50 ? 'partial' : 'weak');
+
+    res.json({
+      score,
+      branch,
+      matchedActions: Array.isArray(result.matchedActions) ? result.matchedActions : [],
+      missingActions: Array.isArray(result.missingActions) ? result.missingActions : [],
+      riskyActions: Array.isArray(result.riskyActions) ? result.riskyActions : [],
+      feedback: sanitiseString(result.feedback || '', 1200)
+    });
+
+  } catch (err) {
+    console.error('Grade response error:', err.message);
+    const clientMsg = err.status === 429 ? 'OpenAI rate limit exceeded — try again shortly'
+                    : err.status === 401 ? 'Invalid OpenAI API key'
+                    : 'Failed to grade response';
+    res.status(500).json({ error: clientMsg });
+  }
 });
 
 // ─────────────────────────────────────────────
 // CATCH-ALL — serve HTML app
 // ─────────────────────────────────────────────
 app.get('/{*path}', (req, res) => {
-  const indexFile = path.join(PUBLIC_DIR, 'nexa-cybersim.html');
+  const indexFile = path.join(PUBLIC_DIR, 'index.html');
+  const legacyFile = path.join(PUBLIC_DIR, 'nexa-cybersim.html');
   if (fs.existsSync(indexFile)) {
     res.sendFile(indexFile);
+  } else if (fs.existsSync(legacyFile)) {
+    res.sendFile(legacyFile);
   } else {
     res.status(404).send('Application not found.');
   }
@@ -1413,8 +1423,8 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Internal server error' });
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => { // listens on all local interfaces
-  console.log(`NexaCyberSim running on http://localhost:${PORT}`);
+const PORT = process.env.PORT || 8080;
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`NexaCyberSim running on port ${PORT}`);
   console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
 });
