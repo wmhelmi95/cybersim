@@ -498,6 +498,12 @@ textarea{min-height:98px;}
 .report-client-header,.brief-box,.brief-cover,.level-tab{box-shadow:0 14px 38px rgba(0,0,0,.18);}
 @media(max-width:1024px){.sim-layout{grid-template-columns:1fr;height:auto;min-height:calc(100vh - 60px);}.sim-feed{border-right:none;border-bottom:1px solid var(--border);}.sim-right{position:relative;}.stats-row{grid-template-columns:repeat(2,minmax(0,1fr));}}
 @media(max-width:760px){#screen-login{padding:24px 16px!important;align-items:flex-start!important;padding-top:48px!important;}#screen-login>div{max-width:100%!important;transform:none;}#screen-login>div>div:nth-child(2){padding:24px 20px!important;}.topnav{height:auto;min-height:60px;flex-wrap:wrap;padding:10px 16px;gap:10px;}.nav-tabs{order:3;width:100%;max-width:100%;padding-bottom:2px;}.page-wrap{width:calc(100% - 28px);padding-top:112px;}.grid-2,.grid-3{grid-template-columns:1fr;}.stats-row{grid-template-columns:1fr;}.client-profile-header{flex-wrap:wrap;}.cp-actions{margin-left:0;width:100%;flex-wrap:wrap;}.sim-topbar{height:auto;min-height:60px;gap:8px;flex-wrap:wrap;padding:10px 16px;}.sim-layout{margin-top:76px;}.sim-feed,.sim-right{padding:14px;}.report-wrap,.briefing-wrap{width:calc(100% - 28px);padding-top:100px;}}
+
+/* Public live session mode: participant/observer must bypass admin login */
+body.public-live-mode #screen-login{display:none!important;}
+body.public-live-mode #main-topnav{display:none!important;}
+body.public-live-mode #screen-live-public{display:block!important;}
+
 </style>
 </head>
 <body>
@@ -3930,11 +3936,13 @@ function doLogout(){
 document.querySelectorAll('.screen:not(#screen-login)').forEach(s=>s.style.display='none');
 const _token=sessionStorage.getItem('nexa_token');
 const _user=sessionStorage.getItem('nexa_user');
-(async function initRoute(){
+// Delay init until all live-exercise functions/variables are declared.
+window.addEventListener('DOMContentLoaded', () => setTimeout(initRoute, 0));
+async function initRoute(){
   const publicMode = await bootLivePublicIfNeeded();
   if(publicMode) return;
   if(_token&&_user){try{authToken=_token;currentUser=JSON.parse(_user);enterApp();}catch(e){}}
-})();
+}
 document.querySelector('.nav-right').insertAdjacentHTML('beforeend','<button class="btn btn-ghost btn-sm" onclick="doLogout()" style="font-size:10px;margin-left:4px;">Sign Out</button>');
 
 // ── Login event listeners (no inline onclick needed) ──
@@ -4143,10 +4151,11 @@ async function bootLivePublicIfNeeded(){
   livePublic.participantId=localStorage.getItem('nexa_live_participant_id')||null;
   livePublic.name=localStorage.getItem('nexa_live_name')||'';
   livePublic.team=localStorage.getItem('nexa_live_team')||'Unassigned';
-  document.getElementById('screen-login').style.display='none';
-  document.getElementById('main-topnav').style.display='none';
-  document.querySelectorAll('.screen').forEach(s=>{s.classList.remove('active');s.style.display='none';});
-  document.getElementById('screen-live-public').style.display='block';
+  document.body.classList.add('public-live-mode');
+  document.getElementById('screen-login')?.style.setProperty('display','none','important');
+  document.getElementById('main-topnav')?.style.setProperty('display','none','important');
+  document.querySelectorAll('.screen').forEach(s=>{s.classList.remove('active');s.style.setProperty('display','none','important');});
+  document.getElementById('screen-live-public')?.style.setProperty('display','block','important');
   document.getElementById('public-session-id').textContent=`${sid} · ${livePublic.role.toUpperCase()}`;
   if(livePublic.name) document.getElementById('public-name').value=livePublic.name;
   if(document.getElementById('public-team')) document.getElementById('public-team').value=livePublic.team||'';
