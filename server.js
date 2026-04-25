@@ -1437,7 +1437,8 @@ function publicSessionView(session){
     participants: session.participants || [],
     answers: session.answers || [],
     notes: session.notes || [],
-    state: session.state || null
+    state: session.state || null,
+    summary: session.summary || null
   };
 }
 function broadcastLive(sessionId){
@@ -1464,6 +1465,22 @@ function applyLiveEffect(session, option){
   session.state.money = Number(session.state.money || 0) + moneyDelta;
   session.state.reputation = Math.max(0, Math.min(100, Number(session.state.reputation ?? 100) + repDelta));
   session.state.lastImpact = { money: moneyDelta, reputation: repDelta };
+}
+
+
+function avgLiveScore(rows){ rows=Array.isArray(rows)?rows:[]; if(!rows.length) return 0; return Math.round(rows.reduce((s,a)=>s+Number(a.score ?? a.aiScore ?? (a.correct?100:0)),0)/rows.length); }
+function groupLive(rows,key){ return (rows||[]).reduce((acc,r)=>{ const k=(r[key]||'Unassigned'); (acc[k]||(acc[k]=[])).push(r); return acc; },{}); }
+function strongestWeakest(rows){ const bySkill=groupLive(rows,'skillTested'); let strongest=null,weakest=null; for(const [skill,items] of Object.entries(bySkill)){ const score=avgLiveScore(items); if(!strongest||score>strongest.score) strongest={skill,score}; if(!weakest||score<weakest.score) weakest={skill,score}; } return {strongest,weakest}; }
+function buildLiveSummary(session){
+  const answers=session.answers||[], participants=session.participants||[], participantAnswers=answers.filter(a=>a.participantId);
+  const individuals=Object.entries(groupLive(participantAnswers,'participantName')).map(([name,rows])=>{ const sw=strongestWeakest(rows); return {name,team:rows[0]?.team||'Unassigned',avgScore:avgLiveScore(rows),answers:rows.length,strongest:sw.strongest,weakest:sw.weakest}; }).sort((a,b)=>b.avgScore-a.avgScore);
+  const teams=Object.entries(groupLive(participantAnswers,'team')).map(([team,rows])=>{ const sw=strongestWeakest(rows); return {team,participants:new Set(rows.map(r=>r.participantName)).size,avgScore:avgLiveScore(rows),answers:rows.length,strongest:sw.strongest,weakest:sw.weakest}; }).sort((a,b)=>b.avgScore-a.avgScore);
+  const byStep=groupLive(participantAnswers.map(a=>({...a,stepKey:String(a.step??0)})),'stepKey');
+  const decisionHeatmap=Object.entries(byStep).map(([step,rows])=>{ const scores=rows.map(r=>Number(r.score ?? r.aiScore ?? (r.correct?100:0))); return {step:Number(step),avgScore:avgLiveScore(rows),strong:scores.filter(s=>s>=80).length,partial:scores.filter(s=>s>=50&&s<80).length,weak:scores.filter(s=>s<50).length,submissions:rows.length}; }).sort((a,b)=>a.step-b.step);
+  const timeline=participantAnswers.slice().sort((a,b)=>String(a.submittedAt||'').localeCompare(String(b.submittedAt||''))).map(a=>({at:a.submittedAt,label:`D${Number(a.step||0)+1}`,text:`${a.participantName||'Participant'} (${a.team||'Unassigned'}) submitted`,score:Number(a.score ?? a.aiScore ?? (a.correct?100:0)),branch:a.branch||''}));
+  const replay=participantAnswers.slice().sort((a,b)=>String(a.submittedAt||'').localeCompare(String(b.submittedAt||''))).map(a=>({participantName:a.participantName,team:a.team,step:a.step,question:a.question,mcqAnswer:a.mcqAnswer,freeText:a.freeText,expectedActions:a.expectedActions,aiFeedback:a.aiFeedback,score:Number(a.score ?? a.aiScore ?? (a.correct?100:0)),branch:a.branch,submittedAt:a.submittedAt}));
+  const weakIssues=participantAnswers.filter(a=>Number(a.score ?? a.aiScore ?? 0)<50).slice(0,10).map(a=>({participantName:a.participantName,team:a.team,step:a.step,issue:a.aiFeedback||'Weak response',score:Number(a.score ?? a.aiScore ?? 0)}));
+  return {generatedAt:new Date().toISOString(),avgScore:avgLiveScore(participantAnswers),totalParticipants:participants.filter(p=>p.role==='participant').length,totalObservers:participants.filter(p=>p.role==='observer').length,totalAnswers:participantAnswers.length,totalNotes:(session.notes||[]).length,individuals,teams,decisionHeatmap,timeline,replay,weakIssues};
 }
 
 app.post('/api/live-sessions', requireAuth, (req, res) => {
@@ -1536,7 +1553,7 @@ app.post('/api/live-sessions/:id/control', requireAuth, (req, res) => {
     const decs = session.scenario?.decisions?.[session.level || 'management'] || session.scenario?.decisions?.management || [];
     if(action === 'start') session.status = 'live';
     if(action === 'pause') session.status = 'paused';
-    if(action === 'end') session.status = 'ended';
+    if(action === 'end') { session.status = 'ended'; session.summary = buildLiveSummary(session); }
     if(action === 'lock') session.locked = true;
     if(action === 'unlock') session.locked = false;
     if(action === 'next') session.currentStep = Math.min((session.currentStep || 0) + 1, Math.max(0, decs.length - 1));
