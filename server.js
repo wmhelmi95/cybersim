@@ -490,6 +490,9 @@ Level: ${safeLevel === 'management' ? 'Management & Leadership (C-Suite, Directo
 Date: ${new Date().toLocaleDateString('en-GB')}
 
 IMPORTANT CONTEXT:
+If decision records include freeTextAnswer, aiScore, playbookAlignmentScore, bestPracticeScore, playbookQuality, playbookGaps, consultantInsight, timeline, replay, or heatmap data, you MUST use them. Analyse execution quality against client playbook AND independent best practice. Identify whether failures are participant execution failures, weak-playbook failures, or both.
+
+
 ${safeLevel === 'management'
   ? 'This is a MANAGEMENT LEVEL simulation. Participants are senior leaders, not technical staff. Do NOT assess or criticise Technical Response skills — management are not expected to perform hands-on technical containment. Their role is leadership, communication, compliance, decision-making, and coordination. If Technical Response shows 0%, note that this skill is NOT applicable for management participants.'
   : 'This is a WORKING LEVEL simulation. Participants are SOC analysts and IT engineers. Technical response is the primary expected skill.'}
@@ -687,6 +690,9 @@ Rules:
 - Generate EXACTLY ${numDecisions} decisions — no more, no less
 - Each decision must have exactly 4 options, exactly 1 marked correct:true
 - The "question" field is REQUIRED and must be a clear, specific question the participant must answer
+- Every decision MUST include "expectedActions"
+- "expectedActions" must describe the ideal free-text response as semicolon-separated actions
+- If a client playbook is provided, expectedActions must reflect playbook-aligned and best-practice actions
 - Every decision MUST include "expectedActions"
 - "expectedActions" must describe the ideal typed/tabletop response as semicolon-separated actions
 - If a playbook is provided, expectedActions must be derived from the playbook where possible
@@ -1363,50 +1369,50 @@ app.post('/api/export-word', requireAuth, async (req, res) => {
 // ─────────────────────────────────────────────
 app.post('/api/grade-response', requireAuth, aiLimiter, async (req, res) => {
   try {
-    const answer = sanitiseString(req.body.answer || '', 3000);
-    const question = sanitiseString(req.body.question || '', 1000);
-    const expectedActions = sanitiseString(req.body.expectedActions || req.body.correctFeedback || '', 3000);
+    const answer = sanitiseString(req.body.answer || '', 5000);
+    const question = sanitiseString(req.body.question || '', 1200);
+    const department = sanitiseString(req.body.department || req.body.team || 'General', 120);
+    const expectedActions = sanitiseString(req.body.expectedActions || req.body.correctFeedback || '', 4000);
+    const playbookText = sanitiseString(req.body.playbookText || '', 12000);
     if (!answer) return res.status(400).json({ error: 'answer is required' });
 
+    const useDual = !!playbookText;
+    const system = useDual ? `You are a senior cybersecurity incident response consultant.
+Evaluate the participant response in TWO dimensions:
+A) Playbook Alignment: did the response follow the client's internal SOP/playbook?
+B) Industry Best Practice: did the response meet independent cyber crisis response best practice?
+Return ONLY valid JSON:
+{"score":number,"branch":"strong|partial|weak","playbookAlignmentScore":number,"bestPracticeScore":number,"followedPlaybook":boolean,"playbookQuality":"strong|moderate|weak","matchedActions":["..."],"missingBestPractices":["..."],"missingActions":["..."],"riskyActions":["..."],"playbookGaps":["..."],"participantFeedback":"...","consultantInsight":"...","feedback":"..."}
+Scoring: 80-100 strong, 50-79 partial, 0-49 weak. If a participant follows a weak playbook, highlight that clearly.`
+    : `You are a strict but fair cybersecurity tabletop exercise evaluator.
+Evaluate the participant free-text response against the expected actions.
+Return ONLY valid JSON: {"score":number,"branch":"strong|partial|weak","matchedActions":["..."],"missingActions":["..."],"riskyActions":["..."],"feedback":"..."}`;
+
+    const user = useDual ? `Question:\n${question}\n\nDepartment / role:\n${department}\n\nBest-practice expected actions:\n${expectedActions}\n\nClient playbook / SOP:\n${playbookText}\n\nParticipant response:\n${answer}\n\nEvaluate both execution quality and playbook quality. If the playbook omits important best-practice actions, list those as playbookGaps.`
+    : `Question:\n${question}\n\nExpected actions:\n${expectedActions}\n\nParticipant response:\n${answer}`;
+
     const completion = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
-      temperature: 0.2,
-      max_tokens: 800,
+      model: 'gpt-4o-mini', temperature: 0.2, max_tokens: useDual ? 1100 : 700,
       response_format: { type: 'json_object' },
-      messages: [
-        { role: 'system', content: `You are a strict but fair cybersecurity tabletop exercise evaluator.
-Evaluate the participant free-text response against the expected/playbook-aligned actions.
-Return ONLY valid JSON with this exact shape:
-{
-  "score": 0-100,
-  "branch": "strong" | "partial" | "weak",
-  "matchedActions": ["..."],
-  "missingActions": ["..."],
-  "riskyActions": ["..."],
-  "feedback": "short professional feedback"
-}
-Scoring: 80-100 strong, 50-79 partial, 0-49 weak.` },
-        { role: 'user', content: `Question:
-${question}
-
-Expected actions:
-${expectedActions}
-
-Participant response:
-${answer}` }
-      ]
+      messages: [{ role:'system', content: system }, { role:'user', content: user }]
     });
-
     const parsed = JSON.parse(completion.choices[0]?.message?.content || '{}');
-    const score = Math.max(0, Math.min(100, Number(parsed.score || 0)));
+    const bestPracticeScore = Math.max(0, Math.min(100, Number(parsed.bestPracticeScore ?? parsed.score ?? 0)));
+    const playbookAlignmentScore = parsed.playbookAlignmentScore === undefined ? null : Math.max(0, Math.min(100, Number(parsed.playbookAlignmentScore || 0)));
+    const score = Math.max(0, Math.min(100, Number(parsed.score ?? bestPracticeScore)));
     const branch = parsed.branch || (score >= 80 ? 'strong' : score >= 50 ? 'partial' : 'weak');
     res.json({
-      score,
-      branch,
+      score, branch, playbookAlignmentScore, bestPracticeScore,
+      followedPlaybook: !!parsed.followedPlaybook,
+      playbookQuality: parsed.playbookQuality || (playbookText ? 'unknown' : 'not_applicable'),
       matchedActions: Array.isArray(parsed.matchedActions) ? parsed.matchedActions : [],
-      missingActions: Array.isArray(parsed.missingActions) ? parsed.missingActions : [],
+      missingActions: Array.isArray(parsed.missingActions) ? parsed.missingActions : (Array.isArray(parsed.missingBestPractices) ? parsed.missingBestPractices : []),
+      missingBestPractices: Array.isArray(parsed.missingBestPractices) ? parsed.missingBestPractices : [],
       riskyActions: Array.isArray(parsed.riskyActions) ? parsed.riskyActions : [],
-      feedback: parsed.feedback || ''
+      playbookGaps: Array.isArray(parsed.playbookGaps) ? parsed.playbookGaps : [],
+      participantFeedback: parsed.participantFeedback || parsed.feedback || '',
+      consultantInsight: parsed.consultantInsight || '',
+      feedback: parsed.feedback || parsed.participantFeedback || ''
     });
   } catch (err) {
     console.error('Grade response error:', err.message);
@@ -1480,7 +1486,12 @@ function buildLiveSummary(session){
   const timeline=participantAnswers.slice().sort((a,b)=>String(a.submittedAt||'').localeCompare(String(b.submittedAt||''))).map(a=>({at:a.submittedAt,label:`D${Number(a.step||0)+1}`,text:`${a.participantName||'Participant'} (${a.team||'Unassigned'}) submitted`,score:Number(a.score ?? a.aiScore ?? (a.correct?100:0)),branch:a.branch||''}));
   const replay=participantAnswers.slice().sort((a,b)=>String(a.submittedAt||'').localeCompare(String(b.submittedAt||''))).map(a=>({participantName:a.participantName,team:a.team,step:a.step,question:a.question,mcqAnswer:a.mcqAnswer,freeText:a.freeText,expectedActions:a.expectedActions,aiFeedback:a.aiFeedback,score:Number(a.score ?? a.aiScore ?? (a.correct?100:0)),branch:a.branch,submittedAt:a.submittedAt}));
   const weakIssues=participantAnswers.filter(a=>Number(a.score ?? a.aiScore ?? 0)<50).slice(0,10).map(a=>({participantName:a.participantName,team:a.team,step:a.step,issue:a.aiFeedback||'Weak response',score:Number(a.score ?? a.aiScore ?? 0)}));
-  return {generatedAt:new Date().toISOString(),avgScore:avgLiveScore(participantAnswers),totalParticipants:participants.filter(p=>p.role==='participant').length,totalObservers:participants.filter(p=>p.role==='observer').length,totalAnswers:participantAnswers.length,totalNotes:(session.notes||[]).length,individuals,teams,decisionHeatmap,timeline,replay,weakIssues};
+  const nums=(arr)=>{arr=arr.map(Number).filter(Number.isFinite);return arr.length?Math.round(arr.reduce((a,b)=>a+b,0)/arr.length):0;};
+  const advisoryRows=participantAnswers.filter(a=>a.playbookAlignmentScore!==null||a.bestPracticeScore!==undefined||a.playbookGaps?.length||a.consultantInsight);
+  const qCounts={}; advisoryRows.forEach(a=>{const q=a.playbookQuality||'unknown';qCounts[q]=(qCounts[q]||0)+1;});
+  const playbookGaps={}; advisoryRows.forEach(a=>(a.playbookGaps||[]).forEach(g=>{playbookGaps[g]=(playbookGaps[g]||0)+1;}));
+  const advisory={playbookAlignmentScore:nums(advisoryRows.map(a=>a.playbookAlignmentScore).filter(v=>v!==null&&v!==undefined)),bestPracticeScore:nums(advisoryRows.map(a=>a.bestPracticeScore ?? a.aiScore)),playbookQuality:Object.entries(qCounts).sort((a,b)=>b[1]-a[1])[0]?.[0]||'unknown',playbookGaps:Object.entries(playbookGaps).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([gap,count])=>({gap,count})),consultantInsights:advisoryRows.map(a=>a.consultantInsight).filter(Boolean).slice(0,8)};
+  return {generatedAt:new Date().toISOString(),avgScore:avgLiveScore(participantAnswers),totalParticipants:participants.filter(p=>p.role==='participant').length,totalObservers:participants.filter(p=>p.role==='observer').length,totalAnswers:participantAnswers.length,totalNotes:(session.notes||[]).length,individuals,teams,decisionHeatmap,timeline,replay,weakIssues,advisory};
 }
 
 app.post('/api/live-sessions', requireAuth, (req, res) => {
@@ -1495,7 +1506,8 @@ app.post('/api/live-sessions', requireAuth, (req, res) => {
     sessions[id] = {
       id,
       title: sanitiseString(title || scenario.title, 160),
-      scenario,
+      scenario: {...scenario, clientPlaybookText: sanitiseString(req.body.playbookText || scenario.clientPlaybookText || '', 12000), clientId: sanitiseString(req.body.clientId || scenario.clientId || '', 80), clientName: sanitiseString(req.body.clientName || scenario.clientName || '', 160)},
+      playbookText: sanitiseString(req.body.playbookText || scenario.clientPlaybookText || '', 12000),
       level,
       status: 'waiting',
       locked: false,
@@ -1629,16 +1641,34 @@ app.post('/api/live-sessions/:id/answers', async (req, res) => {
     const chosen = Number.isInteger(optionIndex) ? d.options?.[optionIndex] : null;
     const freeText = sanitiseString(req.body.freeText || '', 4000);
     let aiScore = null, aiFeedback = '', aiBranch = '';
-    if (freeText && (d.expectedActions || d.goodFeedback)) {
+    let advisory = {};
+    if (freeText && (d.expectedActions || d.goodFeedback || session.scenario?.clientPlaybookText)) {
       try {
+        const playbookText = sanitiseString(session.scenario?.clientPlaybookText || session.playbookText || '', 12000);
+        const department = sanitiseString(req.body.department || req.body.team || d.skillTested || 'General', 120);
+        const useDual = !!playbookText;
+        const system = useDual
+          ? 'You are a senior cybersecurity incident response consultant. Evaluate TWO dimensions: playbook alignment and industry best practice. Return JSON {score:number,branch:string,playbookAlignmentScore:number,bestPracticeScore:number,followedPlaybook:boolean,playbookQuality:string,missingBestPractices:array,missingActions:array,riskyActions:array,playbookGaps:array,participantFeedback:string,consultantInsight:string,feedback:string}.'
+          : 'You are a strict but fair cyber tabletop assessor. Return JSON {score:number, branch:string, feedback:string, missingActions:array, matchedActions:array, riskyActions:array}.';
+        const content = useDual
+          ? `Question: ${d.question || ''}
+Department: ${department}
+Best-practice expected actions: ${d.expectedActions || d.goodFeedback || ''}
+Client playbook/SOP: ${playbookText}
+Participant response: ${freeText}
+Evaluate if participant followed playbook AND whether the playbook itself is strong, moderate, or weak.`
+          : `Question: ${d.question || ''}
+Expected actions: ${d.expectedActions || d.goodFeedback || ''}
+Participant response: ${freeText}`;
         const completion = await openai.chat.completions.create({
-          model: 'gpt-4o-mini', temperature: 0.2, max_tokens: 500, response_format:{type:'json_object'},
-          messages:[{role:'system',content:'You are a strict but fair cyber tabletop assessor. Return JSON {score:number, branch:string, feedback:string}.'},{role:'user',content:`Question: ${d.question || ''}\nExpected actions: ${d.expectedActions || d.goodFeedback || ''}\nParticipant response: ${freeText}`} ]
+          model: 'gpt-4o-mini', temperature: 0.2, max_tokens: useDual ? 1000 : 500, response_format:{type:'json_object'},
+          messages:[{role:'system',content:system},{role:'user',content}]
         });
         const parsed = JSON.parse(completion.choices[0].message.content || '{}');
-        aiScore = Math.max(0, Math.min(100, Number(parsed.score || 0)));
+        advisory = parsed;
+        aiScore = Math.max(0, Math.min(100, Number(parsed.score ?? parsed.bestPracticeScore ?? 0)));
         aiBranch = parsed.branch || (aiScore>=80?'strong':aiScore>=50?'partial':'weak');
-        aiFeedback = sanitiseString(parsed.feedback || '', 1200);
+        aiFeedback = sanitiseString(parsed.feedback || parsed.participantFeedback || '', 1200);
       } catch(e) { console.warn('Live AI grading failed:', e.message); }
     }
     const correct = aiScore !== null ? aiScore >= 70 : !!chosen?.correct;
@@ -1659,6 +1689,16 @@ app.post('/api/live-sessions/:id/answers', async (req, res) => {
       skillTested: sanitiseString(d.skillTested || '', 50),
       aiScore,
       aiFeedback,
+      playbookAlignmentScore: advisory.playbookAlignmentScore === undefined ? null : Math.max(0, Math.min(100, Number(advisory.playbookAlignmentScore || 0))),
+      bestPracticeScore: advisory.bestPracticeScore === undefined ? aiScore : Math.max(0, Math.min(100, Number(advisory.bestPracticeScore || aiScore || 0))),
+      followedPlaybook: !!advisory.followedPlaybook,
+      playbookQuality: advisory.playbookQuality || (session.scenario?.clientPlaybookText ? 'unknown' : 'not_applicable'),
+      missingBestPractices: Array.isArray(advisory.missingBestPractices) ? advisory.missingBestPractices : [],
+      missingActions: Array.isArray(advisory.missingActions) ? advisory.missingActions : [],
+      riskyActions: Array.isArray(advisory.riskyActions) ? advisory.riskyActions : [],
+      playbookGaps: Array.isArray(advisory.playbookGaps) ? advisory.playbookGaps : [],
+      participantFeedback: advisory.participantFeedback || aiFeedback,
+      consultantInsight: advisory.consultantInsight || '',
       correct,
       score,
       branch,
