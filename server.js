@@ -1430,6 +1430,8 @@ function publicSessionView(session){
     scenario: session.scenario,
     currentStep: session.currentStep || 0,
     status: session.status || 'waiting',
+    locked: !!session.locked,
+    stateEnabled: !!session.stateEnabled,
     createdAt: session.createdAt,
     updatedAt: session.updatedAt,
     participants: session.participants || [],
@@ -1479,6 +1481,7 @@ app.post('/api/live-sessions', requireAuth, (req, res) => {
       scenario,
       level,
       status: 'waiting',
+      locked: false,
       currentStep: 0,
       participants: [],
       answers: [],
@@ -1534,6 +1537,8 @@ app.post('/api/live-sessions/:id/control', requireAuth, (req, res) => {
     if(action === 'start') session.status = 'live';
     if(action === 'pause') session.status = 'paused';
     if(action === 'end') session.status = 'ended';
+    if(action === 'lock') session.locked = true;
+    if(action === 'unlock') session.locked = false;
     if(action === 'next') session.currentStep = Math.min((session.currentStep || 0) + 1, Math.max(0, decs.length - 1));
     if(action === 'previous') session.currentStep = Math.max((session.currentStep || 0) - 1, 0);
     if(action === 'goto') session.currentStep = Math.max(0, Math.min(Number(step || 0), Math.max(0, decs.length - 1)));
@@ -1551,14 +1556,32 @@ app.post('/api/live-sessions/:id/join', (req, res) => {
   try {
     const id = String(req.params.id).toUpperCase();
     const name = sanitiseString(req.body.name || 'Participant', 80);
+    const team = sanitiseString(req.body.team || 'Unassigned', 80);
     const role = ['participant','observer'].includes(req.body.role) ? req.body.role : 'participant';
+    const requestedId = sanitiseString(req.body.participantId || '', 40);
     const db = readDB();
     const sessions = ensureLiveStore(db);
     const session = sessions[id];
     if(!session) return res.status(404).json({ error:'Session not found' });
-    const participant = { id: makeSessionId(), name, role, joinedAt: new Date().toISOString() };
+
     session.participants = session.participants || [];
-    session.participants.push(participant);
+    let participant = requestedId ? session.participants.find(p => p.id === requestedId) : null;
+
+    // Locked session blocks new people, but allows existing participant/observer refresh/rejoin.
+    if(session.locked && !participant){
+      return res.status(403).json({ error:'Session is locked. Ask the facilitator to unlock it.' });
+    }
+
+    if(participant){
+      participant.name = name || participant.name;
+      participant.team = team || participant.team || 'Unassigned';
+      participant.role = role || participant.role;
+      participant.lastSeenAt = new Date().toISOString();
+    } else {
+      participant = { id: makeSessionId(), name, team, role, joinedAt: new Date().toISOString(), lastSeenAt: new Date().toISOString() };
+      session.participants.push(participant);
+    }
+
     session.updatedAt = new Date().toISOString();
     writeDB(db);
     res.json({ participant, session: publicSessionView(session) });
@@ -1576,8 +1599,15 @@ app.post('/api/live-sessions/:id/answers', async (req, res) => {
     const sessions = ensureLiveStore(db);
     const session = sessions[id];
     if(!session) return res.status(404).json({ error:'Session not found' });
+    if(session.status === 'ended') return res.status(403).json({ error:'Session has ended' });
     const d = getDecision(session);
     if(!d) return res.status(400).json({ error:'No active decision' });
+    const participantId = sanitiseString(req.body.participantId || '', 40);
+    session.answers = session.answers || [];
+    const existingAnswer = participantId ? session.answers.find(a => a.participantId === participantId && Number(a.step) === Number(session.currentStep || 0)) : null;
+    if(existingAnswer && req.body.allowResubmit !== true){
+      return res.status(409).json({ error:'Answer already submitted for this step', answer: existingAnswer, session: publicSessionView(session) });
+    }
     const optionIndex = Number(req.body.optionIndex);
     const chosen = Number.isInteger(optionIndex) ? d.options?.[optionIndex] : null;
     const freeText = sanitiseString(req.body.freeText || '', 4000);
@@ -1600,6 +1630,7 @@ app.post('/api/live-sessions/:id/answers', async (req, res) => {
     applyLiveEffect(session, chosen);
     const answer = {
       id: 'ans_' + Date.now() + '_' + Math.random().toString(36).slice(2,6),
+      participantId,
       step: session.currentStep || 0,
       question: sanitiseString(d.question || '', 500),
       participantName: sanitiseString(req.body.participantName || 'Participant', 80),
@@ -1618,7 +1649,6 @@ app.post('/api/live-sessions/:id/answers', async (req, res) => {
       submittedAt: new Date().toISOString(),
       responseTimeSec: sanitiseNumber(req.body.responseTimeSec, 0)
     };
-    session.answers = session.answers || [];
     session.answers.push(answer);
     session.updatedAt = new Date().toISOString();
     writeDB(db);
@@ -1640,6 +1670,7 @@ app.post('/api/live-sessions/:id/notes', (req, res) => {
     const note = {
       id: 'note_' + Date.now() + '_' + Math.random().toString(36).slice(2,6),
       step: session.currentStep || 0,
+      observerId: sanitiseString(req.body.observerId || '', 40),
       observerName: sanitiseString(req.body.observerName || 'Observer', 80),
       tag: sanitiseString(req.body.tag || 'note', 40),
       note: sanitiseString(req.body.note || '', 4000),
