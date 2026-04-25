@@ -487,6 +487,12 @@ ${critSkills.length ? `Critical failures: ${critSkills.join(', ')}` : ''}
 DECISIONS
 ${buildDecisionBreakdown(decisionHistory)}
 
+IMPORTANT FREE-TEXT AND PARTICIPANT ANALYSIS RULES:
+- If free-text responses are present, analyse them directly and prioritise them over MCQ-only correctness.
+- Use AI response scores, missing actions, expected actions, and typed answer quality to identify gaps in reasoning.
+- Mention recurring weaknesses by participant and team when the data contains participantName or team.
+- Identify who needs improvement and in which skill domain when enough data is available.
+
 Write the full executive debrief using ONLY these HTML tags: <strong>, <br>, <ul>, <li>. No markdown. No other tags.
 
 Use EXACTLY these 7 section headings — each must be wrapped in <strong>Title</strong><br> on its own line:
@@ -599,8 +605,7 @@ app.post('/api/generate-scenario', requireAuth, aiLimiter, async (req, res) => {
 
     // Build playbook injection block
     const playbookBlock = playbookText
-      ? `\n\nCLIENT PLAYBOOK / INCIDENT RESPONSE PROCEDURE:\n${'='.repeat(60)}\n${playbookText.slice(0,10000)}\n${'='.repeat(60)}\n\nPLAYBOOK USAGE RULES:\n- The scenario MUST be grounded in the steps, roles, timelines and procedures described in this playbook\n- Decision options must include: (1) the correct playbook-compliant action, and (2) common real-world deviations from the playbook as wrong answers\n- Good feedback must reference the specific playbook step or procedure that was correctly followed\n- Bad feedback must explain exactly which playbook step was skipped or violated\n- The scenario title, briefing and timeline should reflect the incident type the playbook covers\n- Objectives should map directly to the playbook\'s stated goals
-- Each decision's expectedActions must be derived from the playbook where possible`
+      ? `\n\nCLIENT PLAYBOOK / INCIDENT RESPONSE PROCEDURE:\n${'='.repeat(60)}\n${playbookText.slice(0,10000)}\n${'='.repeat(60)}\n\nPLAYBOOK USAGE RULES:\n- The scenario MUST be grounded in the steps, roles, timelines and procedures described in this playbook\n- Decision options must include: (1) the correct playbook-compliant action, and (2) common real-world deviations from the playbook as wrong answers\n- Good feedback must reference the specific playbook step or procedure that was correctly followed\n- Bad feedback must explain exactly which playbook step was skipped or violated\n- The scenario title, briefing and timeline should reflect the incident type the playbook covers\n- Objectives should map directly to the playbook\'s stated goals`
       : '';
 
     const systemPrompt = `You are an expert cybersecurity training scenario designer for NexaCyberSim.
@@ -648,8 +653,8 @@ Rules:
 - Each decision must have exactly 4 options, exactly 1 marked correct:true
 - The "question" field is REQUIRED and must be a clear, specific question the participant must answer
 - Every decision MUST include "expectedActions"
-- "expectedActions" must describe the ideal free-text response as semicolon-separated actions
-- The expectedActions field is used to grade typed participant answers against the playbook or scenario objective
+- "expectedActions" must describe the ideal typed/tabletop response as semicolon-separated actions
+- If a playbook is provided, expectedActions must be derived from the playbook where possible
 - badge: "r"=red/critical, "a"=amber/warning, "b"=blue/info
 - alertType: "cr"=critical/red alert, "wa"=warning/amber alert, "in"=info/blue alert
 - timeline must have 4-6 events spanning the incident progression
@@ -1319,28 +1324,24 @@ app.post('/api/export-word', requireAuth, async (req, res) => {
 });
 
 // ─────────────────────────────────────────────
-// AI FREE-TEXT RESPONSE GRADER — protected + rate limited
+// FREE-TEXT RESPONSE GRADING — protected + rate limited
 // ─────────────────────────────────────────────
 app.post('/api/grade-response', requireAuth, aiLimiter, async (req, res) => {
   try {
-    const answer = sanitiseString(req.body.answer || '', 2000);
-    const question = sanitiseString(req.body.question || '', 800);
-    const correctFeedback = sanitiseString(req.body.correctFeedback || req.body.expectedActions || '', 2000);
-
-    if (!answer) {
-      return res.status(400).json({ error: 'answer is required' });
-    }
+    const answer = sanitiseString(req.body.answer || '', 3000);
+    const question = sanitiseString(req.body.question || '', 1000);
+    const expectedActions = sanitiseString(req.body.expectedActions || req.body.correctFeedback || '', 3000);
+    if (!answer) return res.status(400).json({ error: 'answer is required' });
 
     const completion = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
       temperature: 0.2,
-      max_tokens: 700,
+      max_tokens: 800,
+      response_format: { type: 'json_object' },
       messages: [
-        {
-          role: 'system',
-          content: `You are a strict but fair cybersecurity tabletop exercise evaluator.
-Evaluate the participant's free-text response against the ideal expected actions.
-Return ONLY valid JSON:
+        { role: 'system', content: `You are a strict but fair cybersecurity tabletop exercise evaluator.
+Evaluate the participant free-text response against the expected/playbook-aligned actions.
+Return ONLY valid JSON with this exact shape:
 {
   "score": 0-100,
   "branch": "strong" | "partial" | "weak",
@@ -1348,55 +1349,33 @@ Return ONLY valid JSON:
   "missingActions": ["..."],
   "riskyActions": ["..."],
   "feedback": "short professional feedback"
-}`
-        },
-        {
-          role: 'user',
-          content: `Question:
+}
+Scoring: 80-100 strong, 50-79 partial, 0-49 weak.` },
+        { role: 'user', content: `Question:
 ${question}
 
-Expected / playbook-aligned actions:
-${correctFeedback}
+Expected actions:
+${expectedActions}
 
 Participant response:
-${answer}
-
-Scoring guide:
-80-100 = strong branch
-50-79 = partial branch
-0-49 = weak branch`
-        }
-      ],
-      response_format: { type: 'json_object' }
+${answer}` }
+      ]
     });
 
-    let result = {};
-    try {
-      result = JSON.parse(completion.choices[0]?.message?.content || '{}');
-    } catch (parseErr) {
-      console.error('Grade response JSON parse error:', parseErr.message);
-    }
-
-    const score = Math.max(0, Math.min(100, Number(result.score || 0)));
-    const branch = ['strong','partial','weak'].includes(result.branch)
-      ? result.branch
-      : (score >= 80 ? 'strong' : score >= 50 ? 'partial' : 'weak');
-
+    const parsed = JSON.parse(completion.choices[0]?.message?.content || '{}');
+    const score = Math.max(0, Math.min(100, Number(parsed.score || 0)));
+    const branch = parsed.branch || (score >= 80 ? 'strong' : score >= 50 ? 'partial' : 'weak');
     res.json({
       score,
       branch,
-      matchedActions: Array.isArray(result.matchedActions) ? result.matchedActions : [],
-      missingActions: Array.isArray(result.missingActions) ? result.missingActions : [],
-      riskyActions: Array.isArray(result.riskyActions) ? result.riskyActions : [],
-      feedback: sanitiseString(result.feedback || '', 1200)
+      matchedActions: Array.isArray(parsed.matchedActions) ? parsed.matchedActions : [],
+      missingActions: Array.isArray(parsed.missingActions) ? parsed.missingActions : [],
+      riskyActions: Array.isArray(parsed.riskyActions) ? parsed.riskyActions : [],
+      feedback: parsed.feedback || ''
     });
-
   } catch (err) {
     console.error('Grade response error:', err.message);
-    const clientMsg = err.status === 429 ? 'OpenAI rate limit exceeded — try again shortly'
-                    : err.status === 401 ? 'Invalid OpenAI API key'
-                    : 'Failed to grade response';
-    res.status(500).json({ error: clientMsg });
+    res.status(500).json({ error: 'Failed to grade response' });
   }
 });
 
@@ -1405,13 +1384,10 @@ Scoring guide:
 // ─────────────────────────────────────────────
 app.get('/{*path}', (req, res) => {
   const indexFile = path.join(PUBLIC_DIR, 'index.html');
-  const legacyFile = path.join(PUBLIC_DIR, 'nexa-cybersim.html');
   if (fs.existsSync(indexFile)) {
     res.sendFile(indexFile);
-  } else if (fs.existsSync(legacyFile)) {
-    res.sendFile(legacyFile);
   } else {
-    res.status(404).send('Application not found.');
+    res.status(404).send('Application not found. Make sure public/index.html exists.');
   }
 });
 
