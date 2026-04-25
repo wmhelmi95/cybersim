@@ -2005,12 +2005,14 @@ async function generateScenarioWithAI(){
       const alertTextEl  = block.querySelector('textarea[placeholder*="simulation feed"]');
       const goodFbEl     = block.querySelector('textarea[placeholder*="correct"]');
       const badFbEl      = block.querySelector('textarea[placeholder*="mistake"]');
+      const expectedEl   = block.querySelector('.expected-actions');
       const numInp       = block.querySelector('input[type=number]');
 
       if(alertTypeEl)  alertTypeEl.value  = alertTypeMap[dec.alertType] || 'wa';
       if(skillEl)      skillEl.value       = dec.skillTested  || 'decision';
       if(alertLabelEl) alertLabelEl.value  = dec.alertLabel   || 'INCIDENT UPDATE';
       if(questionEl)   questionEl.value    = dec.question     || '';
+      if(expectedEl)   expectedEl.value    = dec.expectedActions || dec.idealActions || dec.goodFeedback || '';
       if(alertTextEl)  alertTextEl.value   = dec.alertText    || '';
       if(goodFbEl)     goodFbEl.value      = dec.goodFeedback || '';
       if(badFbEl)      badFbEl.value       = dec.badFeedback  || '';
@@ -2704,7 +2706,13 @@ function loadDec(idx){
       <div class="email-body">${d.emailBody.replace(/\n/g,'<br>')}<br><br><div style="position:relative;display:inline-block;margin-top:14px"><span class="phish-link">→ Verify Account Now</span></div></div>
     </div>`:''}`;
   document.getElementById('dec-q').textContent=d.question;
-  document.getElementById('dec-opts').innerHTML=d.options.map((o,i)=>`<button class="opt-btn" onclick="selectOpt(${i})" id="opt-${i}"><span class="opt-num">0${i+1}</span><span>${o.text}</span></button>`).join('');
+  document.getElementById('dec-opts').innerHTML =
+    d.options.map((o,i)=>`<button class="opt-btn" onclick="selectOpt(${i})" id="opt-${i}"><span class="opt-num">0${i+1}</span><span>${escapeHTML(o.text||'')}</span></button>`).join('') +
+    `<div class="form-group" style="margin-top:12px;">
+      <label class="lbl">Typed Response — optional AI assessment</label>
+      <textarea id="freeTextAnswer" placeholder="Type participant/team response here. Example: isolate affected systems, preserve logs, notify IR lead, escalate to CISO..." style="min-height:92px;"></textarea>
+      <button type="button" class="btn btn-outline btn-sm" style="width:100%;margin-top:8px;" onclick="submitFreeTextAnswer()">Assess Typed Response</button>
+    </div>`;
   document.getElementById('fb-box').className='fb-box';
   document.getElementById('nxt-btn').className='nxt-btn';
   const nxt=document.getElementById('nxt-btn');
@@ -2738,6 +2746,47 @@ function selectOpt(idx){
   const ndot=document.getElementById('pd-'+(simState.decIdx+1));if(ndot) ndot.className='prog-dot cur';
   document.getElementById('nxt-btn').classList.add('show');
 }
+async function submitFreeTextAnswer(){
+  stopDecTimer();
+  const d=simState.scenario.decisions[simState.level][simState.decIdx];
+  const answer=(document.getElementById('freeTextAnswer')?.value||'').trim();
+  if(!answer){alert('Type the participant/team response first.');return;}
+
+  document.querySelectorAll('.opt-btn').forEach(b=>{b.disabled=true;b.classList.add('dim');});
+  const fb=document.getElementById('fb-box');
+  fb.className='fb-box show';
+  fb.innerHTML='Assessing typed response against expected actions...';
+
+  try{
+    const res=await fetch('/api/grade-response',{
+      method:'POST',
+      headers:authHeaders(),
+      body:JSON.stringify({question:d.question,answer,correctFeedback:d.expectedActions || d.goodFeedback || ''})
+    });
+    const result=await res.json();
+    if(!res.ok) throw new Error(result.error||'AI assessment failed');
+
+    const score=Math.max(0,Math.min(100,Number(result.score||0)));
+    const correct=score>=70;
+    const branch=score>=80?'strong':(score>=50?'partial':'weak');
+    if(correct) simState.score+=100;
+
+    fb.className='fb-box show '+(correct?'good':'bad');
+    fb.innerHTML=`<strong>AI Score:</strong> ${score}/100<br><strong>Branch:</strong> ${branch.toUpperCase()}<br><br>${escapeHTML(result.feedback||'')}`;
+
+    simState.results.push({correct,skill:d.skillTested,branch,freeTextAnswer:answer,aiScore:score,aiFeedback:result.feedback||'',expectedActions:d.expectedActions||''});
+    if(d.skillTested&&simState.skillScores.hasOwnProperty(d.skillTested)) simState.skillScores[d.skillTested]+=(correct?100:0);
+    updateSkillBars();
+    const dot=document.getElementById('pd-'+simState.decIdx);if(dot) dot.className='prog-dot done';
+    const ndot=document.getElementById('pd-'+(simState.decIdx+1));if(ndot) ndot.className='prog-dot cur';
+    document.getElementById('nxt-btn').classList.add('show');
+  }catch(err){
+    console.error(err);
+    fb.className='fb-box show bad';
+    fb.innerHTML='AI assessment failed: '+escapeHTML(err.message||String(err));
+  }
+}
+
 function updateSkillBars(){
   const decs=simState.scenario.decisions[simState.level];
   const counts={};
@@ -3238,7 +3287,10 @@ function editScenario(id){
     decCount++;const did='db-'+decCount;
     const div=document.createElement('div');
     div.className='decision-block';div.id=did;
-    const optsHtml=d.options.map((o,idx)=>`<div class="option-row"><input type="text" value="${o.text.replace(/"/g,'&quot;')}"><button class="correct-toggle ${o.correct?'on':''}" onclick="toggleCorr(this)">✓</button><button class="opt-del-btn" onclick="this.closest('.option-row').remove()" title="Remove option">✕</button></div>`).join('');
+    const optsHtml=d.options.map((o,idx)=>{
+      const eff=o.effect||o.impact||{};
+      return `<div class="option-row option-impact-row" data-branch="${escapeHtml(o.branch||o.branchId||(o.correct?'strong':'weak'))}" data-branch-text="${escapeHtml(o.branchText||o.consequence||'')}"><input type="text" value="${escapeHtml(o.text||'')}"><input class="impact-input" data-effect-money type="number" value="${Number(eff.money ?? eff.moneyImpact ?? 0)}" step="1000" title="Money impact" placeholder="€ impact"><input class="impact-input" data-effect-reputation type="number" value="${Number(eff.reputation ?? eff.reputationImpact ?? 0)}" step="1" title="Reputation impact" placeholder="Rep"><button class="correct-toggle ${o.correct?'on':''}" onclick="toggleCorr(this)">✓</button><button class="opt-del-btn" onclick="this.closest('.option-row').remove()" title="Remove option">✕</button></div>`;
+    }).join('');
     const skillsHtml=Object.keys(SKILLS).map(k=>`<option value="${k}" ${d.skillTested===k?'selected':''}>${SKILLS[k].icon} ${SKILLS[k].label}</option>`).join('');
     const alertTypeHtml=`<option value="cr" ${d.alertType==='cr'?'selected':''}>🔴 Critical</option><option value="wa" ${d.alertType==='wa'?'selected':''}>🟠 Warning</option><option value="in" ${d.alertType==='in'?'selected':''}>🔵 Info</option>`;
     const timeLimitVal=d.timeLimit||DEFAULT_DEC_TIME;
@@ -3253,8 +3305,8 @@ function editScenario(id){
           <input type="number" value="${timeLimitVal}" min="15" max="300" step="5" placeholder="60">
         </div>
       </div>
-      <div class="form-group"><label class="lbl">Alert Label (e.g. EXECUTIVE ALERT)</label><input type="text" value="${escapeHtml(d.alertLabel||'')}"></div>
-      <div class="form-group"><label class="lbl">Situation / Alert Text</label><textarea rows="3">${d.alertText}</textarea></div>
+      <div class="form-group"><label class="lbl">Alert Label (e.g. EXECUTIVE ALERT)</label><input class="alert-label" type="text" value="${escapeHtml(d.alertLabel||'')}"></div>
+      <div class="form-group"><label class="lbl">Situation / Alert Text</label><textarea class="alert-text" rows="3">${d.alertText}</textarea></div>
       <div class="form-group">
         <label class="lbl">Decision Image <span style="color:var(--muted);font-size:9px">— optional, shown in simulation feed</span></label>
         <div class="dec-img-wrap">
@@ -3279,7 +3331,8 @@ function editScenario(id){
         <label class="lbl">Teams Involved in this Decision</label>
         <div class="dec-teams-wrap">${makeTeamsHtml(decTeams)}</div>
       </div>
-      <div class="form-group"><label class="lbl">Decision Question</label><input type="text" value="${escapeHtml(d.question||'')}"></div>
+      <div class="form-group"><label class="lbl">Decision Question</label><input class="decision-question" type="text" placeholder="What must participants decide?" value="${escapeHtml(d.question||'')}"></div>
+      <div class="form-group"><label class="lbl">Hybrid Free-Text Expected Actions <span style="color:var(--muted);font-size:9px">— optional, used with MCQ</span></label><textarea class="expected-actions" rows="3" placeholder="e.g. Isolate affected hosts; preserve evidence; notify IR lead; escalate to CISO">${escapeHtml(d.expectedActions||d.idealActions||'')}</textarea></div>
       <div class="form-group"><label class="lbl">Answer Options <span style="color:var(--muted);font-size:9px">(click ✓ to mark correct)</span></label>
         <div class="opts-list-${did}">${optsHtml}</div>
         <button class="add-opt-btn" onclick="addOptRow('${did}')">+ Add Option</button>
@@ -3373,8 +3426,8 @@ function addDecBlock(preTeams){
         <input type="number" value="${DEFAULT_DEC_TIME}" min="15" max="300" step="5" placeholder="60">
       </div>
     </div>
-    <div class="form-group"><label class="lbl">Alert Label (e.g. EXECUTIVE ALERT)</label><input type="text" placeholder="INCIDENT UPDATE"></div>
-    <div class="form-group"><label class="lbl">Situation / Alert Text</label><textarea rows="3" placeholder="What has happened — shown in the simulation feed..."></textarea></div>
+    <div class="form-group"><label class="lbl">Alert Label (e.g. EXECUTIVE ALERT)</label><input class="alert-label" type="text" placeholder="INCIDENT UPDATE"></div>
+    <div class="form-group"><label class="lbl">Situation / Alert Text</label><textarea class="alert-text" rows="3" placeholder="What has happened — shown in the simulation feed..."></textarea></div>
     <div class="form-group">
       <label class="lbl">Decision Image <span style="color:var(--muted);font-size:9px">— optional, shown in simulation feed</span></label>
       <div class="dec-img-wrap">
@@ -3390,7 +3443,7 @@ function addDecBlock(preTeams){
       <label class="lbl">Teams Involved in this Decision</label>
       <div class="dec-teams-wrap">${makeTeamsHtml(teams)}</div>
     </div>
-    <div class="form-group"><label class="lbl">Decision Question</label><input type="text" placeholder="What must participants decide?"></div>
+    <div class="form-group"><label class="lbl">Decision Question</label><input class="decision-question" type="text" placeholder="What must participants decide?"></div>
     <div class="form-group"><label class="lbl">Hybrid Free-Text Expected Actions <span style="color:var(--muted);font-size:9px">— optional, used with MCQ</span></label><textarea class="expected-actions" rows="3" placeholder="e.g. Isolate affected hosts; preserve evidence; notify IR lead; escalate to CISO"></textarea></div>
     <div class="form-group"><label class="lbl">Answer Options <span style="color:var(--muted);font-size:9px">(click ✓ to mark correct)</span></label>
       <div class="opts-list-${id}">${[1,2,3,4].map(n=>`<div class="option-row option-impact-row"><input type="text" placeholder="Option ${n}"><input class="impact-input" data-effect-money type="number" value="0" step="1000" title="Money impact" placeholder="€ impact"><input class="impact-input" data-effect-reputation type="number" value="0" step="1" title="Reputation impact" placeholder="Rep"><button class="correct-toggle" onclick="toggleCorr(this)">✓</button><button class="opt-del-btn" onclick="this.closest('.option-row').remove()" title="Remove option">✕</button></div>`).join('')}</div>
@@ -3551,8 +3604,10 @@ function saveScenario(){
     // Time limit is the number input (ins has text inputs first, number input is at some index)
     const numInput=block.querySelector('input[type=number]');
     const timeLimitVal=numInput?Math.max(15,parseInt(numInput.value)||DEFAULT_DEC_TIME):DEFAULT_DEC_TIME;
-    const alertLabelInput=block.querySelectorAll('input[type=text]')[0];
-    const questionInput=block.querySelectorAll('input[type=text]')[1];
+    const alertLabelInput=block.querySelector('.alert-label') || block.querySelector('input[placeholder="INCIDENT UPDATE"]') || block.querySelectorAll('input[type=text]')[0];
+    const questionInput=block.querySelector('.decision-question') || block.querySelector('input[placeholder="What must participants decide?"]');
+    const alertTextInput=block.querySelector('.alert-text') || block.querySelector('textarea[placeholder*="simulation feed"]') || block.querySelectorAll('textarea')[0];
+    const expectedActionsInput=block.querySelector('.expected-actions');
     const opts=[];
     block.querySelectorAll('.option-row').forEach(row=>{
       const txt=row.querySelector('input[type=text]')?.value.trim();
@@ -3570,12 +3625,13 @@ function saveScenario(){
     const dObj={
       alertType:alertTypeVal,
       alertLabel:alertLabelInput?.value||'INCIDENT UPDATE',
-      alertText:tas[0]?.value||'',
+      alertText:alertTextInput?.value||'',
       hasEmail:false,hasImage:!!decImgUrl,imageUrl:decImgUrl,
       evidence:getDecisionEvidence(block),
       timeLimit:timeLimitVal,
       decTeams,
       question:questionInput?.value||'Decision required',
+      expectedActions:expectedActionsInput?.value||'',
       skillTested:skillVal,
       options:opts,
       goodFeedback:tas[tas.length-2]?.value||'Correct.',
