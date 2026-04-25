@@ -1123,6 +1123,18 @@ textarea{min-height:98px;}
         </table>
       </div>
     </div>
+    <div class="card" style="margin:18px 0;">
+      <div class="section-title" style="font-size:13px;margin-bottom:14px;">Exercise Timeline</div>
+      <div id="exercise-timeline"></div>
+    </div>
+    <div class="card" style="margin:18px 0;">
+      <div class="section-title" style="font-size:13px;margin-bottom:14px;">Decision Heatmap</div>
+      <div id="decision-heatmap"></div>
+    </div>
+    <div class="card" style="margin:18px 0;">
+      <div class="section-title" style="font-size:13px;margin-bottom:14px;">Decision Replay</div>
+      <div id="decision-replay"></div>
+    </div>
     <div class="section-title" style="font-size:13px">Framework Alignment</div>
     <div class="fw-tags" id="rpt-fw"></div>
   </div>
@@ -3108,6 +3120,56 @@ async function fetchAIConclusion(scenario, simState, decisions, resultId){
   }
 }
 
+
+function scoreOfResult(r){
+  if(typeof r.aiScore === 'number' && !Number.isNaN(r.aiScore)) return r.aiScore;
+  if(typeof r.score === 'number' && !Number.isNaN(r.score)) return r.score;
+  return r.correct ? 100 : 0;
+}
+function renderExerciseTimeline(results){
+  const el=document.getElementById('exercise-timeline');
+  if(!el) return;
+  if(!results || !results.length){el.innerHTML='<div style="color:var(--muted);font-size:12px;">No timeline data available.</div>';return;}
+  const sorted=[...results].sort((a,b)=>{
+    const da=(a.decisionIndex??a.step??0)-(b.decisionIndex??b.step??0);
+    if(da!==0) return da;
+    return String(a.submittedAt||a.createdAt||'').localeCompare(String(b.submittedAt||b.createdAt||''));
+  });
+  el.innerHTML=sorted.map((r,i)=>{
+    const score=scoreOfResult(r);
+    const color=score>=80?'var(--green)':score>=50?'var(--amber)':'var(--red)';
+    const dNo=Number(r.decisionIndex ?? r.step ?? i)+1;
+    return `<div class="tl-item"><div class="tl-time">D${dNo}</div><div class="tl-content"><strong>${escapeHTML(r.participantName||r.name||'Participant')}</strong> <span style="color:var(--muted)">(${escapeHTML(r.team||'Unassigned')})</span><br>${escapeHTML(r.question||'Decision submitted')}<br><span style="color:${color};font-family:var(--mono);font-size:10px;">Score: ${score}%</span> · <span style="font-family:var(--mono);font-size:10px;color:var(--muted);">Branch: ${(r.branch||'n/a').toUpperCase()} · Time: ${r.responseTimeSec||0}s</span></div></div>`;
+  }).join('');
+}
+function renderDecisionReplay(results){
+  const el=document.getElementById('decision-replay');
+  if(!el) return;
+  if(!results || !results.length){el.innerHTML='<div style="color:var(--muted);font-size:12px;">No replay data available.</div>';return;}
+  el.innerHTML=results.map((r,i)=>{
+    const score=scoreOfResult(r);
+    const icon=score>=80?'✅':score>=50?'⚠️':'❌';
+    const dNo=Number(r.decisionIndex ?? r.step ?? i)+1;
+    return `<div class="finding-row"><div class="fi-icon">${icon}</div><div class="fi-text"><strong>Decision ${dNo}: ${escapeHTML(r.question||'Decision')}</strong><div style="margin-top:6px;"><strong>Participant:</strong> ${escapeHTML(r.participantName||r.name||'Participant')} · <strong>Team:</strong> ${escapeHTML(r.team||'Unassigned')}</div>${r.mcqAnswer?`<div style="margin-top:6px;"><strong>MCQ Answer:</strong> ${escapeHTML(r.mcqAnswer)}</div>`:''}${r.freeTextAnswer?`<div style="margin-top:6px;"><strong>Free-text Response:</strong><br>${escapeHTML(r.freeTextAnswer)}</div>`:''}${r.expectedActions?`<div style="margin-top:6px;color:var(--muted);"><strong>Expected Actions:</strong><br>${escapeHTML(r.expectedActions)}</div>`:''}${r.aiFeedback||r.feedback?`<div style="margin-top:6px;"><strong>Assessment Feedback:</strong><br>${escapeHTML(r.aiFeedback||r.feedback)}</div>`:''}<div style="margin-top:8px;font-family:var(--mono);font-size:11px;color:var(--muted);">Score: ${score}% · Branch: ${(r.branch||'n/a').toUpperCase()}</div></div></div>`;
+  }).join('');
+}
+function renderDecisionHeatmap(results){
+  const el=document.getElementById('decision-heatmap');
+  if(!el) return;
+  if(!results || !results.length){el.innerHTML='<div style="color:var(--muted);font-size:12px;">No heatmap data available.</div>';return;}
+  const by={};
+  results.forEach((r,i)=>{const key=Number(r.decisionIndex ?? r.step ?? i)+1; if(!by[key]) by[key]=[]; by[key].push(r);});
+  el.innerHTML=Object.entries(by).sort((a,b)=>Number(a[0])-Number(b[0])).map(([n,rows])=>{
+    const scores=rows.map(scoreOfResult);
+    const avg=Math.round(scores.reduce((a,b)=>a+b,0)/scores.length);
+    const strong=scores.filter(s=>s>=80).length;
+    const partial=scores.filter(s=>s>=50&&s<80).length;
+    const weak=scores.filter(s=>s<50).length;
+    const color=avg>=80?'var(--green)':avg>=50?'var(--amber)':'var(--red)';
+    return `<div class="skill-chart-row"><div class="sc-name">Decision ${n}</div><div class="sc-bar-wrap" style="width:190px;"><div class="sc-fill" style="width:${Math.max(3,avg)}%;background:${color};"></div></div><div class="sc-val" style="color:${color}">${avg}%</div><div style="font-family:var(--mono);font-size:10px;color:var(--muted);min-width:160px;">Strong: ${strong} · Partial: ${partial} · Weak: ${weak}</div></div>`;
+  }).join('');
+}
+
 function showReport(){
   clearInterval(simState.timerInt);
   clearInterval(simState.decTimerInt);
@@ -3161,6 +3223,9 @@ function showReport(){
     return `<div class="finding-row"><div class="fi-icon">${r.correct?'✅':'⚠️'}</div><div class="fi-text"><strong>Decision ${i+1}: ${(r.question||d.question).substring(0,75)}...${score}</strong>${feedback}${answer}</div></div>`;
   }).join('');
   renderParticipantTeamReport(simState.results);
+  renderExerciseTimeline(simState.results);
+  renderDecisionHeatmap(simState.results);
+  renderDecisionReplay(simState.results);
   document.getElementById('rpt-fw').innerHTML=FW.map(f=>`<span class="fw-tag">${f}</span>`).join('');
   showScreen('report');
   document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
@@ -3761,23 +3826,27 @@ function authHeaders(){
   };
 }
 
+let saveDataTimer=null;
 async function saveData(){
   if(!authToken) return;
   try{
     const payload={
-      clients:DB.clients,
-      simResults:DB.simResults,
-      customScenarios:DB.scenarios.filter(s=>!['s1','s2','s3'].includes(s.id))
+      schemaVersion:2,
+      savedAt:new Date().toISOString(),
+      clients:Array.isArray(DB.clients)?DB.clients:[],
+      scenarios:Array.isArray(DB.scenarios)?DB.scenarios:[],
+      simResults:Array.isArray(DB.simResults)?DB.simResults:[],
+      customScenarios:Array.isArray(DB.scenarios)?DB.scenarios.filter(s=>!['s1','s2','s3'].includes(s.id)):[]
     };
-    const res=await fetch('/api/data',{
-      method:'POST',
-      headers:authHeaders(),
-      body:JSON.stringify(payload)
-    });
+    const res=await fetch('/api/data',{method:'POST',headers:authHeaders(),body:JSON.stringify(payload)});
     if(res.status===401){doLogout();return;}
+    if(!res.ok){console.warn('Save failed with status',res.status);}
   }catch(e){console.warn('Save failed:',e);}
 }
-
+function queueSaveData(){
+  clearTimeout(saveDataTimer);
+  saveDataTimer=setTimeout(()=>saveData(),250);
+}
 async function loadData(){
   if(!authToken) return;
   try{
@@ -3785,11 +3854,13 @@ async function loadData(){
     if(res.status===401){doLogout();return;}
     if(!res.ok) return;
     const p=await res.json();
-    if(p.clients) DB.clients=p.clients;
-    if(p.simResults) DB.simResults=p.simResults;
-    if(p.customScenarios) p.customScenarios.forEach(cs=>{
-      if(!DB.scenarios.find(s=>s.id===cs.id)) DB.scenarios.push(cs);
+    if(Array.isArray(p.clients)) DB.clients=p.clients;
+    if(Array.isArray(p.scenarios) && p.scenarios.length) DB.scenarios=p.scenarios;
+    else if(Array.isArray(p.customScenarios)) p.customScenarios.forEach(cs=>{
+      const idx=DB.scenarios.findIndex(s=>s.id===cs.id);
+      if(idx>=0) DB.scenarios[idx]=cs; else DB.scenarios.push(cs);
     });
+    if(Array.isArray(p.simResults)) DB.simResults=p.simResults;
   }catch(e){console.warn('Load failed:',e);}
 }
 
@@ -3893,7 +3964,7 @@ document.addEventListener('DOMContentLoaded', function(){
 // ══════════════════════════════════════════════════════════
 // LIVE EXERCISE MODE — admin + public participant/observer
 // ══════════════════════════════════════════════════════════
-let livePublic = { sessionId:null, role:'participant', name:'', participantId:null, session:null, selectedOption:null, stream:null };
+let livePublic = { sessionId:null, role:'participant', name:'', team:'Unassigned', participantId:null, session:null, selectedOption:null, decisionStartedAt:Date.now(), stream:null };
 function liveLink(sessionId, role){
   const base = location.origin + location.pathname;
   return `${base}?session=${encodeURIComponent(sessionId)}&role=${encodeURIComponent(role)}`;
@@ -3946,6 +4017,7 @@ function getDecisionFromLive(sess){
   return decs[sess.currentStep||0]||null;
 }
 function renderLivePublicSession(sess){
+  if(livePublic.session && livePublic.session.currentStep!==sess.currentStep){livePublic.decisionStartedAt=Date.now();}
   livePublic.session=sess;
   document.getElementById('public-live-title').textContent=sess.title||'Live Exercise';
   document.getElementById('public-live-status').textContent=(sess.status||'waiting').toUpperCase()+` · STEP ${(sess.currentStep||0)+1}`;
@@ -3964,6 +4036,7 @@ function selectLivePublicOption(i,btn){
 }
 async function joinLivePublic(){
   livePublic.name=document.getElementById('public-name').value.trim()||'Participant';
+  livePublic.team=document.getElementById('public-team')?.value.trim()||livePublic.team||'Unassigned';
   const res=await fetch(`/api/live-sessions/${livePublic.sessionId}/join`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:livePublic.name,role:livePublic.role})});
   if(!res.ok){alert('Could not join session.');return;}
   const data=await res.json();
@@ -3976,7 +4049,7 @@ async function joinLivePublic(){
 async function submitLiveAnswer(){
   const msg=document.getElementById('public-submit-msg');
   msg.textContent='Submitting…';
-  const res=await fetch(`/api/live-sessions/${livePublic.sessionId}/answers`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({participantName:livePublic.name,optionIndex:livePublic.selectedOption,freeText:document.getElementById('public-free-text').value})});
+  const res=await fetch(`/api/live-sessions/${livePublic.sessionId}/answers`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({participantName:livePublic.name,team:livePublic.team,optionIndex:livePublic.selectedOption,freeText:document.getElementById('public-free-text').value,responseTimeSec:Math.round((Date.now()-(livePublic.decisionStartedAt||Date.now()))/1000)})});
   if(!res.ok){msg.textContent='Submit failed.';return;}
   const data=await res.json();
   msg.textContent=`Submitted. Branch: ${data.answer.branch}. Score: ${data.answer.score ?? '-'}`;
@@ -4024,9 +4097,9 @@ async function bootLivePublicIfNeeded(){
 }
 
 // Auto-save hooks
-const _origSR=showReport;showReport=function(){_origSR();saveData();};
-const _origSC=saveClient;saveClient=function(){_origSC();saveData();};
-const _origDA=doAssign;doAssign=function(a,b){_origDA(a,b);saveData();};
+const _origSR=showReport;showReport=function(){_origSR();queueSaveData();};
+const _origSC=saveClient;saveClient=function(){_origSC();queueSaveData();};
+const _origDA=doAssign;doAssign=function(a,b){_origDA(a,b);queueSaveData();};
 // ── MAGNIFY MODAL ──
 function openMagnify(sourceId, title){
   const content = document.getElementById(sourceId)?.innerHTML || '';
@@ -4053,7 +4126,7 @@ document.addEventListener('keydown', e => {
   }
 });
 
-const _origSS=saveScenario;saveScenario=function(){_origSS();saveData();};
+const _origSS=saveScenario;saveScenario=function(){_origSS();queueSaveData();};
 addDecBlock();
 </script>
 
