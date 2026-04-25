@@ -728,7 +728,8 @@ textarea{min-height:98px;}
       <div class="dec-area" id="public-join-box">
         <div class="dec-q-lbl">SESSION</div>
         <div class="dec-q" id="public-session-id">—</div>
-        <div class="form-group"><label class="lbl">Name / Team</label><input id="public-name" type="text" placeholder="Team A"></div>
+        <div class="form-group"><label class="lbl">Name</label><input id="public-name" type="text" placeholder="Your name"></div>
+        <div class="form-group"><label class="lbl">Team / Department</label><input id="public-team" type="text" placeholder="SOC / Legal / PR / Team A"></div>
         <button class="btn btn-primary" style="width:100%" onclick="joinLivePublic()">Join</button>
       </div>
       <div class="dec-area" id="public-answer-box" style="display:none;">
@@ -3964,7 +3965,7 @@ document.addEventListener('DOMContentLoaded', function(){
 // ══════════════════════════════════════════════════════════
 // LIVE EXERCISE MODE — admin + public participant/observer
 // ══════════════════════════════════════════════════════════
-let livePublic = { sessionId:null, role:'participant', name:'', team:'Unassigned', participantId:null, session:null, selectedOption:null, decisionStartedAt:Date.now(), stream:null };
+let livePublic = { sessionId:null, role:'participant', name:'', team:'Unassigned', participantId:null, session:null, selectedOption:null, decisionStartedAt:Date.now(), stream:null, joined:false };
 function liveLink(sessionId, role){
   const base = location.origin + location.pathname;
   return `${base}?session=${encodeURIComponent(sessionId)}&role=${encodeURIComponent(role)}`;
@@ -4000,7 +4001,7 @@ async function renderLiveAdmin(){
     const answers=(sess.answers||[]).slice(-5).reverse().map(a=>`<div style="padding:8px 0;border-bottom:1px solid var(--border);"><strong>${escapeHTML(a.participantName)}</strong> — ${escapeHTML(a.mcqAnswer||'Typed response')} <span style="color:${a.correct?'var(--green)':'var(--red)'}">${a.score??'-'}</span><br><span style="color:var(--muted)">${escapeHTML((a.freeText||'').slice(0,160))}</span></div>`).join('') || '<span style="color:var(--muted)">No answers yet.</span>';
     const notes=(sess.notes||[]).slice(-5).reverse().map(n=>`<div style="padding:8px 0;border-bottom:1px solid var(--border);"><strong>${escapeHTML(n.tag)}</strong> — ${escapeHTML(n.observerName)}<br><span style="color:var(--muted)">${escapeHTML(n.note)}</span></div>`).join('') || '<span style="color:var(--muted)">No notes yet.</span>';
     return `<div class="card-sm" style="background:var(--surface);border:1px solid var(--border);border-radius:10px;">
-      <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap;"><div><div style="font-family:var(--head);font-weight:800;color:var(--white);">${escapeHTML(sess.title)}</div><div style="font-family:var(--mono);font-size:11px;color:var(--cyan);margin-top:2px;">SESSION ${sess.id} · ${escapeHTML(sess.status)}</div></div><div style="display:flex;gap:6px;flex-wrap:wrap;"><button class="btn btn-sm btn-outline" onclick="controlLive('${sess.id}','start')">Start</button><button class="btn btn-sm btn-ghost" onclick="controlLive('${sess.id}','previous')">Prev</button><button class="btn btn-sm btn-primary" onclick="controlLive('${sess.id}','next')">Next</button><button class="btn btn-sm btn-danger" onclick="controlLive('${sess.id}','end')">End</button></div></div>
+      <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap;"><div><div style="font-family:var(--head);font-weight:800;color:var(--white);">${escapeHTML(sess.title)}</div><div style="font-family:var(--mono);font-size:11px;color:var(--cyan);margin-top:2px;">SESSION ${sess.id} · ${escapeHTML(sess.status)}${sess.locked?' · LOCKED':''}</div></div><div style="display:flex;gap:6px;flex-wrap:wrap;"><button class="btn btn-sm btn-outline" onclick="controlLive('${sess.id}','start')">Start</button><button class="btn btn-sm btn-ghost" onclick="controlLive('${sess.id}','previous')">Prev</button><button class="btn btn-sm btn-primary" onclick="controlLive('${sess.id}','next')">Next</button><button class="btn btn-sm btn-ghost" onclick="controlLive('${sess.id}','${sess.locked?'unlock':'lock'}')">${sess.locked?'Unlock':'Lock'}</button><button class="btn btn-sm btn-danger" onclick="controlLive('${sess.id}','end')">End</button></div></div>
       <div class="grid-2" style="margin-top:12px;"><div><label class="lbl">Participant Link</label><input readonly value="${pLink}" onclick="this.select();navigator.clipboard?.writeText(this.value)"></div><div><label class="lbl">Observer Link</label><input readonly value="${oLink}" onclick="this.select();navigator.clipboard?.writeText(this.value)"></div></div>
       ${sess.state?`<div style="font-family:var(--mono);font-size:11px;color:var(--text);margin-top:10px;">💰 ${Number(sess.state.money).toLocaleString()} · Reputation ${sess.state.reputation}/100</div>`:''}
       <div class="grid-2" style="margin-top:12px;"><div><label class="lbl">Recent Answers</label>${answers}</div><div><label class="lbl">Observer Notes</label>${notes}</div></div>
@@ -4016,15 +4017,57 @@ function getDecisionFromLive(sess){
   const decs=sess.scenario?.decisions?.[level]||[];
   return decs[sess.currentStep||0]||null;
 }
+function getLiveMyAnswer(sess){
+  if(!sess || !Array.isArray(sess.answers) || !livePublic.participantId) return null;
+  return sess.answers.find(a => a.participantId === livePublic.participantId && Number(a.step) === Number(sess.currentStep||0)) || null;
+}
+function persistLivePublic(){
+  if(!livePublic.sessionId) return;
+  localStorage.setItem('nexa_live_session_id', livePublic.sessionId);
+  localStorage.setItem('nexa_live_role', livePublic.role || 'participant');
+  localStorage.setItem('nexa_live_participant_id', livePublic.participantId || '');
+  localStorage.setItem('nexa_live_name', livePublic.name || '');
+  localStorage.setItem('nexa_live_team', livePublic.team || 'Unassigned');
+}
+function clearLivePublicStorage(){
+  ['nexa_live_session_id','nexa_live_role','nexa_live_participant_id','nexa_live_name','nexa_live_team'].forEach(k=>localStorage.removeItem(k));
+}
 function renderLivePublicSession(sess){
-  if(livePublic.session && livePublic.session.currentStep!==sess.currentStep){livePublic.decisionStartedAt=Date.now();}
+  if(livePublic.session && livePublic.session.currentStep!==sess.currentStep){
+    livePublic.decisionStartedAt=Date.now();
+    livePublic.selectedOption=null;
+    const msg=document.getElementById('public-submit-msg'); if(msg) msg.textContent='';
+  }
   livePublic.session=sess;
   document.getElementById('public-live-title').textContent=sess.title||'Live Exercise';
-  document.getElementById('public-live-status').textContent=(sess.status||'waiting').toUpperCase()+` · STEP ${(sess.currentStep||0)+1}`;
+  document.getElementById('public-live-status').textContent=(sess.status||'waiting').toUpperCase()+` · STEP ${(sess.currentStep||0)+1}`+(sess.locked?' · LOCKED':'');
   const d=getDecisionFromLive(sess);
   document.getElementById('public-question').textContent=d?.question||'Waiting for facilitator…';
   document.getElementById('public-live-feed').innerHTML=d?`<div class="feed-block ${d.alertType||'in'}"><div class="feed-label"><span style="color:var(--cyan)">${escapeHTML(d.alertLabel||'LIVE EVENT')}</span><span style="font-family:var(--mono);font-size:9px;color:var(--muted)">LIVE</span></div><div class="feed-text">${d.alertText||''}</div></div>${buildEvidenceHTML(d.evidence)}${d.hasEmail?`<div class="fake-email"><div class="email-bar"><span>⚠ Intercepted Email — Evidence</span></div><div class="email-fields"><div class="ef"><span class="ef-k">From:</span><span style="color:var(--red)">${escapeHTML(d.emailFrom||'')}</span></div><div class="ef"><span class="ef-k">To:</span><span>${escapeHTML(d.emailTo||'')}</span></div><div class="ef-subj">${escapeHTML(d.emailSubject||'')}</div></div><div class="email-body">${escapeHTML(d.emailBody||'').replace(/\n/g,'<br>')}</div></div>`:''}`:'<div class="feed-block in"><div class="feed-label"><span style="color:var(--cyan)">WAITING</span></div><div class="feed-text">The facilitator has not started the exercise yet.</div></div>';
-  document.getElementById('public-options').innerHTML=(d?.options||[]).map((o,i)=>`<button class="opt-btn" onclick="selectLivePublicOption(${i},this)"><span class="opt-num">0${i+1}</span><span>${escapeHTML(o.text)}</span></button>`).join('');
+
+  const answered = getLiveMyAnswer(sess);
+  const answerBox=document.getElementById('public-answer-box');
+  const observerBox=document.getElementById('public-observer-box');
+  if(livePublic.joined){
+    document.getElementById('public-join-box').style.display='none';
+    if(livePublic.role==='observer') observerBox.style.display='block';
+    else answerBox.style.display='block';
+  }
+
+  document.getElementById('public-options').innerHTML=(d?.options||[]).map((o,i)=>`<button class="opt-btn" onclick="selectLivePublicOption(${i},this)" ${answered?'disabled':''}><span class="opt-num">0${i+1}</span><span>${escapeHTML(o.text)}</span></button>`).join('');
+  const submitBtn = document.querySelector('#public-answer-box button.btn-primary');
+  const textBox = document.getElementById('public-free-text');
+  const msg = document.getElementById('public-submit-msg');
+  if(answered){
+    if(textBox) { textBox.value = answered.freeText || ''; textBox.disabled = true; }
+    if(submitBtn) submitBtn.disabled = true;
+    if(msg) msg.innerHTML = `Answer submitted. Waiting for facilitator to continue.<br><span style="font-family:var(--mono);color:var(--muted);">Score: ${answered.score ?? '-'} · Branch: ${(answered.branch||'n/a').toUpperCase()}</span>`;
+  } else {
+    if(textBox) { textBox.disabled = false; }
+    if(submitBtn) submitBtn.disabled = !d || sess.status==='ended';
+    if(msg && !msg.textContent) msg.textContent = sess.status==='ended' ? 'Session ended.' : '';
+  }
+
   const recent=(sess.answers||[]).slice(-4).reverse().map(a=>`${escapeHTML(a.participantName)} submitted step ${Number(a.step)+1}`).join('<br>');
   const notes=(sess.notes||[]).slice(-3).reverse().map(n=>`${escapeHTML(n.tag)}: ${escapeHTML(n.note).slice(0,90)}`).join('<br>');
   document.getElementById('public-activity').innerHTML=(recent||'No participant submissions yet.')+(notes?'<hr style="border-color:var(--border);margin:8px 0;">'+notes:'')+(sess.state?`<hr style="border-color:var(--border);margin:8px 0;">💰 ${Number(sess.state.money).toLocaleString()} · Reputation ${sess.state.reputation}/100`:``);
@@ -4037,10 +4080,18 @@ function selectLivePublicOption(i,btn){
 async function joinLivePublic(){
   livePublic.name=document.getElementById('public-name').value.trim()||'Participant';
   livePublic.team=document.getElementById('public-team')?.value.trim()||livePublic.team||'Unassigned';
-  const res=await fetch(`/api/live-sessions/${livePublic.sessionId}/join`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:livePublic.name,role:livePublic.role})});
-  if(!res.ok){alert('Could not join session.');return;}
+  const res=await fetch(`/api/live-sessions/${livePublic.sessionId}/join`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:livePublic.name,team:livePublic.team,role:livePublic.role,participantId:livePublic.participantId})});
+  if(!res.ok){
+    let err='Could not join session.';
+    try{const j=await res.json(); if(j.error) err=j.error;}catch(e){}
+    alert(err);return;
+  }
   const data=await res.json();
   livePublic.participantId=data.participant.id;
+  livePublic.name=data.participant.name || livePublic.name;
+  livePublic.team=data.participant.team || livePublic.team;
+  livePublic.joined=true;
+  persistLivePublic();
   document.getElementById('public-join-box').style.display='none';
   document.getElementById(livePublic.role==='observer'?'public-observer-box':'public-answer-box').style.display='block';
   renderLivePublicSession(data.session);
@@ -4049,8 +4100,11 @@ async function joinLivePublic(){
 async function submitLiveAnswer(){
   const msg=document.getElementById('public-submit-msg');
   msg.textContent='Submitting…';
-  const res=await fetch(`/api/live-sessions/${livePublic.sessionId}/answers`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({participantName:livePublic.name,team:livePublic.team,optionIndex:livePublic.selectedOption,freeText:document.getElementById('public-free-text').value,responseTimeSec:Math.round((Date.now()-(livePublic.decisionStartedAt||Date.now()))/1000)})});
-  if(!res.ok){msg.textContent='Submit failed.';return;}
+  const res=await fetch(`/api/live-sessions/${livePublic.sessionId}/answers`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({participantId:livePublic.participantId,participantName:livePublic.name,team:livePublic.team,optionIndex:livePublic.selectedOption,freeText:document.getElementById('public-free-text').value,responseTimeSec:Math.round((Date.now()-(livePublic.decisionStartedAt||Date.now()))/1000)})});
+  if(!res.ok){
+    try{const j=await res.json(); msg.textContent=j.error||'Submit failed.'; if(j.session) renderLivePublicSession(j.session);}catch(e){msg.textContent='Submit failed.';}
+    return;
+  }
   const data=await res.json();
   msg.textContent=`Submitted. Branch: ${data.answer.branch}. Score: ${data.answer.score ?? '-'}`;
   document.getElementById('public-free-text').value='';
@@ -4060,7 +4114,7 @@ async function submitLiveAnswer(){
 async function saveObserverNote(){
   const note=document.getElementById('observer-note').value.trim();
   if(!note){alert('Write a note first.');return;}
-  const res=await fetch(`/api/live-sessions/${livePublic.sessionId}/notes`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({observerName:livePublic.name,tag:document.getElementById('observer-tag').value,note})});
+  const res=await fetch(`/api/live-sessions/${livePublic.sessionId}/notes`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({observerId:livePublic.participantId,observerName:livePublic.name,tag:document.getElementById('observer-tag').value,note})});
   if(res.ok){document.getElementById('observer-note').value=''; const data=await res.json(); renderLivePublicSession(data.session);} else alert('Failed to save note.');
 }
 function startLiveStream(){
@@ -4082,15 +4136,38 @@ function startLiveStream(){
 }
 async function bootLivePublicIfNeeded(){
   const qs=new URLSearchParams(location.search);
-  const sid=(qs.get('session')||'').toUpperCase();
-  const role=(qs.get('role')||'participant').toLowerCase();
+  const sid=(qs.get('session')||localStorage.getItem('nexa_live_session_id')||'').toUpperCase();
+  const role=(qs.get('role')||localStorage.getItem('nexa_live_role')||'participant').toLowerCase();
   if(!sid) return false;
   livePublic.sessionId=sid; livePublic.role=role==='observer'?'observer':'participant';
+  livePublic.participantId=localStorage.getItem('nexa_live_participant_id')||null;
+  livePublic.name=localStorage.getItem('nexa_live_name')||'';
+  livePublic.team=localStorage.getItem('nexa_live_team')||'Unassigned';
   document.getElementById('screen-login').style.display='none';
   document.getElementById('main-topnav').style.display='none';
   document.querySelectorAll('.screen').forEach(s=>{s.classList.remove('active');s.style.display='none';});
   document.getElementById('screen-live-public').style.display='block';
   document.getElementById('public-session-id').textContent=`${sid} · ${livePublic.role.toUpperCase()}`;
+  if(livePublic.name) document.getElementById('public-name').value=livePublic.name;
+  if(document.getElementById('public-team')) document.getElementById('public-team').value=livePublic.team||'';
+
+  if(livePublic.participantId && livePublic.name){
+    try{
+      const res=await fetch(`/api/live-sessions/${sid}/join`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:livePublic.name,team:livePublic.team,role:livePublic.role,participantId:livePublic.participantId})});
+      if(res.ok){
+        const data=await res.json();
+        livePublic.participantId=data.participant.id;
+        livePublic.joined=true;
+        persistLivePublic();
+        document.getElementById('public-join-box').style.display='none';
+        document.getElementById(livePublic.role==='observer'?'public-observer-box':'public-answer-box').style.display='block';
+        renderLivePublicSession(data.session);
+      } else {
+        clearLivePublicStorage();
+      }
+    }catch(e){}
+  }
+
   try{const res=await fetch(`/api/live-sessions/${sid}`); if(res.ok) renderLivePublicSession(await res.json());}catch(e){}
   startLiveStream();
   return true;
