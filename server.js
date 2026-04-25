@@ -1,17 +1,13 @@
 require('dotenv').config();
 const express  = require('express');
-const http     = require('http');
 const cors     = require('cors');
 const helmet   = require('helmet');
 const rateLimit= require('express-rate-limit');
-const { Server } = require('socket.io');
 const bcrypt   = require('bcryptjs');
 const jwt      = require('jsonwebtoken');
 const { OpenAI } = require('openai');
 const fs   = require('fs');
 const path = require('path');
-let Pool = null;
-try { ({ Pool } = require('pg')); } catch (e) { /* pg optional until DATABASE_URL is used */ }
 const {
   Document, Packer, Paragraph, TextRun, HeadingLevel,
   Table, TableRow, TableCell, WidthType, BorderStyle,
@@ -188,9 +184,6 @@ for (const key of REQUIRED_ENV) {
 }
 
 const app = express();
-const server = http.createServer(app);
-let io = null;
-const USE_PG = !!process.env.DATABASE_URL;
 
 // ─────────────────────────────────────────────
 // A05 — SECURITY HEADERS (Helmet)
@@ -214,84 +207,6 @@ app.use(cors({
   },
   credentials: true,
 }));
-
-// ─────────────────────────────────────────────
-// PostgreSQL + Socket.io readiness
-// ─────────────────────────────────────────────
-const pgPool = USE_PG && Pool ? new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: process.env.PGSSLMODE === 'disable' ? false : { rejectUnauthorized: false }
-}) : null;
-
-async function initPostgres(){
-  if(!pgPool) return;
-  await pgPool.query(`
-    CREATE TABLE IF NOT EXISTS users (
-      id TEXT PRIMARY KEY,
-      email TEXT UNIQUE NOT NULL,
-      name TEXT NOT NULL,
-      role TEXT NOT NULL DEFAULT 'participant',
-      password_hash TEXT NOT NULL,
-      created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-      updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
-    );
-    CREATE TABLE IF NOT EXISTS live_sessions (
-      id TEXT PRIMARY KEY,
-      title TEXT NOT NULL,
-      status TEXT NOT NULL DEFAULT 'waiting',
-      current_step INTEGER NOT NULL DEFAULT 0,
-      level TEXT NOT NULL DEFAULT 'management',
-      state_enabled BOOLEAN NOT NULL DEFAULT false,
-      state JSONB,
-      scenario JSONB NOT NULL,
-      created_by TEXT,
-      created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-      updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
-    );
-    CREATE TABLE IF NOT EXISTS live_participants (
-      id TEXT PRIMARY KEY,
-      session_id TEXT NOT NULL REFERENCES live_sessions(id) ON DELETE CASCADE,
-      name TEXT NOT NULL,
-      role TEXT NOT NULL,
-      joined_at TIMESTAMPTZ NOT NULL DEFAULT now()
-    );
-    CREATE TABLE IF NOT EXISTS live_answers (
-      id TEXT PRIMARY KEY,
-      session_id TEXT NOT NULL REFERENCES live_sessions(id) ON DELETE CASCADE,
-      step INTEGER NOT NULL,
-      question TEXT,
-      participant_name TEXT,
-      option_index INTEGER,
-      mcq_answer TEXT,
-      free_text TEXT,
-      correct BOOLEAN,
-      score INTEGER,
-      branch TEXT,
-      state JSONB,
-      submitted_at TIMESTAMPTZ NOT NULL DEFAULT now()
-    );
-    CREATE TABLE IF NOT EXISTS live_notes (
-      id TEXT PRIMARY KEY,
-      session_id TEXT NOT NULL REFERENCES live_sessions(id) ON DELETE CASCADE,
-      step INTEGER NOT NULL,
-      observer_name TEXT,
-      tag TEXT,
-      note TEXT,
-      created_at TIMESTAMPTZ NOT NULL DEFAULT now()
-    );
-  `);
-  if(process.env.ADMIN_PASSWORD_HASH){
-    const adminEmail = process.env.ADMIN_EMAIL || 'admin@local';
-    await pgPool.query(
-      `INSERT INTO users (id,email,name,role,password_hash)
-       VALUES ($1,$2,$3,$4,$5)
-       ON CONFLICT (email) DO UPDATE SET password_hash=EXCLUDED.password_hash, role='admin', updated_at=now()`,
-      ['usr_admin', adminEmail, 'Admin', 'admin', process.env.ADMIN_PASSWORD_HASH]
-    );
-  }
-}
-
-function makeId(prefix='id'){ return prefix + '_' + Date.now() + '_' + Math.random().toString(36).slice(2,8); }
 
 app.use(express.json({ limit: '4mb' })); // A03 — cap request body size (4mb allows playbook PDF base64)
 
@@ -377,80 +292,30 @@ function requireAuth(req, res, next) {
 // ─────────────────────────────────────────────
 app.post('/api/login', loginLimiter, async (req, res) => {
   try {
-    const { username, email, password } = req.body;
-    if (!password || (!username && !email)) {
-      return res.status(400).json({ error: 'Username/email and password required' });
+    const { username, password } = req.body;
+    if (!username || !password) {
+      return res.status(400).json({ error: 'Username and password required' });
     }
-
-    // PostgreSQL user accounts when DATABASE_URL is configured
-    if (pgPool) {
-      const login = String(email || username || '').trim().toLowerCase();
-      const result = await pgPool.query(
-        'SELECT id,email,name,role,password_hash FROM users WHERE lower(email)=lower($1) OR lower(name)=lower($1) LIMIT 1',
-        [login]
-      );
-      const user = result.rows[0];
-      if (!user) {
-        await bcrypt.compare(password, '$2a$12$fakehashtopreventtiming000000000000000000000');
-        return res.status(401).json({ error: 'Invalid credentials' });
-      }
-      const valid = await bcrypt.compare(password, user.password_hash);
-      if (!valid) return res.status(401).json({ error: 'Invalid credentials' });
-      const token = jwt.sign({ id:user.id, email:user.email, name:user.name, role:user.role }, JWT_SECRET, { expiresIn: JWT_EXPIRES });
-      return res.json({ token, role:user.role, user:{ id:user.id, email:user.email, name:user.name, role:user.role }, expiresIn: JWT_EXPIRES });
-    }
-
-    // Local fallback: original single admin account
+    // Only 'admin' account supported (add more via env vars when needed)
     if (username !== 'admin') {
+      // Constant-time fake comparison to prevent username enumeration
       await bcrypt.compare(password, '$2a$12$fakehashtopreventtiming000000000000000000000');
       return res.status(401).json({ error: 'Invalid credentials' });
     }
     const valid = await bcrypt.compare(password, process.env.ADMIN_PASSWORD_HASH);
-    if (!valid) return res.status(401).json({ error: 'Invalid credentials' });
-    const token = jwt.sign({ username: 'admin', role: 'admin' }, JWT_SECRET, { expiresIn: JWT_EXPIRES });
-    res.json({ token, role: 'admin', user:{ name:'Admin', role:'admin' }, expiresIn: JWT_EXPIRES });
+    if (!valid) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+    const token = jwt.sign(
+      { username: 'admin', role: 'ADMIN' },
+      JWT_SECRET,
+      { expiresIn: JWT_EXPIRES }
+    );
+    res.json({ token, role: 'ADMIN', expiresIn: JWT_EXPIRES });
   } catch (err) {
     console.error('Login error:', err.message);
     res.status(500).json({ error: 'Login failed' });
   }
-});
-
-app.get('/api/me', requireAuth, (req, res) => {
-  res.json({ user: req.user });
-});
-
-function requireAdmin(req,res,next){
-  if(String(req.user?.role || '').toLowerCase() !== 'admin') return res.status(403).json({ error:'Admin only' });
-  next();
-}
-
-app.post('/api/users', requireAuth, requireAdmin, async (req, res) => {
-  try {
-    if(!pgPool) return res.status(400).json({ error:'PostgreSQL DATABASE_URL required for user accounts' });
-    const email = sanitiseString(req.body.email || '', 160).toLowerCase();
-    const name = sanitiseString(req.body.name || email.split('@')[0] || 'User', 100);
-    const role = ['admin','facilitator','observer','participant','client_admin'].includes(req.body.role) ? req.body.role : 'participant';
-    const password = String(req.body.password || '');
-    if(!email || !password || password.length < 8) return res.status(400).json({ error:'Valid email and password of at least 8 characters required' });
-    const hash = await bcrypt.hash(password, 12);
-    const id = makeId('usr');
-    const r = await pgPool.query(
-      `INSERT INTO users (id,email,name,role,password_hash) VALUES ($1,$2,$3,$4,$5)
-       RETURNING id,email,name,role,created_at`, [id,email,name,role,hash]
-    );
-    res.json({ user:r.rows[0] });
-  } catch(err) {
-    console.error('Create user error:', err.message);
-    res.status(500).json({ error:'Failed to create user' });
-  }
-});
-
-app.get('/api/users', requireAuth, requireAdmin, async (req, res) => {
-  try {
-    if(!pgPool) return res.json([]);
-    const r = await pgPool.query('SELECT id,email,name,role,created_at,updated_at FROM users ORDER BY created_at DESC LIMIT 200');
-    res.json(r.rows);
-  } catch(err) { res.status(500).json({ error:'Failed to list users' }); }
 });
 
 // ─────────────────────────────────────────────
@@ -676,14 +541,12 @@ Use EXACTLY these 7 section headings — each must be wrapped in <strong>Title</
 // ─────────────────────────────────────────────
 app.post('/api/generate-scenario', requireAuth, aiLimiter, async (req, res) => {
   try {
-    const prompt       = sanitiseString(req.body.prompt || '', 1400);
+    const prompt       = sanitiseString(req.body.prompt || '', 800);
     const numDecisions = Math.min(20, Math.max(1, parseInt(req.body.numDecisions) || 4));
     const level        = ['Both','Management','Working'].includes(req.body.level) ? req.body.level : 'Both';
     const alertDetail  = ['standard','detailed','realistic'].includes(req.body.alertDetail) ? req.body.alertDetail : 'detailed';
     const sourceMode   = req.body.sourceMode === 'playbook' ? 'playbook' : 'brief';
     const rawPlaybook  = typeof req.body.playbookText === 'string' ? req.body.playbookText : '';
-    const includeEvidence = req.body.includeEvidence !== false;
-    const includeState = req.body.includeState === true;
     if (!prompt) return res.status(400).json({ error: 'Prompt is required' });
 
     // ── Extract playbook text from PDF/DOCX base64 if needed ──
@@ -749,7 +612,6 @@ The JSON must strictly follow this schema:
   "severity": "CRITICAL" | "HIGH" | "MEDIUM" | "LOW",
   "duration": "15 min" | "20 min" | "30 min",
   "level": "${level}",
-  "stateConfig": { "enabled": true|false, "startMoney": 1000000, "startReputation": 100 },
   "teams": ["array of 2-5 team/department names involved"],
   "skills": ["array of 2-4 values from: technical, communication, decision, leadership, compliance, coordination"],
   "overview": "string — 3-5 sentence situation overview describing the incident context",
@@ -770,9 +632,8 @@ The JSON must strictly follow this schema:
       "decTeams": ["team names involved in this decision"],
       "skillTested": "technical"|"communication"|"decision"|"leadership"|"compliance"|"coordination",
       "options": [
-        { "text": "string — option text", "correct": true|false, "branch": "strong"|"partial"|"weak", "branchText": "string — consequence caused by this answer", "effect": { "money": number, "reputation": number } }
+        { "text": "string — option text", "correct": true|false }
       ],
-      "evidence": { "type": "email"|"log"|"chat"|"ransom"|"legal_notice"|"file"|"invoice", "label": "string", "content": { "from": "string", "to": "string", "subject": "string", "body": "string", "indicator": "string", "log": "string", "messages": "string" } },
       "goodFeedback": "string — explanation for the correct choice",
       "badFeedback": "string — explanation for wrong choices"
     }
@@ -782,11 +643,6 @@ The JSON must strictly follow this schema:
 Rules:
 - Generate EXACTLY ${numDecisions} decisions — no more, no less
 - Each decision must have exactly 4 options, exactly 1 marked correct:true
-- Every option must include branch and branchText. Use branch="strong" for the correct/compliant answer, branch="partial" for plausible but incomplete actions, and branch="weak" for risky actions. Branch text must describe how the incident evolves after that answer.
-- State system: ${includeState ? "set stateConfig.enabled=true and include effect.money and effect.reputation on every option. Use realistic business impact: correct choices may still cost money (containment/legal/PR cost), weak choices should deduct much more money and reputation, partial choices moderate damage. Money is numeric in EUR, reputation is -100 to +100 delta." : "set stateConfig.enabled=false and set every option effect to {money:0,reputation:0}."}
-- Evidence artifacts: ${includeEvidence ? "include one realistic evidence object for every decision" : "set evidence:null for every decision"}.
-- Evidence must visually support the incident: intercepted email, SIEM/SOC log, internal chat, ransom note, suspicious invoice, file metadata, legal/regulatory notice, or dark web sample listing.
-- Evidence must never be generic. Include realistic sender/recipient, subjects, log lines, timestamps, IPs, domains, hostnames, contract values, customer counts, GDPR/ICO timing, or threat actor details where relevant.
 - The "question" field is REQUIRED and must be a clear, specific question the participant must answer
 - badge: "r"=red/critical, "a"=amber/warning, "b"=blue/info
 - alertType: "cr"=critical/red alert, "wa"=warning/amber alert, "in"=info/blue alert
@@ -833,18 +689,6 @@ ${alertDetail === 'standard'
     if (!scenario.title || !scenario.decisions || !Array.isArray(scenario.decisions)) {
       return res.status(500).json({ error: 'AI scenario missing required fields. Try again.' });
     }
-
-    scenario.stateConfig = scenario.stateConfig || { enabled: includeState, startMoney: 1000000, startReputation: 100 };
-    scenario.stateConfig.enabled = includeState ? true : !!scenario.stateConfig.enabled;
-    scenario.stateConfig.startMoney = Number(scenario.stateConfig.startMoney || scenario.stateConfig.money || 1000000);
-    scenario.stateConfig.startReputation = Math.max(0, Math.min(100, Number(scenario.stateConfig.startReputation || scenario.stateConfig.reputation || 100)));
-    scenario.decisions.forEach(dec => {
-      (dec.options || []).forEach(opt => {
-        opt.effect = opt.effect || opt.impact || { money: 0, reputation: 0 };
-        opt.effect.money = includeState ? Number(opt.effect.money || opt.effect.moneyImpact || 0) : 0;
-        opt.effect.reputation = includeState ? Number(opt.effect.reputation || opt.effect.reputationImpact || 0) : 0;
-      });
-    });
 
     res.json({ scenario });
   } catch (err) {
@@ -1549,271 +1393,12 @@ app.post('/api/grade-response', async (req, res) => {
     }
 });
 
-
-
-// ─────────────────────────────────────────────
-// LIVE EXERCISE MODE — PostgreSQL + Socket.io realtime with local JSON fallback
-// ─────────────────────────────────────────────
-const liveStreams = new Map(); // SSE fallback: sessionId -> Set(res)
-function makeSessionId(){ return Math.random().toString(36).slice(2,8).toUpperCase(); }
-function ensureLiveStore(db){
-  if(!db.liveSessions || typeof db.liveSessions !== 'object' || Array.isArray(db.liveSessions)) db.liveSessions = {};
-  return db.liveSessions;
-}
-function publicSessionView(session){
-  if(!session) return null;
-  return {
-    id: session.id,
-    title: session.title,
-    scenario: session.scenario,
-    currentStep: session.currentStep ?? session.current_step ?? 0,
-    status: session.status || 'waiting',
-    level: session.level || 'management',
-    stateEnabled: !!(session.stateEnabled ?? session.state_enabled),
-    createdAt: session.createdAt || session.created_at,
-    updatedAt: session.updatedAt || session.updated_at,
-    participants: session.participants || [],
-    answers: session.answers || [],
-    notes: session.notes || [],
-    state: session.state || null
-  };
-}
-async function pgHydrateSession(id){
-  if(!pgPool) return null;
-  const r = await pgPool.query('SELECT * FROM live_sessions WHERE id=$1', [id]);
-  if(!r.rows[0]) return null;
-  const row = r.rows[0];
-  const [p,a,n] = await Promise.all([
-    pgPool.query('SELECT id,name,role,joined_at AS "joinedAt" FROM live_participants WHERE session_id=$1 ORDER BY joined_at ASC', [id]),
-    pgPool.query('SELECT id,step,question,participant_name AS "participantName",option_index AS "optionIndex",mcq_answer AS "mcqAnswer",free_text AS "freeText",correct,score,branch,state,submitted_at AS "submittedAt" FROM live_answers WHERE session_id=$1 ORDER BY submitted_at ASC', [id]),
-    pgPool.query('SELECT id,step,observer_name AS "observerName",tag,note,created_at AS "createdAt" FROM live_notes WHERE session_id=$1 ORDER BY created_at ASC', [id])
-  ]);
-  return {
-    id: row.id, title: row.title, status: row.status, currentStep: row.current_step,
-    level: row.level, stateEnabled: row.state_enabled, state: row.state, scenario: row.scenario,
-    createdAt: row.created_at, updatedAt: row.updated_at,
-    participants: p.rows, answers: a.rows, notes: n.rows
-  };
-}
-async function loadSession(id){
-  id = String(id).toUpperCase();
-  if(pgPool) return pgHydrateSession(id);
-  return ensureLiveStore(readDB())[id] || null;
-}
-async function saveJsonSession(session){
-  if(pgPool) {
-    await pgPool.query(`UPDATE live_sessions SET status=$2,current_step=$3,state=$4,updated_at=now() WHERE id=$1`,
-      [session.id, session.status, session.currentStep || 0, session.state || null]);
-  } else {
-    const db = readDB();
-    ensureLiveStore(db)[session.id] = session;
-    writeDB(db);
-  }
-}
-async function listSessions(){
-  if(pgPool){
-    const r = await pgPool.query('SELECT id FROM live_sessions ORDER BY created_at DESC LIMIT 100');
-    return (await Promise.all(r.rows.map(x => pgHydrateSession(x.id)))).filter(Boolean).map(publicSessionView);
-  }
-  return Object.values(ensureLiveStore(readDB())).map(publicSessionView).sort((a,b)=>String(b.createdAt).localeCompare(String(a.createdAt)));
-}
-async function broadcastLive(sessionId){
-  const session = await loadSession(sessionId);
-  const view = publicSessionView(session);
-  if(io) io.to(`live:${sessionId}`).emit('session:update', view);
-  const payload = `data: ${JSON.stringify({ type:'session', session: view })}
-
-`;
-  const set = liveStreams.get(sessionId);
-  if(!set) return;
-  for(const res of [...set]){
-    try { res.write(payload); } catch(e) { set.delete(res); }
-  }
-}
-function getDecision(session){
-  const scenario = session.scenario || {};
-  const level = session.level || 'management';
-  const decs = scenario.decisions?.[level] || scenario.decisions?.management || [];
-  return decs[session.currentStep || 0] || null;
-}
-function applyLiveEffect(session, option){
-  if(!session.stateEnabled || !session.state || !option) return;
-  const effect = option.effect || option.impact || {};
-  const moneyDelta = Number(effect.money || 0);
-  const repDelta = Number(effect.reputation || 0);
-  session.state.money = Number(session.state.money || 0) + moneyDelta;
-  session.state.reputation = Math.max(0, Math.min(100, Number(session.state.reputation ?? 100) + repDelta));
-  session.state.lastImpact = { money: moneyDelta, reputation: repDelta };
-}
-
-app.post('/api/live-sessions', requireAuth, async (req, res) => {
-  try {
-    const { scenario, title, level='management', stateEnabled=false } = req.body;
-    if(!scenario || !scenario.title) return res.status(400).json({ error:'Scenario payload required' });
-    let id = makeSessionId();
-    const cfg = scenario.stateConfig || scenario.state || {};
-    const session = {
-      id, title: sanitiseString(title || scenario.title, 160), scenario, level,
-      status: 'waiting', currentStep: 0, participants: [], answers: [], notes: [],
-      stateEnabled: !!(stateEnabled || cfg.enabled),
-      state: (stateEnabled || cfg.enabled) ? { money: Number(cfg.startMoney || cfg.money || 1000000), reputation: Number(cfg.startReputation || cfg.reputation || 100) } : null,
-      createdAt: new Date().toISOString(), updatedAt: new Date().toISOString()
-    };
-    if(pgPool){
-      while((await pgPool.query('SELECT 1 FROM live_sessions WHERE id=$1',[id])).rowCount) id = makeSessionId();
-      session.id = id;
-      await pgPool.query(`INSERT INTO live_sessions (id,title,status,current_step,level,state_enabled,state,scenario,created_by)
-        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
-        [session.id, session.title, session.status, session.currentStep, session.level, session.stateEnabled, session.state, session.scenario, req.user?.id || req.user?.username || 'admin']);
-    } else {
-      const db = readDB(); const sessions = ensureLiveStore(db); while(sessions[id]) id = makeSessionId(); session.id = id; sessions[id] = session; writeDB(db);
-    }
-    const view = publicSessionView(await loadSession(session.id));
-    res.json(view);
-    await broadcastLive(session.id);
-  } catch(err) { console.error('Create live session error:', err.message); res.status(500).json({ error:'Failed to create live session' }); }
-});
-
-app.get('/api/live-sessions', requireAuth, async (req, res) => {
-  res.json(await listSessions());
-});
-
-app.get('/api/live-sessions/:id', async (req, res) => {
-  const session = await loadSession(req.params.id);
-  if(!session) return res.status(404).json({ error:'Session not found' });
-  res.json(publicSessionView(session));
-});
-
-app.get('/api/live-sessions/:id/stream', async (req, res) => {
-  const id = String(req.params.id).toUpperCase();
-  const session = await loadSession(id);
-  if(!session) return res.status(404).end();
-  res.setHeader('Content-Type', 'text/event-stream');
-  res.setHeader('Cache-Control', 'no-cache');
-  res.setHeader('Connection', 'keep-alive');
-  res.flushHeaders?.();
-  if(!liveStreams.has(id)) liveStreams.set(id, new Set());
-  liveStreams.get(id).add(res);
-  res.write(`data: ${JSON.stringify({ type:'session', session: publicSessionView(session) })}\n\n`);
-  req.on('close', () => liveStreams.get(id)?.delete(res));
-});
-
-app.post('/api/live-sessions/:id/control', requireAuth, async (req, res) => {
-  try {
-    const id = String(req.params.id).toUpperCase();
-    const { action, step } = req.body;
-    const session = await loadSession(id);
-    if(!session) return res.status(404).json({ error:'Session not found' });
-    const decs = session.scenario?.decisions?.[session.level || 'management'] || session.scenario?.decisions?.management || [];
-    if(action === 'start') session.status = 'live';
-    if(action === 'pause') session.status = 'paused';
-    if(action === 'end') session.status = 'ended';
-    if(action === 'next') session.currentStep = Math.min((session.currentStep || 0) + 1, Math.max(0, decs.length - 1));
-    if(action === 'previous') session.currentStep = Math.max((session.currentStep || 0) - 1, 0);
-    if(action === 'goto') session.currentStep = Math.max(0, Math.min(Number(step || 0), Math.max(0, decs.length - 1)));
-    session.updatedAt = new Date().toISOString();
-    await saveJsonSession(session);
-    const view = publicSessionView(await loadSession(id));
-    res.json(view);
-    await broadcastLive(id);
-  } catch(err) { console.error('Live control error:', err.message); res.status(500).json({ error:'Failed to control session' }); }
-});
-
-app.post('/api/live-sessions/:id/join', async (req, res) => {
-  try {
-    const id = String(req.params.id).toUpperCase();
-    const name = sanitiseString(req.body.name || 'Participant', 80);
-    const role = ['participant','observer'].includes(req.body.role) ? req.body.role : 'participant';
-    const session = await loadSession(id);
-    if(!session) return res.status(404).json({ error:'Session not found' });
-    const participant = { id: makeSessionId(), name, role, joinedAt: new Date().toISOString() };
-    if(pgPool){
-      await pgPool.query('INSERT INTO live_participants (id,session_id,name,role) VALUES ($1,$2,$3,$4)', [participant.id,id,name,role]);
-      await pgPool.query('UPDATE live_sessions SET updated_at=now() WHERE id=$1',[id]);
-    } else {
-      session.participants = session.participants || []; session.participants.push(participant); await saveJsonSession(session);
-    }
-    const fresh = publicSessionView(await loadSession(id));
-    res.json({ participant, session: fresh });
-    await broadcastLive(id);
-  } catch(err) { console.error('Live join error:', err.message); res.status(500).json({ error:'Failed to join session' }); }
-});
-
-app.post('/api/live-sessions/:id/answers', async (req, res) => {
-  try {
-    const id = String(req.params.id).toUpperCase();
-    const session = await loadSession(id);
-    if(!session) return res.status(404).json({ error:'Session not found' });
-    const d = getDecision(session);
-    if(!d) return res.status(400).json({ error:'No active decision' });
-    const optionIndex = Number(req.body.optionIndex);
-    const chosen = Number.isInteger(optionIndex) ? d.options?.[optionIndex] : null;
-    const freeText = sanitiseString(req.body.freeText || '', 4000);
-    const correct = !!chosen?.correct;
-    const score = chosen ? (correct ? 100 : 0) : null;
-    const branch = chosen?.branch || (correct ? 'strong' : 'weak');
-    applyLiveEffect(session, chosen);
-    const answer = {
-      id: 'ans_' + Date.now() + '_' + Math.random().toString(36).slice(2,6),
-      step: session.currentStep || 0,
-      question: sanitiseString(d.question || '', 500),
-      participantName: sanitiseString(req.body.participantName || 'Participant', 80),
-      optionIndex: Number.isInteger(optionIndex) ? optionIndex : null,
-      mcqAnswer: sanitiseString(chosen?.text || '', 1000),
-      freeText, correct, score, branch, state: session.state || null,
-      submittedAt: new Date().toISOString()
-    };
-    if(pgPool){
-      await pgPool.query('UPDATE live_sessions SET state=$2,updated_at=now() WHERE id=$1',[id, session.state || null]);
-      await pgPool.query(`INSERT INTO live_answers (id,session_id,step,question,participant_name,option_index,mcq_answer,free_text,correct,score,branch,state)
-        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)`,
-        [answer.id,id,answer.step,answer.question,answer.participantName,answer.optionIndex,answer.mcqAnswer,answer.freeText,answer.correct,answer.score,answer.branch,answer.state]);
-    } else {
-      session.answers = session.answers || []; session.answers.push(answer); await saveJsonSession(session);
-    }
-    const fresh = publicSessionView(await loadSession(id));
-    res.json({ answer, session: fresh });
-    await broadcastLive(id);
-  } catch(err) { console.error('Live answer error:', err.message); res.status(500).json({ error:'Failed to submit answer' }); }
-});
-
-app.post('/api/live-sessions/:id/notes', async (req, res) => {
-  try {
-    const id = String(req.params.id).toUpperCase();
-    const session = await loadSession(id);
-    if(!session) return res.status(404).json({ error:'Session not found' });
-    const note = {
-      id: 'note_' + Date.now() + '_' + Math.random().toString(36).slice(2,6),
-      step: session.currentStep || 0,
-      observerName: sanitiseString(req.body.observerName || 'Observer', 80),
-      tag: sanitiseString(req.body.tag || 'note', 40),
-      note: sanitiseString(req.body.note || '', 4000),
-      createdAt: new Date().toISOString()
-    };
-    if(pgPool){
-      await pgPool.query('INSERT INTO live_notes (id,session_id,step,observer_name,tag,note) VALUES ($1,$2,$3,$4,$5,$6)',
-        [note.id,id,note.step,note.observerName,note.tag,note.note]);
-      await pgPool.query('UPDATE live_sessions SET updated_at=now() WHERE id=$1',[id]);
-    } else {
-      session.notes = session.notes || []; session.notes.push(note); await saveJsonSession(session);
-    }
-    const fresh = publicSessionView(await loadSession(id));
-    res.json({ note, session: fresh });
-    await broadcastLive(id);
-  } catch(err) { console.error('Live note error:', err.message); res.status(500).json({ error:'Failed to save note' }); }
-});
-
 // ─────────────────────────────────────────────
 // CATCH-ALL — serve HTML app
 // ─────────────────────────────────────────────
 app.get('/{*path}', (req, res) => {
-  const candidates = [
-    path.join(PUBLIC_DIR, 'nexa-cybersim.html'),
-    path.join(PUBLIC_DIR, 'nexa-cybersim4-latets.html'),
-    path.join(__dirname, 'nexa-cybersim4-latets.html')
-  ];
-  const indexFile = candidates.find(f => fs.existsSync(f));
-  if (indexFile) {
+  const indexFile = path.join(PUBLIC_DIR, 'nexa-cybersim.html');
+  if (fs.existsSync(indexFile)) {
     res.sendFile(indexFile);
   } else {
     res.status(404).send('Application not found.');
@@ -1828,8 +1413,8 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Internal server error' });
 });
 
-const PORT = process.env.PORT || 8080;
-
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server running on ${PORT}`);
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => { // listens on all local interfaces
+  console.log(`NexaCyberSim running on http://localhost:${PORT}`);
+  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
 });

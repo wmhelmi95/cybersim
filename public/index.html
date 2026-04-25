@@ -3391,6 +3391,7 @@ function addDecBlock(preTeams){
       <div class="dec-teams-wrap">${makeTeamsHtml(teams)}</div>
     </div>
     <div class="form-group"><label class="lbl">Decision Question</label><input type="text" placeholder="What must participants decide?"></div>
+    <div class="form-group"><label class="lbl">Hybrid Free-Text Expected Actions <span style="color:var(--muted);font-size:9px">— optional, used with MCQ</span></label><textarea class="expected-actions" rows="3" placeholder="e.g. Isolate affected hosts; preserve evidence; notify IR lead; escalate to CISO"></textarea></div>
     <div class="form-group"><label class="lbl">Answer Options <span style="color:var(--muted);font-size:9px">(click ✓ to mark correct)</span></label>
       <div class="opts-list-${id}">${[1,2,3,4].map(n=>`<div class="option-row option-impact-row"><input type="text" placeholder="Option ${n}"><input class="impact-input" data-effect-money type="number" value="0" step="1000" title="Money impact" placeholder="€ impact"><input class="impact-input" data-effect-reputation type="number" value="0" step="1" title="Reputation impact" placeholder="Rep"><button class="correct-toggle" onclick="toggleCorr(this)">✓</button><button class="opt-del-btn" onclick="this.closest('.option-row').remove()" title="Remove option">✕</button></div>`).join('')}</div>
       <button class="add-opt-btn" onclick="addOptRow('${id}')">+ Add Option</button>
