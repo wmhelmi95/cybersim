@@ -1105,6 +1105,24 @@ textarea{min-height:98px;}
     </div>
     <div class="section-title" style="font-size:13px">Key Findings</div>
     <div class="findings-section" id="rpt-findings"></div>
+    <div class="card" style="margin:18px 0;">
+      <div class="section-title" style="font-size:13px;margin-bottom:14px;">Individual Performance</div>
+      <div class="results-table-wrap">
+        <table class="results-table">
+          <thead><tr><th>Participant</th><th>Team</th><th>Avg Score</th><th>Strongest</th><th>Needs Improvement</th></tr></thead>
+          <tbody id="individual-breakdown"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card" style="margin:18px 0;">
+      <div class="section-title" style="font-size:13px;margin-bottom:14px;">Team Performance</div>
+      <div class="results-table-wrap">
+        <table class="results-table">
+          <thead><tr><th>Team</th><th>Participants</th><th>Avg Score</th><th>Strongest</th><th>Needs Improvement</th></tr></thead>
+          <tbody id="team-breakdown"></tbody>
+        </table>
+      </div>
+    </div>
     <div class="section-title" style="font-size:13px">Framework Alignment</div>
     <div class="fw-tags" id="rpt-fw"></div>
   </div>
@@ -2005,14 +2023,12 @@ async function generateScenarioWithAI(){
       const alertTextEl  = block.querySelector('textarea[placeholder*="simulation feed"]');
       const goodFbEl     = block.querySelector('textarea[placeholder*="correct"]');
       const badFbEl      = block.querySelector('textarea[placeholder*="mistake"]');
-      const expectedEl   = block.querySelector('.expected-actions');
       const numInp       = block.querySelector('input[type=number]');
 
       if(alertTypeEl)  alertTypeEl.value  = alertTypeMap[dec.alertType] || 'wa';
       if(skillEl)      skillEl.value       = dec.skillTested  || 'decision';
       if(alertLabelEl) alertLabelEl.value  = dec.alertLabel   || 'INCIDENT UPDATE';
       if(questionEl)   questionEl.value    = dec.question     || '';
-      if(expectedEl)   expectedEl.value    = dec.expectedActions || dec.idealActions || dec.goodFeedback || '';
       if(alertTextEl)  alertTextEl.value   = dec.alertText    || '';
       if(goodFbEl)     goodFbEl.value      = dec.goodFeedback || '';
       if(badFbEl)      badFbEl.value       = dec.badFeedback  || '';
@@ -2634,7 +2650,8 @@ function stopDecTimer(){
 }
 function autoExpireDecision(){
   // Counts as no answer / incorrect
-  simState.results.push({correct:false,skill:simState.scenario.decisions[simState.level][simState.decIdx].skillTested});
+  const d=simState.scenario.decisions[simState.level][simState.decIdx];
+  simState.results.push({participantName:'Admin Run',team:(d.decTeams&&d.decTeams[0])||'Unassigned',decisionIndex:simState.decIdx,question:d.question,skillTested:d.skillTested,skill:d.skillTested,mcqAnswer:null,freeTextAnswer:'',expectedActions:d.expectedActions||'',aiScore:0,aiFeedback:'Time expired — no decision made.',branch:'weak',correct:false,feedback:'Time expired — no decision made.'});
   document.querySelectorAll('.opt-btn').forEach(b=>{b.disabled=true;b.classList.add('dim');});
   const fb=document.getElementById('fb-box');
   fb.className='fb-box show bad';
@@ -2706,13 +2723,9 @@ function loadDec(idx){
       <div class="email-body">${d.emailBody.replace(/\n/g,'<br>')}<br><br><div style="position:relative;display:inline-block;margin-top:14px"><span class="phish-link">→ Verify Account Now</span></div></div>
     </div>`:''}`;
   document.getElementById('dec-q').textContent=d.question;
-  document.getElementById('dec-opts').innerHTML =
-    d.options.map((o,i)=>`<button class="opt-btn" onclick="selectOpt(${i})" id="opt-${i}"><span class="opt-num">0${i+1}</span><span>${escapeHTML(o.text||'')}</span></button>`).join('') +
-    `<div class="form-group" style="margin-top:12px;">
-      <label class="lbl">Typed Response — optional AI assessment</label>
-      <textarea id="freeTextAnswer" placeholder="Type participant/team response here. Example: isolate affected systems, preserve logs, notify IR lead, escalate to CISO..." style="min-height:92px;"></textarea>
-      <button type="button" class="btn btn-outline btn-sm" style="width:100%;margin-top:8px;" onclick="submitFreeTextAnswer()">Assess Typed Response</button>
-    </div>`;
+  document.getElementById('dec-opts').innerHTML=d.options.map((o,i)=>`<button class="opt-btn" onclick="selectOpt(${i})" id="opt-${i}"><span class="opt-num">0${i+1}</span><span>${escapeHTML(o.text)}</span></button>`).join('') +
+    `<textarea id="freeTextAnswer" placeholder="Optional: type the participant/team response here..." style="margin-top:10px;min-height:90px;"></textarea>
+     <button class="btn btn-outline btn-sm" style="width:100%;margin-top:8px;" onclick="submitFreeTextAnswer()">Assess Typed Response</button>`;
   document.getElementById('fb-box').className='fb-box';
   document.getElementById('nxt-btn').className='nxt-btn';
   const nxt=document.getElementById('nxt-btn');
@@ -2739,7 +2752,25 @@ function selectOpt(idx){
   const fb=document.getElementById("fb-box");
   fb.className="fb-box show "+(chosen.correct?"good":"bad");
   fb.innerHTML=(chosen.correct?d.goodFeedback:d.badFeedback)+branchNote+(impactMsg?`<br><br><strong>State impact:</strong> ${escapeHTML(impactMsg)}`:'');
-  simState.results.push({correct:chosen.correct,skill:d.skillTested,branch,branchText:chosen.branchText||"",effect:chosen.effect||chosen.impact||null,state:simState.crisisState?{money:simState.crisisState.money,reputation:simState.crisisState.reputation}:null});
+  simState.results.push({
+    participantName:'Admin Run',
+    team:(d.decTeams&&d.decTeams[0])||'Unassigned',
+    decisionIndex:simState.decIdx,
+    question:d.question,
+    skillTested:d.skillTested,
+    skill:d.skillTested,
+    mcqAnswer:chosen.text,
+    freeTextAnswer:document.getElementById('freeTextAnswer')?.value.trim()||'',
+    expectedActions:d.expectedActions||'',
+    aiScore:null,
+    aiFeedback:'',
+    branch,
+    branchText:chosen.branchText||'',
+    correct:chosen.correct,
+    feedback:chosen.correct?d.goodFeedback:d.badFeedback,
+    effect:chosen.effect||chosen.impact||null,
+    state:simState.crisisState?{money:simState.crisisState.money,reputation:simState.crisisState.reputation}:null
+  });
   if(d.skillTested&&simState.skillScores.hasOwnProperty(d.skillTested)) simState.skillScores[d.skillTested]+=(chosen.correct?100:0);
   updateSkillBars();
   const dot=document.getElementById('pd-'+simState.decIdx);if(dot) dot.className='prog-dot done';
@@ -2749,33 +2780,50 @@ function selectOpt(idx){
 async function submitFreeTextAnswer(){
   stopDecTimer();
   const d=simState.scenario.decisions[simState.level][simState.decIdx];
-  const answer=(document.getElementById('freeTextAnswer')?.value||'').trim();
+  const answer=document.getElementById('freeTextAnswer')?.value.trim();
   if(!answer){alert('Type the participant/team response first.');return;}
-
   document.querySelectorAll('.opt-btn').forEach(b=>{b.disabled=true;b.classList.add('dim');});
   const fb=document.getElementById('fb-box');
   fb.className='fb-box show';
-  fb.innerHTML='Assessing typed response against expected actions...';
-
+  fb.innerHTML='Assessing typed response...';
   try{
-    const res=await fetch('/api/grade-response',{
+    const res=await fetch(`${API_BASE}/api/grade-response`,{
       method:'POST',
       headers:authHeaders(),
-      body:JSON.stringify({question:d.question,answer,correctFeedback:d.expectedActions || d.goodFeedback || ''})
+      body:JSON.stringify({answer,question:d.question,correctFeedback:d.expectedActions||d.goodFeedback||'',expectedActions:d.expectedActions||''})
     });
+    if(!res.ok){const er=await res.json().catch(()=>({error:'AI assessment failed'}));throw new Error(er.error||'AI assessment failed');}
     const result=await res.json();
-    if(!res.ok) throw new Error(result.error||'AI assessment failed');
-
     const score=Math.max(0,Math.min(100,Number(result.score||0)));
+    const branch=result.branch || (score>=80?'strong':score>=50?'partial':'weak');
     const correct=score>=70;
-    const branch=score>=80?'strong':(score>=50?'partial':'weak');
-    if(correct) simState.score+=100;
-
+    const impactMsg=applyCrisisImpact({effect:branch==='strong'?{money:0,reputation:2}:branch==='partial'?{money:-25000,reputation:-5}:{money:-100000,reputation:-15}});
+    simState.score += score;
+    if(d.skillTested&&simState.skillScores.hasOwnProperty(d.skillTested)) simState.skillScores[d.skillTested]+=score;
+    const feedback=result.feedback||'';
     fb.className='fb-box show '+(correct?'good':'bad');
-    fb.innerHTML=`<strong>AI Score:</strong> ${score}/100<br><strong>Branch:</strong> ${branch.toUpperCase()}<br><br>${escapeHTML(result.feedback||'')}`;
-
-    simState.results.push({correct,skill:d.skillTested,branch,freeTextAnswer:answer,aiScore:score,aiFeedback:result.feedback||'',expectedActions:d.expectedActions||''});
-    if(d.skillTested&&simState.skillScores.hasOwnProperty(d.skillTested)) simState.skillScores[d.skillTested]+=(correct?100:0);
+    fb.innerHTML=`<strong>AI Score:</strong> ${score}/100<br><strong>Branch:</strong> ${branch.toUpperCase()}<br><br>${escapeHTML(feedback)}${impactMsg?`<br><br><strong>State impact:</strong> ${escapeHTML(impactMsg)}`:''}`;
+    simState.results.push({
+      participantName:'Admin Run',
+      team:(d.decTeams&&d.decTeams[0])||'Unassigned',
+      decisionIndex:simState.decIdx,
+      question:d.question,
+      skillTested:d.skillTested,
+      skill:d.skillTested,
+      mcqAnswer:null,
+      freeTextAnswer:answer,
+      expectedActions:d.expectedActions||'',
+      aiScore:score,
+      aiFeedback:feedback,
+      matchedActions:result.matchedActions||[],
+      missingActions:result.missingActions||[],
+      riskyActions:result.riskyActions||[],
+      branch,
+      correct,
+      feedback,
+      effect:null,
+      state:simState.crisisState?{money:simState.crisisState.money,reputation:simState.crisisState.reputation}:null
+    });
     updateSkillBars();
     const dot=document.getElementById('pd-'+simState.decIdx);if(dot) dot.className='prog-dot done';
     const ndot=document.getElementById('pd-'+(simState.decIdx+1));if(ndot) ndot.className='prog-dot cur';
@@ -2783,8 +2831,28 @@ async function submitFreeTextAnswer(){
   }catch(err){
     console.error(err);
     fb.className='fb-box show bad';
-    fb.innerHTML='AI assessment failed: '+escapeHTML(err.message||String(err));
+    fb.innerHTML='AI assessment failed: '+escapeHTML(err.message);
   }
+}
+
+function getResultScoreValue(r){
+  if(typeof r?.aiScore==='number' && !Number.isNaN(r.aiScore)) return Math.max(0,Math.min(100,r.aiScore));
+  return r?.correct ? 100 : 0;
+}
+function calculateTotalScore(results){return Math.round((results||[]).reduce((sum,r)=>sum+getResultScoreValue(r),0));}
+function calculateAverageScore(results){return results&&results.length?Math.round(calculateTotalScore(results)/results.length):0;}
+function groupByKey(arr,key){return (arr||[]).reduce((acc,item)=>{const k=item?.[key]||'Unassigned';(acc[k]=acc[k]||[]).push(item);return acc;},{});}
+function scoreBySkill(rows){const grouped=groupByKey(rows,'skillTested');return Object.entries(grouped).map(([skill,items])=>({skill,score:calculateAverageScore(items)}));}
+function strongestSkill(rows){const list=scoreBySkill(rows).sort((a,b)=>b.score-a.score);return list[0]?`${SKILLS[list[0].skill]?.label||list[0].skill} (${list[0].score}%)`:'N/A';}
+function weakestSkill(rows){const list=scoreBySkill(rows).sort((a,b)=>a.score-b.score);return list[0]?`${SKILLS[list[0].skill]?.label||list[0].skill} (${list[0].score}%)`:'N/A';}
+function renderParticipantTeamReport(results){
+  const individualEl=document.getElementById('individual-breakdown');
+  const teamEl=document.getElementById('team-breakdown');
+  if(!individualEl||!teamEl) return;
+  const people=groupByKey(results,'participantName');
+  individualEl.innerHTML=Object.entries(people).map(([name,rows])=>`<tr><td>${escapeHTML(name)}</td><td>${escapeHTML(rows[0]?.team||'Unassigned')}</td><td>${calculateAverageScore(rows)}%</td><td>${escapeHTML(strongestSkill(rows))}</td><td>${escapeHTML(weakestSkill(rows))}</td></tr>`).join('') || '<tr><td colspan="5" style="color:var(--muted);">No participant data captured.</td></tr>';
+  const teams=groupByKey(results,'team');
+  teamEl.innerHTML=Object.entries(teams).map(([team,rows])=>`<tr><td>${escapeHTML(team)}</td><td>${new Set(rows.map(r=>r.participantName||'Participant')).size}</td><td>${calculateAverageScore(rows)}%</td><td>${escapeHTML(strongestSkill(rows))}</td><td>${escapeHTML(weakestSkill(rows))}</td></tr>`).join('') || '<tr><td colspan="5" style="color:var(--muted);">No team data captured.</td></tr>';
 }
 
 function updateSkillBars(){
@@ -2963,17 +3031,24 @@ async function fetchAIConclusion(scenario, simState, decisions, resultId){
     skillScores[k] = Math.round(((simState.skillScores[k]||0)/max)*100);
   });
 
-  // Build structured decision history for the AI
+  // Build structured decision history for the AI — includes MCQ and free-text data
   const decisionHistory = simState.results.map((r, i) => {
-    const d = decisions[i];
+    const d = decisions[r.decisionIndex ?? i];
     if(!d) return null;
-    const chosenOption = d.options ? d.options.find(o => o.correct === r.correct) : null;
     return {
-      question: d.question,
-      chosen: chosenOption ? chosenOption.text : 'No answer selected',
-      correct: r.correct,
-      feedback: r.correct ? d.goodFeedback : d.badFeedback,
-      skillTested: d.skillTested || 'general'
+      index:i+1,
+      participantName:r.participantName || 'Admin Run',
+      team:r.team || (d.decTeams&&d.decTeams[0]) || 'Unassigned',
+      question:r.question || d.question,
+      chosen:r.mcqAnswer || (r.freeTextAnswer ? 'Free-text response' : 'No answer selected'),
+      freeTextAnswer:r.freeTextAnswer || '',
+      expectedActions:r.expectedActions || d.expectedActions || '',
+      aiScore:typeof r.aiScore==='number'?r.aiScore:null,
+      aiFeedback:r.aiFeedback || '',
+      branch:r.branch || '',
+      correct:!!r.correct,
+      feedback:r.aiFeedback || r.feedback || (r.correct ? d.goodFeedback : d.badFeedback),
+      skillTested:r.skillTested || r.skill || d.skillTested || 'general'
     };
   }).filter(Boolean);
 
@@ -2985,7 +3060,7 @@ async function fetchAIConclusion(scenario, simState, decisions, resultId){
       method: 'POST',
       headers: authHeaders(),
       body: JSON.stringify({
-        score: simState.score,
+        score: calculateTotalScore(simState.results),
         maxScore,
         scenarioTitle: scenario.title,
         level: simState.level,
@@ -3017,7 +3092,7 @@ async function fetchAIConclusion(scenario, simState, decisions, resultId){
 
   } catch(err) {
     console.error('AI conclusion error:', err);
-    const pct = maxScore > 0 ? Math.round((simState.score/maxScore)*100) : 0;
+    const pct = maxScore > 0 ? Math.round((calculateTotalScore(simState.results)/maxScore)*100) : 0;
     const worstSkill = Object.entries(skillScores).sort((a,b)=>a[1]-b[1])[0];
     conclusionEl.innerHTML = `
       <div style="background:rgba(255,179,0,0.06);border-left:3px solid var(--amber);border-radius:0 8px 8px 0;padding:14px 16px;margin-bottom:12px;">
@@ -3039,12 +3114,14 @@ function showReport(){
   const s=simState.scenario;
   const decs=s.decisions[simState.level];
   const maxScore=decs.length*100;
-  const pct=maxScore>0?Math.round((simState.score/maxScore)*100):0;
+  const reportScore=calculateTotalScore(simState.results);
+  simState.score=reportScore;
+  const pct=maxScore>0?Math.round((reportScore/maxScore)*100):0;
   const correct=simState.results.filter(r=>r.correct).length;
   const grade=getGrade(pct);
   const gradeColors={A:'#00e676',B:'#00e5ff',C:'#ffb300',D:'#ff2d55'};
   const gc=gradeColors[grade];
-  const resultObj={id:'r'+Date.now(),clientId:simState.client?.id||null,scenarioId:s.id,level:simState.level,score:simState.score,maxScore,date:new Date().toISOString().split('T')[0],skillScores:{...simState.skillScores},decisions:simState.results.map(r=>({correct:r.correct,effect:r.effect||null,state:r.state||null})),stateEnabled:simState.stateEnabled,finalState:simState.crisisState?{money:simState.crisisState.money,reputation:simState.crisisState.reputation}:null,savedConclusion:null};
+  const resultObj={id:'r'+Date.now(),clientId:simState.client?.id||null,scenarioId:s.id,level:simState.level,score:reportScore,maxScore,date:new Date().toISOString().split('T')[0],skillScores:{...simState.skillScores},decisions:simState.results.map(r=>({...r})),stateEnabled:simState.stateEnabled,finalState:simState.crisisState?{money:simState.crisisState.money,reputation:simState.crisisState.reputation}:null,savedConclusion:null};
   if(!simState.isViewingPastResult){DB.simResults.push(resultObj);simState.lastResultId=resultObj.id;}
   const client=simState.client;
   document.getElementById('rpt-client-header').innerHTML=client?`
@@ -3058,10 +3135,10 @@ function showReport(){
   circle.style.color=gc;
   circle.style.boxShadow=`0 0 40px ${gc}33`;
   document.getElementById('rpt-headline').textContent=pct>=90?'Excellent Response — Outstanding':pct>=70?'Strong Response — Well Done':pct>=50?'Adequate Response — Room to Improve':'Response Needs Significant Improvement';
-  document.getElementById('rpt-score-line').textContent=`${s.title} · ${simState.level.toUpperCase()} LEVEL · Score: ${simState.score}/${maxScore} · ${pct}% · ${correct}/${decs.length} correct`;
+  document.getElementById('rpt-score-line').textContent=`${s.title} · ${simState.level.toUpperCase()} LEVEL · Score: ${reportScore}/${maxScore} · ${pct}% · ${correct}/${decs.length} correct`;
   const timeTaken=(s.duration==='20 min'?1200:s.duration==='30 min'?1800:900)-simState.timeLeft;
   document.getElementById('rpt-metrics').innerHTML=`
-    <div class="rm"><div class="rm-val">${simState.score}</div><div class="rm-lbl">Total Score</div></div>
+    <div class="rm"><div class="rm-val">${reportScore}</div><div class="rm-lbl">Total Score</div></div>
     <div class="rm"><div class="rm-val">${correct}/${decs.length}</div><div class="rm-lbl">Correct</div></div>
     <div class="rm"><div class="rm-val">${Math.floor(timeTaken/60)}m${timeTaken%60}s</div><div class="rm-lbl">Time Taken</div></div>
     <div class="rm"><div class="rm-val">${pct}%</div><div class="rm-lbl">Performance</div></div>
@@ -3076,9 +3153,14 @@ function showReport(){
   }).join('');
   drawRadar(s.skills,skillCounts);
   document.getElementById('rpt-findings').innerHTML=simState.results.map((r,i)=>{
-    const d=decs[i];
-    return d?`<div class="finding-row"><div class="fi-icon">${r.correct?'✅':'⚠️'}</div><div class="fi-text"><strong>Decision ${i+1}: ${d.question.substring(0,55)}...</strong>${r.correct?d.goodFeedback:d.badFeedback}</div></div>`:'';
+    const d=decs[r.decisionIndex ?? i];
+    if(!d) return '';
+    const score=typeof r.aiScore==='number'?` · AI Score: ${r.aiScore}%`:'';
+    const answer=r.freeTextAnswer?`<br><span style="color:var(--muted);font-family:var(--mono);font-size:10px;">Typed answer:</span> ${escapeHTML(r.freeTextAnswer)}`:'';
+    const feedback=escapeHTML(r.aiFeedback || r.feedback || (r.correct?d.goodFeedback:d.badFeedback));
+    return `<div class="finding-row"><div class="fi-icon">${r.correct?'✅':'⚠️'}</div><div class="fi-text"><strong>Decision ${i+1}: ${(r.question||d.question).substring(0,75)}...${score}</strong>${feedback}${answer}</div></div>`;
   }).join('');
+  renderParticipantTeamReport(simState.results);
   document.getElementById('rpt-fw').innerHTML=FW.map(f=>`<span class="fw-tag">${f}</span>`).join('');
   showScreen('report');
   document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
@@ -3124,15 +3206,15 @@ function drawRadar(skills,skillCounts){
 // ══════════════════════════════════════════════════════════
 function exportPDF(){
   const s=simState.scenario;const client=simState.client;
-  const decs=s.decisions[simState.level];const maxScore=decs.length*100;
-  const pct=maxScore>0?Math.round((simState.score/maxScore)*100):0;const grade=getGrade(pct);
+  const decs=s.decisions[simState.level];const maxScore=decs.length*100;const reportScore=calculateTotalScore(simState.results);
+  const pct=maxScore>0?Math.round((reportScore/maxScore)*100):0;const grade=getGrade(pct);
   const skillCounts={};decs.forEach(d=>{if(d.skillTested) skillCounts[d.skillTested]=(skillCounts[d.skillTested]||0)+1;});
   const skillRows=s.skills.map(k=>{const max=(skillCounts[k]||1)*100;const p=Math.round(((simState.skillScores[k]||0)/max)*100);return `<tr><td style="padding:8px 10px;font-size:12px;">${SKILLS[k].icon} ${SKILLS[k].label}</td><td style="padding:8px 10px;"><div style="height:8px;background:#e0e0e0;border-radius:4px;overflow:hidden;"><div style="height:100%;width:${p}%;background:${SKILLS[k].color};border-radius:4px;"></div></div></td><td style="padding:8px 10px;font-family:monospace;font-size:12px;font-weight:bold;">${p}%</td></tr>`;}).join('');
   const findingRows=simState.results.map((r,i)=>{const d=decs[i];if(!d) return '';return `<tr style="background:${r.correct?'#f0fff4':'#fff5f5'}"><td style="padding:8px 10px;font-size:11px;">${r.correct?'✅':'⚠️'} Decision ${i+1}</td><td style="padding:8px 10px;font-size:11px;">${d.question.substring(0,60)}...</td><td style="padding:8px 10px;font-size:11px;">${r.correct?'Correct':'Incorrect'}</td></tr>`;}).join('');
   const aiConclusion=document.getElementById('rpt-conclusion').innerText||'Analysis not available.';
   const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Nexa-CyberSim Report</title><style>body{font-family:Arial,sans-serif;margin:0;padding:0;color:#111;}.cover{background:linear-gradient(135deg,#03070f,#0a1425);color:white;padding:60px 50px;min-height:280px;}.logo{font-size:22px;font-weight:900;color:#00e5ff;letter-spacing:-0.5px;margin-bottom:40px;}.report-title{font-size:32px;font-weight:900;margin-bottom:8px;}.report-sub{font-size:14px;color:#7fa8cc;}.grade-box{display:inline-block;width:80px;height:80px;border-radius:50%;background:${grade==='A'?'#00e676':grade==='B'?'#00e5ff':grade==='C'?'#ffb300':'#ff2d55'};color:#000;font-size:40px;font-weight:900;line-height:80px;text-align:center;margin:20px 0;}.content{padding:30px 50px;}h2{font-size:18px;border-bottom:2px solid #00e5ff;padding-bottom:6px;color:#0a1425;margin-top:30px;}table{width:100%;border-collapse:collapse;margin:10px 0;}th{background:#0a1425;color:white;padding:9px 10px;text-align:left;font-size:12px;}td{border-bottom:1px solid #e0e0e0;}.metric{display:inline-block;background:#f0f7ff;border:1px solid #c0d8f0;border-radius:8px;padding:14px 20px;margin:6px;text-align:center;}.mv{font-size:26px;font-weight:900;color:#0a1425;}.ml{font-size:11px;color:#666;margin-top:2px;}.fw-tag{display:inline-block;background:#e8f4ff;border:1px solid #90c4e8;border-radius:20px;padding:4px 12px;font-size:11px;margin:3px;color:#1a5276;}.ai-box{background:#f9fbff;border-left:4px solid #00e5ff;padding:16px;font-size:13px;line-height:1.6;margin-top:14px;}@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}</style></head><body>
   <div class="cover"><div class="logo">🛡️ Nexa-CyberSim</div><div class="report-title">Simulation Report</div><div class="report-sub">${client?client.name+' · ':''} ${s.title} · ${simState.level.charAt(0).toUpperCase()+simState.level.slice(1)} Level</div><div class="report-sub">${new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})}</div><div class="grade-box">${grade}</div></div>
-  <div class="content"><h2>Executive Summary</h2><div><div class="metric"><div class="mv">${simState.score}/${maxScore}</div><div class="ml">Total Score</div></div><div class="metric"><div class="mv">${pct}%</div><div class="ml">Performance</div></div><div class="metric"><div class="mv">${simState.results.filter(r=>r.correct).length}/${decs.length}</div><div class="ml">Correct Decisions</div></div><div class="metric"><div class="mv">${grade}</div><div class="ml">Grade</div></div></div>
+  <div class="content"><h2>Executive Summary</h2><div><div class="metric"><div class="mv">${reportScore}/${maxScore}</div><div class="ml">Total Score</div></div><div class="metric"><div class="mv">${pct}%</div><div class="ml">Performance</div></div><div class="metric"><div class="mv">${simState.results.filter(r=>r.correct).length}/${decs.length}</div><div class="ml">Correct Decisions</div></div><div class="metric"><div class="mv">${grade}</div><div class="ml">Grade</div></div></div>
   <h2>Consultant Analysis</h2><div class="ai-box">${aiConclusion}</div>
   <h2>Skill Performance</h2><table><thead><tr><th>Skill</th><th>Score Bar</th><th>Score</th></tr></thead><tbody>${skillRows}</tbody></table>
   <h2>Decision Findings</h2><table><thead><tr><th>Decision</th><th>Question</th><th>Result</th></tr></thead><tbody>${findingRows}</tbody></table>
@@ -3146,7 +3228,8 @@ async function exportWord(){
   const client=simState.client;
   const decs=s.decisions[simState.level];
   const maxScore=decs.length*100;
-  const pct=maxScore>0?Math.round((simState.score/maxScore)*100):0;
+  const reportScore=calculateTotalScore(simState.results);
+  const pct=maxScore>0?Math.round((reportScore/maxScore)*100):0;
   const grade=getGrade(pct);
   const skillCounts={};
   decs.forEach(d=>{if(d.skillTested) skillCounts[d.skillTested]=(skillCounts[d.skillTested]||0)+1;});
@@ -3160,7 +3243,7 @@ async function exportWord(){
       clientName:client?.name||null,
       scenarioTitle:s.title,
       level:simState.level,
-      score:simState.score,
+      score:reportScore,
       maxScore,pct,grade,
       date:new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}),
       correctCount:simState.results.filter(r=>r.correct).length,
@@ -3173,7 +3256,7 @@ async function exportWord(){
       }),
       decisions:simState.results.map((r,i)=>{
         const d=decs[i];if(!d)return null;
-        return{index:i+1,question:d.question,correct:r.correct,feedback:r.correct?d.goodFeedback:d.badFeedback,skillTested:d.skillTested||'general'};
+        return{index:i+1,question:r.question||d.question,correct:r.correct,feedback:r.aiFeedback||r.feedback||(r.correct?d.goodFeedback:d.badFeedback),skillTested:r.skillTested||r.skill||d.skillTested||'general',freeTextAnswer:r.freeTextAnswer||'',aiScore:r.aiScore||null,team:r.team||'Unassigned',participantName:r.participantName||'Admin Run'};
       }).filter(Boolean),
       frameworks:FW,
     };
@@ -3287,10 +3370,7 @@ function editScenario(id){
     decCount++;const did='db-'+decCount;
     const div=document.createElement('div');
     div.className='decision-block';div.id=did;
-    const optsHtml=d.options.map((o,idx)=>{
-      const eff=o.effect||o.impact||{};
-      return `<div class="option-row option-impact-row" data-branch="${escapeHtml(o.branch||o.branchId||(o.correct?'strong':'weak'))}" data-branch-text="${escapeHtml(o.branchText||o.consequence||'')}"><input type="text" value="${escapeHtml(o.text||'')}"><input class="impact-input" data-effect-money type="number" value="${Number(eff.money ?? eff.moneyImpact ?? 0)}" step="1000" title="Money impact" placeholder="€ impact"><input class="impact-input" data-effect-reputation type="number" value="${Number(eff.reputation ?? eff.reputationImpact ?? 0)}" step="1" title="Reputation impact" placeholder="Rep"><button class="correct-toggle ${o.correct?'on':''}" onclick="toggleCorr(this)">✓</button><button class="opt-del-btn" onclick="this.closest('.option-row').remove()" title="Remove option">✕</button></div>`;
-    }).join('');
+    const optsHtml=d.options.map((o,idx)=>`<div class="option-row"><input type="text" value="${o.text.replace(/"/g,'&quot;')}"><button class="correct-toggle ${o.correct?'on':''}" onclick="toggleCorr(this)">✓</button><button class="opt-del-btn" onclick="this.closest('.option-row').remove()" title="Remove option">✕</button></div>`).join('');
     const skillsHtml=Object.keys(SKILLS).map(k=>`<option value="${k}" ${d.skillTested===k?'selected':''}>${SKILLS[k].icon} ${SKILLS[k].label}</option>`).join('');
     const alertTypeHtml=`<option value="cr" ${d.alertType==='cr'?'selected':''}>🔴 Critical</option><option value="wa" ${d.alertType==='wa'?'selected':''}>🟠 Warning</option><option value="in" ${d.alertType==='in'?'selected':''}>🔵 Info</option>`;
     const timeLimitVal=d.timeLimit||DEFAULT_DEC_TIME;
@@ -3305,8 +3385,8 @@ function editScenario(id){
           <input type="number" value="${timeLimitVal}" min="15" max="300" step="5" placeholder="60">
         </div>
       </div>
-      <div class="form-group"><label class="lbl">Alert Label (e.g. EXECUTIVE ALERT)</label><input class="alert-label" type="text" value="${escapeHtml(d.alertLabel||'')}"></div>
-      <div class="form-group"><label class="lbl">Situation / Alert Text</label><textarea class="alert-text" rows="3">${d.alertText}</textarea></div>
+      <div class="form-group"><label class="lbl">Alert Label (e.g. EXECUTIVE ALERT)</label><input type="text" value="${escapeHtml(d.alertLabel||'')}"></div>
+      <div class="form-group"><label class="lbl">Situation / Alert Text</label><textarea rows="3">${d.alertText}</textarea></div>
       <div class="form-group">
         <label class="lbl">Decision Image <span style="color:var(--muted);font-size:9px">— optional, shown in simulation feed</span></label>
         <div class="dec-img-wrap">
@@ -3331,8 +3411,8 @@ function editScenario(id){
         <label class="lbl">Teams Involved in this Decision</label>
         <div class="dec-teams-wrap">${makeTeamsHtml(decTeams)}</div>
       </div>
-      <div class="form-group"><label class="lbl">Decision Question</label><input class="decision-question" type="text" placeholder="What must participants decide?" value="${escapeHtml(d.question||'')}"></div>
-      <div class="form-group"><label class="lbl">Hybrid Free-Text Expected Actions <span style="color:var(--muted);font-size:9px">— optional, used with MCQ</span></label><textarea class="expected-actions" rows="3" placeholder="e.g. Isolate affected hosts; preserve evidence; notify IR lead; escalate to CISO">${escapeHtml(d.expectedActions||d.idealActions||'')}</textarea></div>
+      <div class="form-group"><label class="lbl">Decision Question</label><input type="text" value="${escapeHtml(d.question||'')}"></div>
+      <div class="form-group"><label class="lbl">Hybrid Free-Text Expected Actions <span style="color:var(--muted);font-size:9px">— optional, used to grade typed answers</span></label><textarea class="expected-actions" rows="3" placeholder="e.g. isolate affected hosts; preserve evidence; notify IR lead; escalate to CISO">${escapeHtml(d.expectedActions||'')}</textarea></div>
       <div class="form-group"><label class="lbl">Answer Options <span style="color:var(--muted);font-size:9px">(click ✓ to mark correct)</span></label>
         <div class="opts-list-${did}">${optsHtml}</div>
         <button class="add-opt-btn" onclick="addOptRow('${did}')">+ Add Option</button>
@@ -3426,8 +3506,8 @@ function addDecBlock(preTeams){
         <input type="number" value="${DEFAULT_DEC_TIME}" min="15" max="300" step="5" placeholder="60">
       </div>
     </div>
-    <div class="form-group"><label class="lbl">Alert Label (e.g. EXECUTIVE ALERT)</label><input class="alert-label" type="text" placeholder="INCIDENT UPDATE"></div>
-    <div class="form-group"><label class="lbl">Situation / Alert Text</label><textarea class="alert-text" rows="3" placeholder="What has happened — shown in the simulation feed..."></textarea></div>
+    <div class="form-group"><label class="lbl">Alert Label (e.g. EXECUTIVE ALERT)</label><input type="text" placeholder="INCIDENT UPDATE"></div>
+    <div class="form-group"><label class="lbl">Situation / Alert Text</label><textarea rows="3" placeholder="What has happened — shown in the simulation feed..."></textarea></div>
     <div class="form-group">
       <label class="lbl">Decision Image <span style="color:var(--muted);font-size:9px">— optional, shown in simulation feed</span></label>
       <div class="dec-img-wrap">
@@ -3443,7 +3523,7 @@ function addDecBlock(preTeams){
       <label class="lbl">Teams Involved in this Decision</label>
       <div class="dec-teams-wrap">${makeTeamsHtml(teams)}</div>
     </div>
-    <div class="form-group"><label class="lbl">Decision Question</label><input class="decision-question" type="text" placeholder="What must participants decide?"></div>
+    <div class="form-group"><label class="lbl">Decision Question</label><input type="text" placeholder="What must participants decide?"></div>
     <div class="form-group"><label class="lbl">Hybrid Free-Text Expected Actions <span style="color:var(--muted);font-size:9px">— optional, used with MCQ</span></label><textarea class="expected-actions" rows="3" placeholder="e.g. Isolate affected hosts; preserve evidence; notify IR lead; escalate to CISO"></textarea></div>
     <div class="form-group"><label class="lbl">Answer Options <span style="color:var(--muted);font-size:9px">(click ✓ to mark correct)</span></label>
       <div class="opts-list-${id}">${[1,2,3,4].map(n=>`<div class="option-row option-impact-row"><input type="text" placeholder="Option ${n}"><input class="impact-input" data-effect-money type="number" value="0" step="1000" title="Money impact" placeholder="€ impact"><input class="impact-input" data-effect-reputation type="number" value="0" step="1" title="Reputation impact" placeholder="Rep"><button class="correct-toggle" onclick="toggleCorr(this)">✓</button><button class="opt-del-btn" onclick="this.closest('.option-row').remove()" title="Remove option">✕</button></div>`).join('')}</div>
@@ -3604,10 +3684,8 @@ function saveScenario(){
     // Time limit is the number input (ins has text inputs first, number input is at some index)
     const numInput=block.querySelector('input[type=number]');
     const timeLimitVal=numInput?Math.max(15,parseInt(numInput.value)||DEFAULT_DEC_TIME):DEFAULT_DEC_TIME;
-    const alertLabelInput=block.querySelector('.alert-label') || block.querySelector('input[placeholder="INCIDENT UPDATE"]') || block.querySelectorAll('input[type=text]')[0];
-    const questionInput=block.querySelector('.decision-question') || block.querySelector('input[placeholder="What must participants decide?"]');
-    const alertTextInput=block.querySelector('.alert-text') || block.querySelector('textarea[placeholder*="simulation feed"]') || block.querySelectorAll('textarea')[0];
-    const expectedActionsInput=block.querySelector('.expected-actions');
+    const alertLabelInput=block.querySelectorAll('input[type=text]')[0];
+    const questionInput=block.querySelectorAll('input[type=text]')[1];
     const opts=[];
     block.querySelectorAll('.option-row').forEach(row=>{
       const txt=row.querySelector('input[type=text]')?.value.trim();
@@ -3625,13 +3703,13 @@ function saveScenario(){
     const dObj={
       alertType:alertTypeVal,
       alertLabel:alertLabelInput?.value||'INCIDENT UPDATE',
-      alertText:alertTextInput?.value||'',
+      alertText:tas[0]?.value||'',
       hasEmail:false,hasImage:!!decImgUrl,imageUrl:decImgUrl,
       evidence:getDecisionEvidence(block),
       timeLimit:timeLimitVal,
       decTeams,
       question:questionInput?.value||'Decision required',
-      expectedActions:expectedActionsInput?.value||'',
+      expectedActions:block.querySelector('.expected-actions')?.value || '',
       skillTested:skillVal,
       options:opts,
       goodFeedback:tas[tas.length-2]?.value||'Correct.',
