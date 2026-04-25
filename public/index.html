@@ -3995,6 +3995,49 @@ async function createLiveSession(){
   document.getElementById('live-create-panel').style.display='none';
   renderLiveAdmin();
 }
+
+function scoreColor(score){
+  const s=Number(score||0);
+  return s>=80?'var(--green)':s>=50?'var(--amber)':'var(--red)';
+}
+function liveAverageScore(answers){
+  const rows=(answers||[]).filter(a=>a.score!==undefined || a.aiScore!==undefined || a.correct!==undefined);
+  if(!rows.length) return 0;
+  return Math.round(rows.reduce((sum,a)=>sum+Number(a.score ?? a.aiScore ?? (a.correct?100:0)),0)/rows.length);
+}
+function liveSummaryHtml(sess){
+  const answers=sess.answers||[], participants=sess.participants||[], summary=sess.summary||{};
+  const avg=summary.avgScore ?? liveAverageScore(answers);
+  const participantCount=summary.totalParticipants ?? participants.filter(p=>p.role==='participant').length;
+  const teamRows=summary.teams || [], individualRows=summary.individuals || [], heatmap=summary.decisionHeatmap || [];
+  const timeline=summary.timeline || answers.slice().sort((a,b)=>String(a.submittedAt||'').localeCompare(String(b.submittedAt||''))).map(a=>({label:`D${Number(a.step||0)+1}`, text:`${a.participantName||'Participant'} submitted`, score:a.score??a.aiScore??(a.correct?100:0)}));
+  const replay=summary.replay || answers.slice(-10).reverse();
+  return `<div style="margin-top:14px;border-top:1px solid var(--border);padding-top:14px;">
+    <div class="section-title" style="font-size:13px;margin-bottom:12px;">Post-Exercise Summary</div>
+    <div class="stats-row" style="grid-template-columns:repeat(4,1fr);margin-bottom:14px;">
+      <div class="stat-card"><div class="stat-val" style="color:${scoreColor(avg)}">${avg}%</div><div class="stat-label">Average Score</div></div>
+      <div class="stat-card"><div class="stat-val">${participantCount}</div><div class="stat-label">Participants</div></div>
+      <div class="stat-card"><div class="stat-val">${answers.length}</div><div class="stat-label">Submissions</div></div>
+      <div class="stat-card"><div class="stat-val">${(sess.notes||[]).length}</div><div class="stat-label">Observer Notes</div></div>
+    </div>
+    <div class="grid-2" style="gap:12px;">
+      <div class="card-sm" style="background:rgba(3,7,15,.35);border:1px solid var(--border);border-radius:10px;"><label class="lbl">Team Performance</label>${teamRows.length?teamRows.map(t=>`<div class="skill-chart-row"><div class="sc-name">${escapeHTML(t.team)}</div><div class="sc-bar-wrap" style="width:160px"><div class="sc-fill" style="width:${Number(t.avgScore||0)}%;background:${scoreColor(t.avgScore)}"></div></div><div class="sc-val">${t.avgScore}%</div></div>`).join(''):'<div style="color:var(--muted);font-size:12px;">No team data yet.</div>'}</div>
+      <div class="card-sm" style="background:rgba(3,7,15,.35);border:1px solid var(--border);border-radius:10px;"><label class="lbl">Individual Performance</label>${individualRows.length?individualRows.slice(0,8).map(p=>`<div class="skill-chart-row"><div class="sc-name">${escapeHTML(p.name)} <span style="color:var(--muted)">(${escapeHTML(p.team||'Unassigned')})</span></div><div class="sc-bar-wrap" style="width:120px"><div class="sc-fill" style="width:${Number(p.avgScore||0)}%;background:${scoreColor(p.avgScore)}"></div></div><div class="sc-val">${p.avgScore}%</div></div>`).join(''):'<div style="color:var(--muted);font-size:12px;">No individual data yet.</div>'}</div>
+    </div>
+    <div class="grid-2" style="gap:12px;margin-top:12px;">
+      <div class="card-sm" style="background:rgba(3,7,15,.35);border:1px solid var(--border);border-radius:10px;"><label class="lbl">Decision Heatmap</label>${heatmap.length?heatmap.map(h=>`<div class="skill-chart-row"><div class="sc-name">D${Number(h.step)+1}</div><div class="sc-bar-wrap" style="width:190px"><div class="sc-fill" style="width:${Number(h.avgScore||0)}%;background:${scoreColor(h.avgScore)}"></div></div><div class="sc-val">${h.avgScore}%</div><div style="font-family:var(--mono);font-size:10px;color:var(--muted)">S:${h.strong} P:${h.partial} W:${h.weak}</div></div>`).join(''):'<div style="color:var(--muted);font-size:12px;">No heatmap data.</div>'}</div>
+      <div class="card-sm" style="background:rgba(3,7,15,.35);border:1px solid var(--border);border-radius:10px;"><label class="lbl">Timeline</label>${timeline.length?timeline.slice(0,8).map(t=>`<div class="tl-item"><div class="tl-time">${escapeHTML(t.label||'')}</div><div class="tl-content">${escapeHTML(t.text||'')} <span style="color:${scoreColor(t.score)}">${t.score??''}${t.score!==undefined?'%':''}</span></div></div>`).join(''):'<div style="color:var(--muted);font-size:12px;">No timeline yet.</div>'}</div>
+    </div>
+    <div class="card-sm" style="background:rgba(3,7,15,.35);border:1px solid var(--border);border-radius:10px;margin-top:12px;"><label class="lbl">Decision Replay</label>${replay.length?replay.map(r=>`<div class="finding-row"><div class="fi-icon">${Number(r.score??r.aiScore??0)>=70?'✅':Number(r.score??r.aiScore??0)>=50?'⚠️':'❌'}</div><div class="fi-text"><strong>${escapeHTML(r.participantName||'Participant')} — D${Number(r.step??r.decisionIndex??0)+1} · ${Number(r.score??r.aiScore??0)}%</strong><br>${escapeHTML(r.question||'')}<br>${r.freeText?`<span style="color:var(--muted)">${escapeHTML(String(r.freeText).slice(0,220))}</span><br>`:''}${r.aiFeedback?escapeHTML(String(r.aiFeedback).slice(0,220)):''}</div></div>`).join(''):'<div style="color:var(--muted);font-size:12px;">No replay data.</div>'}</div>
+  </div>`;
+}
+function liveSessionProgress(sess){
+  const decs=sess.scenario?.decisions?.[sess.level||'management'] || sess.scenario?.decisions?.management || [];
+  const total=Math.max(1,decs.length||1);
+  const current=Math.min(total, Number(sess.currentStep||0)+1);
+  return { current,total,pct:Math.round((current/total)*100) };
+}
+
 async function renderLiveAdmin(){
   if(!authToken) return;
   let sessions=[];
@@ -4003,22 +4046,31 @@ async function renderLiveAdmin(){
   if(!box) return;
   if(!sessions.length){box.innerHTML='<div style="color:var(--muted);font-size:13px;">No live sessions yet. Create one from a scenario.</div>';return;}
   box.innerHTML=sessions.map(sess=>{
-    const decs=sess.scenario?.decisions?.management||[];
-    const pLink=liveLink(sess.id,'participant');
-    const oLink=liveLink(sess.id,'observer');
-    const answers=(sess.answers||[]).slice(-5).reverse().map(a=>`<div style="padding:8px 0;border-bottom:1px solid var(--border);"><strong>${escapeHTML(a.participantName)}</strong> — ${escapeHTML(a.mcqAnswer||'Typed response')} <span style="color:${a.correct?'var(--green)':'var(--red)'}">${a.score??'-'}</span><br><span style="color:var(--muted)">${escapeHTML((a.freeText||'').slice(0,160))}</span></div>`).join('') || '<span style="color:var(--muted)">No answers yet.</span>';
+    const progress=liveSessionProgress(sess), pLink=liveLink(sess.id,'participant'), oLink=liveLink(sess.id,'observer'), avg=liveAverageScore(sess.answers||[]);
+    const answers=(sess.answers||[]).slice(-5).reverse().map(a=>`<div style="padding:8px 0;border-bottom:1px solid var(--border);"><strong>${escapeHTML(a.participantName)}</strong> <span style="color:var(--muted)">(${escapeHTML(a.team||'Unassigned')})</span> — ${escapeHTML(a.mcqAnswer||'Typed response')} <span style="color:${scoreColor(a.score??a.aiScore??0)}">${a.score??a.aiScore??'-'}%</span><br><span style="color:var(--muted)">${escapeHTML((a.freeText||'').slice(0,160))}</span></div>`).join('') || '<span style="color:var(--muted)">No answers yet.</span>';
     const notes=(sess.notes||[]).slice(-5).reverse().map(n=>`<div style="padding:8px 0;border-bottom:1px solid var(--border);"><strong>${escapeHTML(n.tag)}</strong> — ${escapeHTML(n.observerName)}<br><span style="color:var(--muted)">${escapeHTML(n.note)}</span></div>`).join('') || '<span style="color:var(--muted)">No notes yet.</span>';
-    return `<div class="card-sm" style="background:var(--surface);border:1px solid var(--border);border-radius:10px;">
-      <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap;"><div><div style="font-family:var(--head);font-weight:800;color:var(--white);">${escapeHTML(sess.title)}</div><div style="font-family:var(--mono);font-size:11px;color:var(--cyan);margin-top:2px;">SESSION ${sess.id} · ${escapeHTML(sess.status)}${sess.locked?' · LOCKED':''}</div></div><div style="display:flex;gap:6px;flex-wrap:wrap;"><button class="btn btn-sm btn-outline" onclick="controlLive('${sess.id}','start')">Start</button><button class="btn btn-sm btn-ghost" onclick="controlLive('${sess.id}','previous')">Prev</button><button class="btn btn-sm btn-primary" onclick="controlLive('${sess.id}','next')">Next</button><button class="btn btn-sm btn-ghost" onclick="controlLive('${sess.id}','${sess.locked?'unlock':'lock'}')">${sess.locked?'Unlock':'Lock'}</button><button class="btn btn-sm btn-danger" onclick="controlLive('${sess.id}','end')">End</button></div></div>
+    return `<div class="card-sm" id="live-card-${sess.id}" style="background:linear-gradient(180deg,rgba(10,20,37,.98),rgba(3,7,15,.86));border:1px solid rgba(0,229,255,.14);border-radius:14px;padding:18px;box-shadow:0 18px 45px rgba(0,0,0,.22);">
+      <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap;"><div><div style="font-family:var(--head);font-size:16px;font-weight:800;color:var(--white);">${escapeHTML(sess.title)}</div><div style="font-family:var(--mono);font-size:11px;color:var(--cyan);margin-top:2px;">SESSION ${sess.id} · ${escapeHTML(sess.status)}${sess.locked?' · LOCKED':''}</div></div><div style="display:flex;gap:6px;flex-wrap:wrap;"><button class="btn btn-sm btn-outline" onclick="controlLive('${sess.id}','start',this)">Start</button><button class="btn btn-sm btn-ghost" onclick="controlLive('${sess.id}','previous',this)">Prev</button><button class="btn btn-sm btn-primary" onclick="controlLive('${sess.id}','next',this)">Next</button><button class="btn btn-sm btn-ghost" onclick="controlLive('${sess.id}','${sess.locked?'unlock':'lock'}',this)">${sess.locked?'Unlock':'Lock'}</button><button class="btn btn-sm btn-danger" onclick="controlLive('${sess.id}','end',this)">End</button></div></div>
+      <div style="margin-top:14px;display:grid;grid-template-columns:repeat(4,1fr);gap:10px;"><div class="stat-card card-sm"><div class="stat-val" style="font-size:20px;color:${scoreColor(avg)}">${avg}%</div><div class="stat-label">Live Avg</div></div><div class="stat-card card-sm"><div class="stat-val" style="font-size:20px;">${(sess.participants||[]).filter(p=>p.role==='participant').length}</div><div class="stat-label">Participants</div></div><div class="stat-card card-sm"><div class="stat-val" style="font-size:20px;">${(sess.answers||[]).length}</div><div class="stat-label">Answers</div></div><div class="stat-card card-sm"><div class="stat-val" style="font-size:20px;">${progress.current}/${progress.total}</div><div class="stat-label">Progress</div></div></div>
+      <div style="margin-top:12px;height:6px;background:var(--border);border-radius:4px;overflow:hidden;"><div style="height:100%;width:${progress.pct}%;background:var(--cyan);transition:width .25s ease;"></div></div>
       <div class="grid-2" style="margin-top:12px;"><div><label class="lbl">Participant Link</label><input readonly value="${pLink}" onclick="this.select();navigator.clipboard?.writeText(this.value)"></div><div><label class="lbl">Observer Link</label><input readonly value="${oLink}" onclick="this.select();navigator.clipboard?.writeText(this.value)"></div></div>
       ${sess.state?`<div style="font-family:var(--mono);font-size:11px;color:var(--text);margin-top:10px;">💰 ${Number(sess.state.money).toLocaleString()} · Reputation ${sess.state.reputation}/100</div>`:''}
       <div class="grid-2" style="margin-top:12px;"><div><label class="lbl">Recent Answers</label>${answers}</div><div><label class="lbl">Observer Notes</label>${notes}</div></div>
+      ${sess.status==='ended' ? liveSummaryHtml(sess) : ''}
     </div>`;
   }).join('');
 }
-async function controlLive(id, action){
-  await fetch(`/api/live-sessions/${id}/control`,{method:'POST',headers:authHeaders(),body:JSON.stringify({action})});
-  renderLiveAdmin();
+async function controlLive(id, action, btn){
+  const oldText=btn?.textContent;
+  if(btn){btn.disabled=true;btn.textContent='…';}
+  const card=document.getElementById(`live-card-${id}`); if(card) card.style.opacity='.72';
+  try{
+    const res=await fetch(`/api/live-sessions/${id}/control`,{method:'POST',headers:authHeaders(),body:JSON.stringify({action})});
+    const sess=await res.json().catch(()=>null);
+    if(!res.ok) throw new Error(sess?.error||'Control failed');
+    await renderLiveAdmin();
+  }catch(e){ alert(e.message||'Live control failed.'); }
+  finally{ if(btn){btn.disabled=false;btn.textContent=oldText;} if(card) card.style.opacity='1'; }
 }
 function getDecisionFromLive(sess){
   const level=sess.scenario?.decisions?.management ? 'management' : Object.keys(sess.scenario?.decisions||{})[0];
@@ -4079,6 +4131,7 @@ function renderLivePublicSession(sess){
   const recent=(sess.answers||[]).slice(-4).reverse().map(a=>`${escapeHTML(a.participantName)} submitted step ${Number(a.step)+1}`).join('<br>');
   const notes=(sess.notes||[]).slice(-3).reverse().map(n=>`${escapeHTML(n.tag)}: ${escapeHTML(n.note).slice(0,90)}`).join('<br>');
   document.getElementById('public-activity').innerHTML=(recent||'No participant submissions yet.')+(notes?'<hr style="border-color:var(--border);margin:8px 0;">'+notes:'')+(sess.state?`<hr style="border-color:var(--border);margin:8px 0;">💰 ${Number(sess.state.money).toLocaleString()} · Reputation ${sess.state.reputation}/100`:``);
+  if(sess.status==='ended' && sess.summary){ document.getElementById('public-activity').innerHTML += '<hr style="border-color:var(--border);margin:8px 0;"><strong>Session ended.</strong><br>Average score: '+(sess.summary.avgScore||0)+'% · Participants: '+(sess.summary.totalParticipants||0); }
 }
 function selectLivePublicOption(i,btn){
   livePublic.selectedOption=i;
