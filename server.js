@@ -1828,8 +1828,7 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Internal server error' });
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => { // listens on all local interfaces
-  console.log(`NexaCyberSim running on http://localhost:${PORT}`);
-  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+const PORT = process.env.PORT || 8080;
+app.listen(PORT, (0.0.0.0) => { // listens on all local interfaces
+  console.log(`Server running on ${PORT}`);
 });
