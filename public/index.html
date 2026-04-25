@@ -706,6 +706,10 @@ body.public-live-mode #screen-live-public{display:block!important;}
           <label class="lbl">Level</label>
           <select id="live-level-select"><option value="management">Management</option><option value="working">Working Level</option></select>
         </div>
+        <div class="form-group full">
+          <label class="lbl">Client Playbook For Advisory Grading</label>
+          <select id="live-client-select"><option value="">No client playbook</option></select>
+        </div>
       </div>
       <div style="display:flex;gap:10px;justify-content:flex-end;">
         <button class="btn btn-ghost" onclick="document.getElementById('live-create-panel').style.display='none'">Cancel</button>
@@ -1158,6 +1162,10 @@ body.public-live-mode #screen-live-public{display:block!important;}
       <div class="form-group"><label class="lbl">Company Size</label><select id="nc-size"><option>1–50</option><option>51–200</option><option>201–1000</option><option>1000+</option></select></div>
       <div class="form-group full"><label class="lbl">Contact Name</label><input type="text" id="nc-contact" placeholder="Primary contact"></div>
       <div class="form-group full"><label class="lbl">Contact Email</label><input type="text" id="nc-email" placeholder="contact@company.com"></div>
+      <div class="form-group full">
+        <label class="lbl">Client Playbook / SOP Text <span style="color:var(--muted);font-size:9px">— optional, used for advisory grading</span></label>
+        <textarea id="nc-playbook" rows="5" placeholder="Paste incident response playbook, escalation matrix, legal/comms SOP, or key procedures here. AI will compare answers against this client playbook and best practice."></textarea>
+      </div>
       <div class="form-group full">
         <label class="lbl">Company Logo</label>
         <label class="file-upload" for="nc-logo-file">🖼 Upload logo (PNG, JPG)</label>
@@ -2366,7 +2374,7 @@ function openNewClientModal(){
   document.querySelector('#modal-new-client .modal-title').textContent='New Client';
   document.querySelector('#modal-new-client .modal-sub').textContent='Create a client profile to assign scenarios and track results.';
   document.querySelector('#modal-new-client .btn-primary').textContent='Create Client';
-  ['nc-name','nc-contact','nc-email'].forEach(id=>document.getElementById(id).value='');
+  ['nc-name','nc-contact','nc-email','nc-playbook'].forEach(id=>{const el=document.getElementById(id); if(el) el.value='';});
   document.getElementById('nc-industry').selectedIndex=0;
   document.getElementById('nc-size').selectedIndex=0;
   document.getElementById('nc-logo-prev').style.display='none';
@@ -2385,6 +2393,7 @@ function openEditClientModal(id){
   document.getElementById('nc-size').value=c.size;
   document.getElementById('nc-contact').value=c.contact;
   document.getElementById('nc-email').value=c.email;
+  if(document.getElementById('nc-playbook')) document.getElementById('nc-playbook').value=c.playbookText||'';
   const logoPrev=document.getElementById('nc-logo-prev');
   if(c.logo){logoPrev.src=c.logo;logoPrev.style.display='block';}else{logoPrev.style.display='none';logoPrev.src='';}
   openModal('modal-new-client');
@@ -2396,13 +2405,14 @@ function saveClient(){
   const logo=logoPreview.style.display!=='none'?logoPreview.src:null;
   const emojis={Finance:'🏦',Healthcare:'🏥',Government:'🏛️',Technology:'💻',Manufacturing:'🏭',Retail:'🛍️',Energy:'⚡',Other:'🏢'};
   const industry=document.getElementById('nc-industry').value;
+  const playbookText=document.getElementById('nc-playbook')?.value||'';
   if(editingClientId){
     const c=DB.clients.find(x=>x.id===editingClientId);
-    if(c){c.name=name;c.industry=industry;c.size=document.getElementById('nc-size').value;c.contact=document.getElementById('nc-contact').value;c.email=document.getElementById('nc-email').value;c.logo=logo;c.logoEmoji=emojis[industry]||'🏢';}
+    if(c){c.name=name;c.industry=industry;c.size=document.getElementById('nc-size').value;c.contact=document.getElementById('nc-contact').value;c.email=document.getElementById('nc-email').value;c.logo=logo;c.logoEmoji=emojis[industry]||'🏢';c.playbookText=playbookText;}
     closeModal('modal-new-client');renderClients();
     if(simState.fromClientId===editingClientId) openClientProfile(editingClientId);
   } else {
-    DB.clients.push({id:'c'+Date.now(),name,industry,size:document.getElementById('nc-size').value,contact:document.getElementById('nc-contact').value,email:document.getElementById('nc-email').value,logo,logoEmoji:emojis[industry]||'🏢',assignedScenarios:[],simResults:[]});
+    DB.clients.push({id:'c'+Date.now(),name,industry,size:document.getElementById('nc-size').value,contact:document.getElementById('nc-contact').value,email:document.getElementById('nc-email').value,logo,logoEmoji:emojis[industry]||'🏢',playbookText,assignedScenarios:[],simResults:[]});
     closeModal('modal-new-client');renderClients();
   }
 }
@@ -2809,7 +2819,7 @@ async function submitFreeTextAnswer(){
     const res=await fetch(`${API_BASE}/api/grade-response`,{
       method:'POST',
       headers:authHeaders(),
-      body:JSON.stringify({answer,question:d.question,correctFeedback:d.expectedActions||d.goodFeedback||'',expectedActions:d.expectedActions||''})
+      body:JSON.stringify({answer,question:d.question,department:(d.decTeams&&d.decTeams[0])||d.skillTested||'General',correctFeedback:d.expectedActions||d.goodFeedback||'',expectedActions:d.expectedActions||'',playbookText:(simState.client?.playbookText)||''})
     });
     if(!res.ok){const er=await res.json().catch(()=>({error:'AI assessment failed'}));throw new Error(er.error||'AI assessment failed');}
     const result=await res.json();
@@ -2834,8 +2844,15 @@ async function submitFreeTextAnswer(){
       expectedActions:d.expectedActions||'',
       aiScore:score,
       aiFeedback:feedback,
+      playbookAlignmentScore:result.playbookAlignmentScore ?? null,
+      bestPracticeScore:result.bestPracticeScore ?? score,
+      followedPlaybook:!!result.followedPlaybook,
+      playbookQuality:result.playbookQuality||'unknown',
+      playbookGaps:result.playbookGaps||[],
+      consultantInsight:result.consultantInsight||'',
+      participantFeedback:result.participantFeedback||feedback,
       matchedActions:result.matchedActions||[],
-      missingActions:result.missingActions||[],
+      missingActions:result.missingActions||result.missingBestPractices||[],
       riskyActions:result.riskyActions||[],
       branch,
       correct,
@@ -3149,6 +3166,34 @@ function renderExerciseTimeline(results){
     return `<div class="tl-item"><div class="tl-time">D${dNo}</div><div class="tl-content"><strong>${escapeHTML(r.participantName||r.name||'Participant')}</strong> <span style="color:var(--muted)">(${escapeHTML(r.team||'Unassigned')})</span><br>${escapeHTML(r.question||'Decision submitted')}<br><span style="color:${color};font-family:var(--mono);font-size:10px;">Score: ${score}%</span> · <span style="font-family:var(--mono);font-size:10px;color:var(--muted);">Branch: ${(r.branch||'n/a').toUpperCase()} · Time: ${r.responseTimeSec||0}s</span></div></div>`;
   }).join('');
 }
+
+function avgNums(nums){ const arr=(nums||[]).map(Number).filter(n=>Number.isFinite(n)); return arr.length?Math.round(arr.reduce((a,b)=>a+b,0)/arr.length):0; }
+function renderAdvisoryAssessment(results){
+  const target=document.getElementById('advisory-assessment');
+  if(!target) return;
+  const rows=(results||[]).filter(r=>r.freeTextAnswer||r.playbookAlignmentScore!==undefined||r.bestPracticeScore!==undefined);
+  if(!rows.length){target.innerHTML='<span style="color:var(--muted)">No free-text advisory data available.</span>';return;}
+  const playbookAvg=avgNums(rows.map(r=>r.playbookAlignmentScore).filter(v=>v!==null&&v!==undefined));
+  const bestAvg=avgNums(rows.map(r=>r.bestPracticeScore ?? r.aiScore));
+  const qualityCounts={};
+  rows.forEach(r=>{const q=r.playbookQuality||'unknown';qualityCounts[q]=(qualityCounts[q]||0)+1;});
+  const quality=Object.entries(qualityCounts).sort((a,b)=>b[1]-a[1])[0]?.[0]||'unknown';
+  const gaps={};
+  rows.forEach(r=>(r.playbookGaps||[]).forEach(g=>{if(g)gaps[g]=(gaps[g]||0)+1;}));
+  const topGaps=Object.entries(gaps).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  const insights=rows.map(r=>r.consultantInsight).filter(Boolean).slice(0,5);
+  target.innerHTML=`
+    <div class="grid-3" style="margin-bottom:14px;">
+      <div class="rm"><div class="rm-val" style="color:${scoreColor(playbookAvg)}">${playbookAvg||'—'}%</div><div class="rm-lbl">Playbook Alignment</div></div>
+      <div class="rm"><div class="rm-val" style="color:${scoreColor(bestAvg)}">${bestAvg||'—'}%</div><div class="rm-lbl">Best Practice Score</div></div>
+      <div class="rm"><div class="rm-val" style="font-size:20px;color:${quality==='strong'?'var(--green)':quality==='moderate'?'var(--amber)':'var(--red)'}">${escapeHTML(quality.toUpperCase())}</div><div class="rm-lbl">Playbook Quality</div></div>
+    </div>
+    <div class="grid-2">
+      <div><div class="section-title" style="font-size:12px;margin-bottom:8px;">Top Playbook Gaps</div>${topGaps.length?topGaps.map(([g,c])=>`<div class="finding-row"><div class="fi-icon">⚠</div><div class="fi-text">${escapeHTML(g)} <span style="color:var(--muted)">(${c})</span></div></div>`).join(''):'<span style="color:var(--muted)">No structural gaps detected.</span>'}</div>
+      <div><div class="section-title" style="font-size:12px;margin-bottom:8px;">Consultant Insights</div>${insights.length?insights.map(i=>`<div class="finding-row"><div class="fi-icon">💡</div><div class="fi-text">${escapeHTML(i)}</div></div>`).join(''):'<span style="color:var(--muted)">No consultant insights available.</span>'}</div>
+    </div>`;
+}
+
 function renderDecisionReplay(results){
   const el=document.getElementById('decision-replay');
   if(!el) return;
@@ -3233,6 +3278,7 @@ function showReport(){
   renderExerciseTimeline(simState.results);
   renderDecisionHeatmap(simState.results);
   renderDecisionReplay(simState.results);
+  renderAdvisoryAssessment(simState.results);
   document.getElementById('rpt-fw').innerHTML=FW.map(f=>`<span class="fw-tag">${f}</span>`).join('');
   showScreen('report');
   document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
@@ -3983,6 +4029,11 @@ function openLiveCreatePanel(){
   panel.style.display='block';
   const sel=document.getElementById('live-scenario-select');
   sel.innerHTML=DB.scenarios.map(s=>`<option value="${s.id}">${escapeHTML(s.title)} — ${escapeHTML(s.severity||'')}</option>`).join('');
+  const clSel=document.getElementById('live-client-select');
+  if(clSel){
+    clSel.innerHTML='<option value="">No client playbook</option>'+DB.clients.map(c=>`<option value="${c.id}">${escapeHTML(c.name)}${c.playbookText?' · playbook':''}</option>`).join('');
+    if(simState.fromClientId) clSel.value=simState.fromClientId;
+  }
 }
 async function createLiveSession(){
   const sid=document.getElementById('live-scenario-select').value;
@@ -3990,7 +4041,10 @@ async function createLiveSession(){
   const scenario=DB.scenarios.find(s=>s.id===sid);
   if(!scenario){alert('Select a scenario first.');return;}
   const cfg=scenario.stateConfig||scenario.state||{};
-  const res=await fetch('/api/live-sessions',{method:'POST',headers:authHeaders(),body:JSON.stringify({scenario,title:scenario.title,level,stateEnabled:!!cfg.enabled})});
+  const clientId=document.getElementById('live-client-select')?.value||'';
+  const client=clientId?DB.clients.find(c=>c.id===clientId):null;
+  const scenarioForSession={...scenario,clientId:client?.id||null,clientName:client?.name||null,clientPlaybookText:client?.playbookText||''};
+  const res=await fetch('/api/live-sessions',{method:'POST',headers:authHeaders(),body:JSON.stringify({scenario:scenarioForSession,title:scenario.title,level,stateEnabled:!!cfg.enabled,clientId:client?.id||null,clientName:client?.name||null,playbookText:client?.playbookText||''})});
   if(!res.ok){alert('Failed to create live session.');return;}
   document.getElementById('live-create-panel').style.display='none';
   renderLiveAdmin();
@@ -4161,7 +4215,7 @@ async function joinLivePublic(){
 async function submitLiveAnswer(){
   const msg=document.getElementById('public-submit-msg');
   msg.textContent='Submitting…';
-  const res=await fetch(`/api/live-sessions/${livePublic.sessionId}/answers`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({participantId:livePublic.participantId,participantName:livePublic.name,team:livePublic.team,optionIndex:livePublic.selectedOption,freeText:document.getElementById('public-free-text').value,responseTimeSec:Math.round((Date.now()-(livePublic.decisionStartedAt||Date.now()))/1000)})});
+  const res=await fetch(`/api/live-sessions/${livePublic.sessionId}/answers`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({participantId:livePublic.participantId,participantName:livePublic.name,team:livePublic.team,department:livePublic.team,optionIndex:livePublic.selectedOption,freeText:document.getElementById('public-free-text').value,responseTimeSec:Math.round((Date.now()-(livePublic.decisionStartedAt||Date.now()))/1000)})});
   if(!res.ok){
     try{const j=await res.json(); msg.textContent=j.error||'Submit failed.'; if(j.session) renderLivePublicSession(j.session);}catch(e){msg.textContent='Submit failed.';}
     return;
