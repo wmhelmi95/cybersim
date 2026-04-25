@@ -363,7 +363,16 @@ function writeDB(data) {
 // ─────────────────────────────────────────────
 app.get('/api/data', requireAuth, (req, res) => {
   try {
-    res.json(readDB());
+    const db = readDB();
+    res.json({
+      schemaVersion: db.schemaVersion || 2,
+      savedAt: db.savedAt || null,
+      clients: Array.isArray(db.clients) ? db.clients : [],
+      scenarios: Array.isArray(db.scenarios) ? db.scenarios : (Array.isArray(db.customScenarios) ? db.customScenarios : []),
+      customScenarios: Array.isArray(db.customScenarios) ? db.customScenarios : [],
+      simResults: Array.isArray(db.simResults) ? db.simResults : [],
+      liveSessions: db.liveSessions && typeof db.liveSessions === 'object' ? db.liveSessions : {}
+    });
   } catch (err) {
     console.error('Load error:', err.message);
     res.status(500).json({ error: 'Failed to load data' });
@@ -372,8 +381,20 @@ app.get('/api/data', requireAuth, (req, res) => {
 
 app.post('/api/data', requireAuth, (req, res) => {
   try {
-    writeDB(req.body);
-    res.json({ ok: true });
+    const incoming = req.body || {};
+    const current = readDB();
+    const merged = {
+      ...current,
+      schemaVersion: 2,
+      savedAt: new Date().toISOString(),
+      clients: Array.isArray(incoming.clients) ? incoming.clients : (Array.isArray(current.clients) ? current.clients : []),
+      scenarios: Array.isArray(incoming.scenarios) ? incoming.scenarios : (Array.isArray(current.scenarios) ? current.scenarios : []),
+      customScenarios: Array.isArray(incoming.customScenarios) ? incoming.customScenarios : (Array.isArray(current.customScenarios) ? current.customScenarios : []),
+      simResults: Array.isArray(incoming.simResults) ? incoming.simResults : (Array.isArray(current.simResults) ? current.simResults : []),
+      liveSessions: current.liveSessions && typeof current.liveSessions === 'object' ? current.liveSessions : {}
+    };
+    writeDB(merged);
+    res.json({ ok: true, savedAt: merged.savedAt });
   } catch (err) {
     console.error('Save error:', err.message);
     res.status(500).json({ error: 'Failed to save data' });
@@ -487,6 +508,14 @@ ${critSkills.length ? `Critical failures: ${critSkills.join(', ')}` : ''}
 DECISIONS
 ${buildDecisionBreakdown(decisionHistory)}
 
+TIMELINE / REPLAY / HEATMAP ANALYSIS REQUIREMENTS
+- Use freeTextAnswer, aiScore, aiFeedback, expectedActions, participantName, team and branch when present.
+- Identify which decision caused the most failure and why.
+- Identify participants and teams that repeatedly made weak or partial decisions.
+- Mention whether performance improved or degraded across the exercise timeline.
+- Include specific missing actions from expectedActions where available.
+- Do not produce generic summaries; cite observed behaviour from the decision history.
+
 IMPORTANT FREE-TEXT AND PARTICIPANT ANALYSIS RULES:
 - If free-text responses are present, analyse them directly and prioritise them over MCQ-only correctness.
 - Use AI response scores, missing actions, expected actions, and typed answer quality to identify gaps in reasoning.
@@ -495,7 +524,7 @@ IMPORTANT FREE-TEXT AND PARTICIPANT ANALYSIS RULES:
 
 Write the full executive debrief using ONLY these HTML tags: <strong>, <br>, <ul>, <li>. No markdown. No other tags.
 
-Use EXACTLY these 7 section headings — each must be wrapped in <strong>Title</strong><br> on its own line:
+Use EXACTLY these 9 section headings — each must be wrapped in <strong>Title</strong><br> on its own line:
 
 <strong>Executive Summary</strong><br>
 [3 sentences: what was tested, overall result, key finding]
@@ -511,6 +540,12 @@ Use EXACTLY these 7 section headings — each must be wrapped in <strong>Title</
 
 <strong>Correct Responses</strong><br>
 [List correct decisions with <ul><li> items. Be specific.]
+
+<strong>Team & Individual Insights</strong><br>
+[Summarise strongest team, weakest team, top participant patterns, and who needs improvement. If only one admin run exists, state that participant-level breakdown is limited.]
+
+<strong>Timeline, Replay & Heatmap Insights</strong><br>
+[Identify the most failed decision, repeated weak branches, and whether response quality improved or degraded over time.]
 
 <strong>Prioritised Recommendations</strong><br>
 [Exactly 3 <ul><li> items. Start each with [IMMEDIATE], [30 DAYS], or [NEXT QUARTER] followed by the recommendation.]
@@ -1379,10 +1414,256 @@ ${answer}` }
   }
 });
 
+// LIVE EXERCISE MODE — lightweight SSE sync
+// ─────────────────────────────────────────────
+const liveStreams = new Map(); // sessionId -> Set(res)
+function makeSessionId(){ return Math.random().toString(36).slice(2,8).toUpperCase(); }
+function ensureLiveStore(db){
+  if(!db.liveSessions || typeof db.liveSessions !== 'object' || Array.isArray(db.liveSessions)) db.liveSessions = {};
+  return db.liveSessions;
+}
+function publicSessionView(session){
+  if(!session) return null;
+  return {
+    id: session.id,
+    title: session.title,
+    scenario: session.scenario,
+    currentStep: session.currentStep || 0,
+    status: session.status || 'waiting',
+    createdAt: session.createdAt,
+    updatedAt: session.updatedAt,
+    participants: session.participants || [],
+    answers: session.answers || [],
+    notes: session.notes || [],
+    state: session.state || null
+  };
+}
+function broadcastLive(sessionId){
+  const db = readDB();
+  const session = ensureLiveStore(db)[sessionId];
+  const payload = `data: ${JSON.stringify({ type:'session', session: publicSessionView(session) })}\n\n`;
+  const set = liveStreams.get(sessionId);
+  if(!set) return;
+  for(const res of [...set]){
+    try { res.write(payload); } catch(e) { set.delete(res); }
+  }
+}
+function getDecision(session){
+  const scenario = session.scenario || {};
+  const level = session.level || 'management';
+  const decs = scenario.decisions?.[level] || scenario.decisions?.management || [];
+  return decs[session.currentStep || 0] || null;
+}
+function applyLiveEffect(session, option){
+  if(!session.stateEnabled || !session.state || !option) return;
+  const effect = option.effect || option.impact || {};
+  const moneyDelta = Number(effect.money || 0);
+  const repDelta = Number(effect.reputation || 0);
+  session.state.money = Number(session.state.money || 0) + moneyDelta;
+  session.state.reputation = Math.max(0, Math.min(100, Number(session.state.reputation ?? 100) + repDelta));
+  session.state.lastImpact = { money: moneyDelta, reputation: repDelta };
+}
+
+app.post('/api/live-sessions', requireAuth, (req, res) => {
+  try {
+    const { scenario, title, level='management', stateEnabled=false } = req.body;
+    if(!scenario || !scenario.title) return res.status(400).json({ error:'Scenario payload required' });
+    const db = readDB();
+    const sessions = ensureLiveStore(db);
+    let id = makeSessionId();
+    while(sessions[id]) id = makeSessionId();
+    const cfg = scenario.stateConfig || scenario.state || {};
+    sessions[id] = {
+      id,
+      title: sanitiseString(title || scenario.title, 160),
+      scenario,
+      level,
+      status: 'waiting',
+      currentStep: 0,
+      participants: [],
+      answers: [],
+      notes: [],
+      stateEnabled: !!(stateEnabled || cfg.enabled),
+      state: (stateEnabled || cfg.enabled) ? { money: Number(cfg.startMoney || cfg.money || 1000000), reputation: Number(cfg.startReputation || cfg.reputation || 100) } : null,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    writeDB(db);
+    res.json(publicSessionView(sessions[id]));
+    broadcastLive(id);
+  } catch(err) {
+    console.error('Create live session error:', err.message);
+    res.status(500).json({ error:'Failed to create live session' });
+  }
+});
+
+app.get('/api/live-sessions', requireAuth, (req, res) => {
+  const sessions = ensureLiveStore(readDB());
+  res.json(Object.values(sessions).map(publicSessionView).sort((a,b)=>String(b.createdAt).localeCompare(String(a.createdAt))));
+});
+
+app.get('/api/live-sessions/:id', (req, res) => {
+  const session = ensureLiveStore(readDB())[String(req.params.id).toUpperCase()];
+  if(!session) return res.status(404).json({ error:'Session not found' });
+  res.json(publicSessionView(session));
+});
+
+app.get('/api/live-sessions/:id/stream', (req, res) => {
+  const id = String(req.params.id).toUpperCase();
+  const session = ensureLiveStore(readDB())[id];
+  if(!session) return res.status(404).end();
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.flushHeaders?.();
+  if(!liveStreams.has(id)) liveStreams.set(id, new Set());
+  liveStreams.get(id).add(res);
+  res.write(`data: ${JSON.stringify({ type:'session', session: publicSessionView(session) })}\n\n`);
+  req.on('close', () => liveStreams.get(id)?.delete(res));
+});
+
+app.post('/api/live-sessions/:id/control', requireAuth, (req, res) => {
+  try {
+    const id = String(req.params.id).toUpperCase();
+    const { action, step } = req.body;
+    const db = readDB();
+    const sessions = ensureLiveStore(db);
+    const session = sessions[id];
+    if(!session) return res.status(404).json({ error:'Session not found' });
+    const decs = session.scenario?.decisions?.[session.level || 'management'] || session.scenario?.decisions?.management || [];
+    if(action === 'start') session.status = 'live';
+    if(action === 'pause') session.status = 'paused';
+    if(action === 'end') session.status = 'ended';
+    if(action === 'next') session.currentStep = Math.min((session.currentStep || 0) + 1, Math.max(0, decs.length - 1));
+    if(action === 'previous') session.currentStep = Math.max((session.currentStep || 0) - 1, 0);
+    if(action === 'goto') session.currentStep = Math.max(0, Math.min(Number(step || 0), Math.max(0, decs.length - 1)));
+    session.updatedAt = new Date().toISOString();
+    writeDB(db);
+    res.json(publicSessionView(session));
+    broadcastLive(id);
+  } catch(err) {
+    console.error('Live control error:', err.message);
+    res.status(500).json({ error:'Failed to control session' });
+  }
+});
+
+app.post('/api/live-sessions/:id/join', (req, res) => {
+  try {
+    const id = String(req.params.id).toUpperCase();
+    const name = sanitiseString(req.body.name || 'Participant', 80);
+    const role = ['participant','observer'].includes(req.body.role) ? req.body.role : 'participant';
+    const db = readDB();
+    const sessions = ensureLiveStore(db);
+    const session = sessions[id];
+    if(!session) return res.status(404).json({ error:'Session not found' });
+    const participant = { id: makeSessionId(), name, role, joinedAt: new Date().toISOString() };
+    session.participants = session.participants || [];
+    session.participants.push(participant);
+    session.updatedAt = new Date().toISOString();
+    writeDB(db);
+    res.json({ participant, session: publicSessionView(session) });
+    broadcastLive(id);
+  } catch(err) {
+    console.error('Live join error:', err.message);
+    res.status(500).json({ error:'Failed to join session' });
+  }
+});
+
+app.post('/api/live-sessions/:id/answers', async (req, res) => {
+  try {
+    const id = String(req.params.id).toUpperCase();
+    const db = readDB();
+    const sessions = ensureLiveStore(db);
+    const session = sessions[id];
+    if(!session) return res.status(404).json({ error:'Session not found' });
+    const d = getDecision(session);
+    if(!d) return res.status(400).json({ error:'No active decision' });
+    const optionIndex = Number(req.body.optionIndex);
+    const chosen = Number.isInteger(optionIndex) ? d.options?.[optionIndex] : null;
+    const freeText = sanitiseString(req.body.freeText || '', 4000);
+    let aiScore = null, aiFeedback = '', aiBranch = '';
+    if (freeText && (d.expectedActions || d.goodFeedback)) {
+      try {
+        const completion = await openai.chat.completions.create({
+          model: 'gpt-4o-mini', temperature: 0.2, max_tokens: 500, response_format:{type:'json_object'},
+          messages:[{role:'system',content:'You are a strict but fair cyber tabletop assessor. Return JSON {score:number, branch:string, feedback:string}.'},{role:'user',content:`Question: ${d.question || ''}\nExpected actions: ${d.expectedActions || d.goodFeedback || ''}\nParticipant response: ${freeText}`} ]
+        });
+        const parsed = JSON.parse(completion.choices[0].message.content || '{}');
+        aiScore = Math.max(0, Math.min(100, Number(parsed.score || 0)));
+        aiBranch = parsed.branch || (aiScore>=80?'strong':aiScore>=50?'partial':'weak');
+        aiFeedback = sanitiseString(parsed.feedback || '', 1200);
+      } catch(e) { console.warn('Live AI grading failed:', e.message); }
+    }
+    const correct = aiScore !== null ? aiScore >= 70 : !!chosen?.correct;
+    const score = aiScore !== null ? aiScore : (chosen ? (correct ? 100 : 0) : 0);
+    const branch = aiBranch || chosen?.branch || (score >= 80 ? 'strong' : score >= 50 ? 'partial' : 'weak');
+    applyLiveEffect(session, chosen);
+    const answer = {
+      id: 'ans_' + Date.now() + '_' + Math.random().toString(36).slice(2,6),
+      step: session.currentStep || 0,
+      question: sanitiseString(d.question || '', 500),
+      participantName: sanitiseString(req.body.participantName || 'Participant', 80),
+      team: sanitiseString(req.body.team || 'Unassigned', 80),
+      optionIndex: Number.isInteger(optionIndex) ? optionIndex : null,
+      mcqAnswer: sanitiseString(chosen?.text || '', 1000),
+      freeText,
+      expectedActions: sanitiseString(d.expectedActions || '', 2000),
+      skillTested: sanitiseString(d.skillTested || '', 50),
+      aiScore,
+      aiFeedback,
+      correct,
+      score,
+      branch,
+      state: session.state || null,
+      submittedAt: new Date().toISOString(),
+      responseTimeSec: sanitiseNumber(req.body.responseTimeSec, 0)
+    };
+    session.answers = session.answers || [];
+    session.answers.push(answer);
+    session.updatedAt = new Date().toISOString();
+    writeDB(db);
+    res.json({ answer, session: publicSessionView(session) });
+    broadcastLive(id);
+  } catch(err) {
+    console.error('Live answer error:', err.message);
+    res.status(500).json({ error:'Failed to submit answer' });
+  }
+});
+
+app.post('/api/live-sessions/:id/notes', (req, res) => {
+  try {
+    const id = String(req.params.id).toUpperCase();
+    const db = readDB();
+    const sessions = ensureLiveStore(db);
+    const session = sessions[id];
+    if(!session) return res.status(404).json({ error:'Session not found' });
+    const note = {
+      id: 'note_' + Date.now() + '_' + Math.random().toString(36).slice(2,6),
+      step: session.currentStep || 0,
+      observerName: sanitiseString(req.body.observerName || 'Observer', 80),
+      tag: sanitiseString(req.body.tag || 'note', 40),
+      note: sanitiseString(req.body.note || '', 4000),
+      createdAt: new Date().toISOString()
+    };
+    session.notes = session.notes || [];
+    session.notes.push(note);
+    session.updatedAt = new Date().toISOString();
+    writeDB(db);
+    res.json({ note, session: publicSessionView(session) });
+    broadcastLive(id);
+  } catch(err) {
+    console.error('Live note error:', err.message);
+    res.status(500).json({ error:'Failed to save note' });
+  }
+});
+
+// ─────────────────────────────────────────────
+
+
 // ─────────────────────────────────────────────
 // CATCH-ALL — serve HTML app
 // ─────────────────────────────────────────────
-app.get('/{*path}', (req, res) => {
+app.get(/.*/, (req, res) => {
   const indexFile = path.join(PUBLIC_DIR, 'index.html');
   if (fs.existsSync(indexFile)) {
     res.sendFile(indexFile);
