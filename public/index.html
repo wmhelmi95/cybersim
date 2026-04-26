@@ -899,6 +899,275 @@ body.theme-light{--bg:#eef5fb!important;--surface:#ffffff!important;--card:#ffff
 body.theme-light::before{opacity:.16!important;}
 body.theme-light #screen-login > div > div:nth-child(2),body.theme-light .card,body.theme-light .panel,body.theme-light .dash-card,body.theme-light .stat-card{box-shadow:0 18px 45px rgba(32,72,110,.12)!important;}
 
+
+/* ── MANAGEMENT-LEVEL EXECUTIVE VIEW ── */
+.mgmt-hero{
+  display:grid;
+  grid-template-columns:1.35fr .85fr;
+  gap:16px;
+  margin-bottom:18px;
+}
+@media(max-width:1000px){.mgmt-hero{grid-template-columns:1fr;}}
+.mgmt-panel{
+  background:linear-gradient(180deg,rgba(10,20,37,.98),rgba(7,14,28,.98));
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:22px;
+  box-shadow:0 18px 50px rgba(0,0,0,.18);
+}
+.mgmt-label{
+  font-family:var(--mono);
+  font-size:10px;
+  letter-spacing:1.4px;
+  color:var(--cyan);
+  text-transform:uppercase;
+  margin-bottom:8px;
+}
+.mgmt-title{
+  font-family:var(--head);
+  font-size:28px;
+  line-height:1.18;
+  font-weight:800;
+  color:var(--white);
+  margin-bottom:8px;
+}
+.mgmt-sub{
+  color:var(--text);
+  font-size:13px;
+  line-height:1.75;
+  max-width:760px;
+}
+.mgmt-meta-row{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin-top:16px;
+}
+.mgmt-chip{
+  font-family:var(--mono);
+  font-size:10px;
+  color:var(--text);
+  padding:6px 9px;
+  border-radius:999px;
+  background:rgba(0,229,255,.045);
+  border:1px solid rgba(0,229,255,.14);
+}
+.mgmt-risk-card{
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+  min-height:190px;
+}
+.mgmt-risk-score{
+  display:flex;
+  align-items:flex-end;
+  gap:10px;
+  margin:8px 0;
+}
+.mgmt-risk-score .num{
+  font-family:var(--head);
+  font-size:54px;
+  line-height:.95;
+  font-weight:800;
+  color:var(--white);
+}
+.mgmt-risk-score .unit{
+  font-family:var(--mono);
+  font-size:13px;
+  color:var(--muted);
+  padding-bottom:7px;
+}
+.mgmt-risk-pill{
+  align-self:flex-start;
+  font-family:var(--mono);
+  font-size:10px;
+  letter-spacing:1px;
+  padding:6px 10px;
+  border-radius:999px;
+  border:1px solid rgba(255,179,0,.3);
+  background:rgba(255,179,0,.08);
+  color:var(--amber);
+  text-transform:uppercase;
+}
+.mgmt-kpi-grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:12px;
+  margin-bottom:18px;
+}
+@media(max-width:900px){.mgmt-kpi-grid{grid-template-columns:1fr 1fr;}}
+.mgmt-kpi{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:16px;
+}
+.mgmt-kpi .kpi-value{
+  font-family:var(--head);
+  font-size:30px;
+  font-weight:800;
+  color:var(--white);
+  margin-bottom:4px;
+}
+.mgmt-kpi .kpi-label{
+  font-family:var(--mono);
+  font-size:10px;
+  color:var(--muted);
+  letter-spacing:1.1px;
+  text-transform:uppercase;
+}
+.mgmt-kpi .kpi-note{
+  margin-top:8px;
+  font-size:11px;
+  color:var(--text);
+}
+.mgmt-grid-2{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:16px;
+  margin-bottom:18px;
+}
+@media(max-width:1000px){.mgmt-grid-2{grid-template-columns:1fr;}}
+.mgmt-section-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:14px;
+}
+.mgmt-section-title{
+  font-family:var(--head);
+  color:var(--white);
+  font-size:16px;
+  font-weight:800;
+}
+.mgmt-section-note{
+  font-family:var(--mono);
+  color:var(--muted);
+  font-size:10px;
+}
+.mgmt-table{
+  width:100%;
+  border-collapse:separate;
+  border-spacing:0;
+  overflow:hidden;
+}
+.mgmt-table th{
+  font-family:var(--mono);
+  font-size:9px;
+  color:var(--muted);
+  letter-spacing:.9px;
+  text-transform:uppercase;
+  text-align:left;
+  padding:9px 10px;
+  border-bottom:1px solid var(--border);
+}
+.mgmt-table td{
+  padding:11px 10px;
+  border-bottom:1px solid var(--border);
+  font-size:12px;
+  vertical-align:middle;
+}
+.mgmt-table tr:last-child td{border-bottom:none;}
+.mgmt-status{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:76px;
+  padding:4px 8px;
+  border-radius:999px;
+  font-family:var(--mono);
+  font-size:9px;
+  letter-spacing:.6px;
+  text-transform:uppercase;
+}
+.mgmt-status.ok{color:var(--green);background:rgba(0,230,118,.08);border:1px solid rgba(0,230,118,.22);}
+.mgmt-status.watch{color:var(--amber);background:rgba(255,179,0,.08);border:1px solid rgba(255,179,0,.24);}
+.mgmt-status.risk{color:var(--red);background:rgba(255,45,85,.08);border:1px solid rgba(255,45,85,.24);}
+.mgmt-bar{
+  height:7px;
+  background:var(--border);
+  border-radius:999px;
+  overflow:hidden;
+  min-width:110px;
+}
+.mgmt-bar span{
+  display:block;
+  height:100%;
+  border-radius:999px;
+  background:linear-gradient(90deg,var(--cyan),var(--blue));
+}
+.mgmt-risk-list{
+  display:grid;
+  gap:10px;
+}
+.mgmt-risk-item{
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:12px 14px;
+  background:rgba(255,255,255,.015);
+}
+.mgmt-risk-item .risk-title{
+  font-family:var(--head);
+  font-size:13px;
+  font-weight:800;
+  color:var(--white);
+  margin-bottom:4px;
+}
+.mgmt-risk-item .risk-copy{
+  font-size:12px;
+  color:var(--text);
+  line-height:1.6;
+}
+.mgmt-actions{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:12px;
+}
+@media(max-width:900px){.mgmt-actions{grid-template-columns:1fr;}}
+.mgmt-action{
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:15px;
+  background:var(--card);
+}
+.mgmt-action .horizon{
+  font-family:var(--mono);
+  font-size:10px;
+  color:var(--cyan);
+  letter-spacing:1px;
+  margin-bottom:8px;
+  text-transform:uppercase;
+}
+.mgmt-action .action-title{
+  font-family:var(--head);
+  color:var(--white);
+  font-size:14px;
+  font-weight:800;
+  margin-bottom:6px;
+}
+.mgmt-action .action-copy{
+  font-size:12px;
+  color:var(--text);
+  line-height:1.6;
+}
+.mgmt-muted-score{
+  font-family:var(--mono);
+  color:var(--muted);
+  font-size:11px;
+}
+.hide-game-metrics .stat-card .stat-label,
+.hide-game-metrics .rm-lbl{text-transform:uppercase;}
+
+
+/* ── LIVE EXERCISE END POPUP ── */
+.live-ended-overlay{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.72);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:22px;}
+.live-ended-modal{width:min(92vw,520px);background:linear-gradient(180deg,rgba(10,20,37,.98),rgba(3,7,15,.96));border:1px solid rgba(0,229,255,.24);border-radius:18px;padding:26px;box-shadow:0 28px 90px rgba(0,0,0,.45);text-align:center;}
+.live-ended-icon{width:58px;height:58px;margin:0 auto 14px;border-radius:16px;background:rgba(0,230,118,.10);border:1px solid rgba(0,230,118,.28);display:flex;align-items:center;justify-content:center;font-size:26px;}
+.live-ended-title{font-family:var(--head);font-size:23px;font-weight:800;color:var(--white);margin-bottom:8px;}
+.live-ended-copy{font-size:13px;line-height:1.75;color:var(--text);margin-bottom:18px;}
+.live-ended-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+
 </style>
 </head>
 <body>
@@ -1522,7 +1791,7 @@ body.theme-light #screen-login > div > div:nth-child(2),body.theme-light .card,b
       <div>
         <div class="report-breadcrumb">Reports / <span id="rpt-breadcrumb-title">Simulation</span></div>
         <div class="report-title-row">
-          <h1>Executive Summary</h1>
+          <h1>Management Executive Summary</h1>
           <span class="report-status-pill">Completed</span>
         </div>
         <div class="report-meta-line" id="rpt-score-line"></div>
@@ -1535,7 +1804,7 @@ body.theme-light #screen-login > div > div:nth-child(2),body.theme-light .card,b
     </div>
 
     <div class="report-tabs-v2">
-      <button class="active" onclick="document.getElementById('report-exec').scrollIntoView({behavior:'smooth'})">Executive Summary</button>
+      <button class="active" onclick="document.getElementById('report-exec').scrollIntoView({behavior:'smooth'})">Management Executive Summary</button>
       <button onclick="document.getElementById('report-performance').scrollIntoView({behavior:'smooth'})">Performance Analysis</button>
       <button onclick="document.getElementById('report-timeline').scrollIntoView({behavior:'smooth'})">Timeline & Events</button>
       <button onclick="document.getElementById('report-decisions').scrollIntoView({behavior:'smooth'})">Decision Review</button>
@@ -1550,7 +1819,7 @@ body.theme-light #screen-login > div > div:nth-child(2),body.theme-light .card,b
         <div class="report-kpi-grid" id="rpt-metrics"></div>
 
         <div class="report-card report-card-large" id="report-performance">
-          <div class="report-card-head"><h3>Readiness Score Over Time</h3><span>Simulation trend</span></div>
+          <div class="report-card-head"><h3>Management Readiness Trend</h3><span>Board-level trend</span></div>
           <div class="readiness-trend-viz">
             <svg viewBox="0 0 600 190" preserveAspectRatio="none">
               <defs><linearGradient id="rptGrad" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="rgba(124,92,255,.55)"/><stop offset="1" stop-color="rgba(0,229,255,.03)"/></linearGradient></defs>
@@ -1627,7 +1896,7 @@ body.theme-light #screen-login > div > div:nth-child(2),body.theme-light .card,b
 
       <aside class="report-side-v2">
         <div class="report-card ai-summary-card">
-          <div class="report-card-head"><h3>Executive Summary</h3><button class="btn btn-ghost btn-sm" onclick="exportPDF()">Download PDF</button></div>
+          <div class="report-card-head"><h3>Management Executive Summary</h3><button class="btn btn-ghost btn-sm" onclick="exportPDF()">Download PDF</button></div>
           <div id="rpt-conclusion-title" class="ai-report-title-v2">
             <div class="ai-icon">🤖</div>
             <div><strong>AI Consultant Report</strong><small>Generated by Dr. Marcus Reid</small></div>
@@ -3458,6 +3727,32 @@ function getResultScoreValue(r){
   return r?.correct ? 100 : 0;
 }
 function calculateTotalScore(results){return Math.round((results||[]).reduce((sum,r)=>sum+getResultScoreValue(r),0));}
+function aggregateResultsForExecutive(results, decisionCount){
+  const grouped={};
+  (results||[]).forEach((r,i)=>{
+    const idx=Number(r?.decisionIndex ?? r?.step ?? i);
+    if(!grouped[idx]) grouped[idx]=[];
+    grouped[idx].push(r);
+  });
+  const totalDecisions=Math.max(Number(decisionCount||0), Object.keys(grouped).length || 0);
+  const rows=[];
+  for(let i=0;i<totalDecisions;i++){
+    const items=grouped[i]||[];
+    const avg=items.length ? Math.round(items.reduce((sum,r)=>sum+getResultScoreValue(r),0)/items.length) : 0;
+    rows.push({decisionIndex:i,score:avg,correct:avg>=70,submissions:items.length,items});
+  }
+  return rows;
+}
+function calculateExecutiveMetrics(results, decisionCount){
+  const decisions=aggregateResultsForExecutive(results, decisionCount);
+  const maxScore=Math.max(1, decisions.length) * 100;
+  const score=Math.round(decisions.reduce((sum,d)=>sum+d.score,0));
+  const pct=Math.round((score/maxScore)*100);
+  const passed=decisions.filter(d=>d.correct).length;
+  const submissions=(results||[]).length;
+  const participantNames=[...new Set((results||[]).map(r=>r.participantName||r.name).filter(Boolean))];
+  return {decisions,maxScore,score,pct,passed,submissions,participantCount:participantNames.length};
+}
 function calculateAverageScore(results){return results&&results.length?Math.round(calculateTotalScore(results)/results.length):0;}
 function groupByKey(arr,key){return (arr||[]).reduce((acc,item)=>{const k=item?.[key]||'Unassigned';(acc[k]=acc[k]||[]).push(item);return acc;},{});}
 function scoreBySkill(rows){const grouped=groupByKey(rows,'skillTested');return Object.entries(grouped).map(([skill,items])=>({skill,score:calculateAverageScore(items)}));}
@@ -3494,7 +3789,7 @@ function renderConclusionHTML(raw){
   if(!raw) return '<span style="color:var(--muted)">No AI report available.</span>';
 
   const SECTIONS = [
-    { key:'Executive Summary',           icon:'📋', accent:'#00e5ff', bg:'rgba(0,229,255,0.05)',  num:'01' },
+    { key:'Management Executive Summary',           icon:'📋', accent:'#00e5ff', bg:'rgba(0,229,255,0.05)',  num:'01' },
     { key:'Cyber Resilience Posture',    icon:'🛡️', accent:'#ff2d55', bg:'rgba(255,45,85,0.05)',  num:'02' },
     { key:'Skill Domain',                icon:'📊', accent:'#2979ff', bg:'rgba(41,121,255,0.05)', num:'03' },
     { key:'Decision Analysis: Failures', icon:'⚠️', accent:'#ff2d55', bg:'rgba(255,45,85,0.05)',  num:'04' },
@@ -3809,11 +4104,12 @@ function showReport(){
   clearInterval(simState.decTimerInt);
   const s=simState.scenario;
   const decs=s.decisions[simState.level];
-  const maxScore=decs.length*100;
-  const reportScore=calculateTotalScore(simState.results);
+  const execMetrics=calculateExecutiveMetrics(simState.results, decs.length);
+  const maxScore=execMetrics.maxScore;
+  const reportScore=execMetrics.score;
   simState.score=reportScore;
-  const pct=maxScore>0?Math.round((reportScore/maxScore)*100):0;
-  const correct=simState.results.filter(r=>r.correct).length;
+  const pct=execMetrics.pct;
+  const correct=execMetrics.passed;
   const grade=getGrade(pct);
   const gradeColors={A:'#00e676',B:'#00e5ff',C:'#ffb300',D:'#ff2d55'};
   const gc=gradeColors[grade];
@@ -3830,14 +4126,15 @@ function showReport(){
   circle.style.background=`radial-gradient(circle at center,var(--card) 55%,${gc}22 100%)`;
   circle.style.color=gc;
   circle.style.boxShadow=`0 0 40px ${gc}33`;
+  const tb=document.getElementById('rpt-trend-badge'); if(tb) tb.textContent=pct+'%';
   document.getElementById('rpt-headline').textContent=pct>=90?'Excellent Response — Outstanding':pct>=70?'Strong Response — Well Done':pct>=50?'Adequate Response — Room to Improve':'Response Needs Significant Improvement';
-  document.getElementById('rpt-score-line').textContent=`${s.title} · ${simState.level.toUpperCase()} LEVEL · Score: ${reportScore}/${maxScore} · ${pct}% · ${correct}/${decs.length} correct`;
+  document.getElementById('rpt-score-line').textContent=`${s.title} · ${simState.level.toUpperCase()} LEVEL · Team readiness: ${pct}% · ${correct}/${decs.length} decisions passed · ${execMetrics.participantCount||1} participant(s) · ${execMetrics.submissions} submissions`;
   const timeTaken=(s.duration==='20 min'?1200:s.duration==='30 min'?1800:900)-simState.timeLeft;
   document.getElementById('rpt-metrics').innerHTML=`
-    <div class="rm"><div class="rm-val">${reportScore}</div><div class="rm-lbl">Total Score</div></div>
-    <div class="rm"><div class="rm-val">${correct}/${decs.length}</div><div class="rm-lbl">Correct</div></div>
+    <div class="rm"><div class="rm-val">${pct}%</div><div class="rm-lbl">Team Readiness</div></div>
+    <div class="rm"><div class="rm-val">${correct}/${decs.length}</div><div class="rm-lbl">Decisions Passed</div></div>
+    <div class="rm"><div class="rm-val">${execMetrics.participantCount||1}</div><div class="rm-lbl">Participants</div></div>
     <div class="rm"><div class="rm-val">${Math.floor(timeTaken/60)}m${timeTaken%60}s</div><div class="rm-lbl">Time Taken</div></div>
-    <div class="rm"><div class="rm-val">${pct}%</div><div class="rm-lbl">Performance</div></div>
     ${simState.stateEnabled&&simState.crisisState?`<div class="rm"><div class="rm-val">${formatMoney(simState.crisisState.money)}</div><div class="rm-lbl">Final Money</div></div><div class="rm"><div class="rm-val">${Math.round(simState.crisisState.reputation)}/100</div><div class="rm-lbl">Final Reputation</div></div>`:''}`;
   fetchAIConclusion(s,simState,decs,simState.lastResultId||simState.viewingResultId);
   const skillCounts={};
@@ -3909,12 +4206,14 @@ function exportPDF(){
   if(!s){ alert('No report available.'); return; }
 
   const decs=(s.decisions&&s.decisions[simState.level])||[];
-  const maxScore=decs.length*100;
-  const reportScore=calculateTotalScore(simState.results||[]);
-  const pct=maxScore>0?Math.round((reportScore/maxScore)*100):0;
+  const execMetrics=calculateExecutiveMetrics(simState.results||[], decs.length);
+  const maxScore=execMetrics.maxScore;
+  const reportScore=execMetrics.score;
+  const pct=execMetrics.pct;
   const grade=getGrade(pct);
   const gradeColor={A:'#0F766E',B:'#1D4ED8',C:'#B45309',D:'#B91C1C'}[grade]||'#1D4ED8';
   const gradeLabel=pct>=90?'Excellent':pct>=70?'Competent':pct>=50?'Developing':'Critical Risk';
+  const correct=execMetrics.passed;
   const date=new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
   const esc=(v)=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
@@ -3922,27 +4221,49 @@ function exportPDF(){
     return String(raw||'')
       .replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{27BF}\u{FE00}-\u{FE0F}]/gu,'')
       .replace(/SECTION\s*\d+/gi,'')
-      .replace(/Executive Summary\s*\n\s*Executive Summary/i,'Executive Summary')
+      .replace(/Management Executive Summary\s*\n\s*Management Executive Summary/i,'Management Executive Summary')
       .replace(/\n{3,}/g,'\n\n')
       .trim();
   }
   function parseExecutiveSections(raw){
-    const headings=['Executive Summary','Cyber Resilience Posture Assessment','Skill Domain Performance','Decision Failures & Consequences','Correct Responses','Team & Individual Insights','Timeline, Replay & Heatmap Insights','MITRE ATT&CK / Threat Behaviour Mapping','Playbook Advisory Assessment','Prioritised Recommendations',"Consultant's Verdict"];
+    const headings=['Management Executive Summary','Cyber Resilience Posture Assessment','Skill Domain Performance','Decision Failures & Consequences','Correct Responses','Team & Individual Insights','Timeline, Replay & Heatmap Insights','MITRE ATT&CK / Threat Behaviour Mapping','Playbook Advisory Assessment','Prioritised Recommendations',"Consultant's Verdict"];
     let text=cleanReportText(raw);
     const escaped=headings.map(h=>h.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|');
     const re=new RegExp('^\\s*('+escaped+')\\s*$','gmi');
     const matches=[...text.matchAll(re)];
-    if(!matches.length) return [{title:'Executive Summary',body:text||'Executive analysis is not available yet.'}];
+    if(!matches.length) return [{title:'Management Executive Summary',body:text||'Executive analysis is not available yet.'}];
     return matches.map((m,i)=>({title:m[1].trim(),body:text.slice(m.index+m[0].length, i+1<matches.length?matches[i+1].index:text.length).trim()})).filter(x=>x.body||x.title);
   }
-  function bodyToHtml(body){
+  function bodyToHtml(body, title=''){
     const lines=cleanReportText(body).split('\n').map(x=>x.trim()).filter(Boolean);
     let html='', list=[];
     const flush=()=>{ if(list.length){ html+='<ul>'+list.map(x=>`<li>${esc(x.replace(/^[●•\-–—]\s*/,''))}</li>`).join('')+'</ul>'; list=[]; } };
-    for(const line of lines){
+    const isStatus=v=>/^(PASS|FAIL|BORDERLINE|DEVELOPING|PARTIAL)$/i.test(v||'');
+    const pctOf=v=>{ const m=String(v||'').match(/^(\d{1,3})%$/); return m?Math.max(0,Math.min(100,Number(m[1]))):null; };
+
+    if(/Skill Domain Performance/i.test(title)){
+      const rows=[];
+      for(let i=0;i<lines.length;i++){
+        const score=pctOf(lines[i+1]);
+        if(score!==null && isStatus(lines[i+2])){
+          const status=lines[i+2].toUpperCase();
+          const cls=score>=70?'pass':score>=50?'warn':'fail';
+          rows.push(`<tr><td><strong>${esc(lines[i])}</strong><br><small>${esc(lines[i+3]||'No observation provided.')}</small></td><td><div class="bar"><span class="${cls}" style="width:${Math.max(3,score)}%"></span></div></td><td class="num ${cls}">${score}%</td><td><span class="pill ${cls}">${esc(status)}</span></td></tr>`);
+          i+=3;
+        } else if(lines[i]) {
+          html+=`<p>${esc(lines[i])}</p>`;
+        }
+      }
+      if(rows.length) return `<table><thead><tr><th>Capability</th><th>Performance</th><th class="num">Score</th><th>Status</th></tr></thead><tbody>${rows.join('')}</tbody></table>${html}`;
+    }
+
+    for(let i=0;i<lines.length;i++){
+      const line=lines[i];
+      const inlineSkill=line.match(/^([^:]{2,40}):\s*(\d{1,3})%\s*\[?(PASS|FAIL|BORDERLINE|DEVELOPING|PARTIAL)\]?\s*[—–-]?\s*(.*)$/i);
+      if(inlineSkill){ flush(); const score=Number(inlineSkill[2]); const cls=score>=70?'pass':score>=50?'warn':'fail'; html+=`<div class="skill-card"><div><strong>${esc(inlineSkill[1])}</strong><p>${esc(inlineSkill[4]||'No observation provided.')}</p></div><div class="score ${cls}">${score}%<span>${esc(inlineSkill[3].toUpperCase())}</span></div></div>`; continue; }
+      const splitScore=pctOf(lines[i+1]);
+      if(splitScore!==null && isStatus(lines[i+2])){ flush(); const cls=splitScore>=70?'pass':splitScore>=50?'warn':'fail'; html+=`<div class="skill-card"><div><strong>${esc(line)}</strong><p>${esc(lines[i+3]||'No observation provided.')}</p></div><div class="score ${cls}">${splitScore}%<span>${esc(lines[i+2].toUpperCase())}</span></div></div>`; i+=3; continue; }
       if(/^[●•\-–—]\s*/.test(line) || /^Decision\s+\d+:/i.test(line) || /^\[?(IMMEDIATE|30 DAYS|NEXT QUARTER)\]?/i.test(line)){ list.push(line); continue; }
-      const skill=line.match(/^([^:]{2,40}):\s*(\d+)%\s*\[?(PASS|FAIL|BORDERLINE)\]?\s*[—–-]?\s*(.*)$/i);
-      if(skill){ flush(); const score=Number(skill[2]); const cls=score>=70?'pass':score>=50?'warn':'fail'; html+=`<div class="skill-card"><div><strong>${esc(skill[1])}</strong><p>${esc(skill[4]||'No observation provided.')}</p></div><div class="score ${cls}">${score}%<span>${esc(skill[3].toUpperCase())}</span></div></div>`; continue; }
       flush(); html+=`<p>${esc(line)}</p>`;
     }
     flush(); return html || '<p>No narrative available.</p>';
@@ -3953,11 +4274,11 @@ function exportPDF(){
   const decisionRows=(simState.results||[]).map((r,i)=>{ const d=decs[r.decisionIndex??i]||{}; const score=getResultScoreValue(r); const cls=score>=70?'pass':score>=50?'warn':'fail'; return `<tr><td class="num">${i+1}</td><td><strong>${esc(r.question||d.question||'Decision')}</strong><br><small>${esc(r.mcqAnswer||r.freeTextAnswer||'No response recorded')}</small></td><td class="num ${cls}">${score}%</td><td><span class="pill ${cls}">${score>=70?'PASS':score>=50?'PARTIAL':'FAIL'}</span></td><td>${esc(r.aiFeedback||r.feedback||(r.correct?d.goodFeedback:d.badFeedback)||'')}</td></tr>`; }).join('');
   const rawConclusion=document.getElementById('rpt-conclusion')?.innerText||'Executive analysis is not available yet.';
   const sections=parseExecutiveSections(rawConclusion);
-  const preferred=['Executive Summary','Cyber Resilience Posture Assessment','Skill Domain Performance','Decision Failures & Consequences','Correct Responses','Team & Individual Insights','Timeline, Replay & Heatmap Insights','MITRE ATT&CK / Threat Behaviour Mapping','Playbook Advisory Assessment','Prioritised Recommendations',"Consultant's Verdict"];
+  const preferred=['Management Executive Summary','Cyber Resilience Posture Assessment','Skill Domain Performance','Decision Failures & Consequences','Correct Responses','Team & Individual Insights','Timeline, Replay & Heatmap Insights','MITRE ATT&CK / Threat Behaviour Mapping','Playbook Advisory Assessment','Prioritised Recommendations',"Consultant's Verdict"];
   const sectionMap=Object.fromEntries(sections.map(x=>[x.title,x.body]));
-  const sectionHtml=preferred.filter(t=>sectionMap[t]).map((title,idx)=>`<section class="section"><div class="section-kicker">SECTION ${String(idx+1).padStart(2,'0')}</div><h2>${esc(title)}</h2><div class="section-body">${bodyToHtml(sectionMap[title])}</div></section>`).join('') || `<section class="section"><h2>Executive Summary</h2>${bodyToHtml(rawConclusion)}</section>`;
+  const sectionHtml=preferred.filter(t=>sectionMap[t]).map((title,idx)=>`<section class="section"><div class="section-kicker">SECTION ${String(idx+1).padStart(2,'0')}</div><h2>${esc(title)}</h2><div class="section-body">${bodyToHtml(sectionMap[title], title)}</div></section>`).join('') || `<section class="section"><h2>Management Executive Summary</h2>${bodyToHtml(rawConclusion)}</section>`;
 
-  const html=`<!doctype html><html><head><meta charset="utf-8"><title>NexaCyberSim Executive Report</title><style>@page{size:A4;margin:15mm 14mm}*{box-sizing:border-box}body{font-family:Arial,Helvetica,sans-serif;color:#172033;margin:0;background:#fff;font-size:11.5px;line-height:1.55;-webkit-print-color-adjust:exact;print-color-adjust:exact}.cover{background:linear-gradient(135deg,#071527,#0f3557);color:#fff;padding:32px 34px 26px;border-radius:0 0 18px 18px}.brand{font-size:12px;letter-spacing:2.4px;text-transform:uppercase;color:#8fe8ff;font-weight:800}.title{font-size:31px;font-weight:800;margin:23px 0 8px}.sub{color:#d9eaf7;font-size:12.5px}.grade-row{margin-top:24px;display:flex;align-items:center;gap:18px}.badge{width:82px;height:82px;border-radius:18px;background:${gradeColor};display:flex;align-items:center;justify-content:center;color:#fff;font-size:44px;font-weight:800}.grade-text strong{display:block;font-size:19px}.grade-text span{color:#d9eaf7}.content{padding:24px 0}.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:0 0 18px}.metric{border:1px solid #d8e2ea;border-radius:13px;padding:12px;background:#f8fbfd}.mv{font-size:23px;font-weight:800;color:#0f3557}.ml{font-size:9.5px;color:#667085;text-transform:uppercase;letter-spacing:.7px}.section{border:1px solid #d8e2ea;border-radius:14px;padding:16px 18px;margin:14px 0;background:#fff;page-break-inside:avoid}.section-kicker{font-size:9.5px;color:#64748b;letter-spacing:1.5px;font-weight:800}.section h2{font-size:16px;color:#0f3557;margin:2px 0 9px;border-bottom:2px solid #e2e8f0;padding-bottom:7px}.section p{margin:6px 0}.section ul{margin:8px 0 0 18px;padding:0}.section li{margin:5px 0}.skill-card{display:flex;justify-content:space-between;gap:14px;align-items:center;border:1px solid #e2e8f0;border-left:5px solid #0f3557;border-radius:10px;padding:9px 11px;margin:7px 0;background:#f8fbfd}.skill-card p{margin:2px 0 0;color:#475569}.score{min-width:72px;text-align:center;font-size:18px;font-weight:800}.score span{display:block;font-size:9px;letter-spacing:.8px}.pass{color:#0F766E}.warn{color:#B45309}.fail{color:#B91C1C}.bar{height:8px;background:#edf2f7;border-radius:99px;overflow:hidden}.bar span{display:block;height:100%;border-radius:99px}.bar span.pass{background:#0F766E}.bar span.warn{background:#B45309}.bar span.fail{background:#B91C1C}.pill{display:inline-block;border-radius:999px;padding:3px 8px;font-size:9px;font-weight:800;color:#fff}.pill.pass{background:#0F766E;color:#fff}.pill.warn{background:#B45309;color:#fff}.pill.fail{background:#B91C1C;color:#fff}table{width:100%;border-collapse:collapse;margin-top:9px}th{background:#0f3557;color:#fff;text-align:left;padding:8px;font-size:10px;text-transform:uppercase}td{border-bottom:1px solid #e5edf3;padding:8px;vertical-align:top}.num{font-family:Consolas,monospace;text-align:right;white-space:nowrap;font-weight:800}small{color:#667085}.chip{display:inline-block;border:1px solid #d8e2ea;background:#f8fbfd;border-radius:20px;padding:4px 9px;margin:2px;font-size:10px;color:#344054}.footer{margin-top:20px;border-top:1px solid #d8e2ea;padding-top:10px;color:#667085;font-size:10px;text-align:center}@media print{.cover{border-radius:0}.section{break-inside:avoid}}</style></head><body><section class="cover"><div class="brand">NexaCyberSim Confidential Report</div><div class="title">Cyber Crisis Simulation Report</div><div class="sub">${client?esc(client.name)+' · ':''}${esc(s.title)} · ${esc(String(simState.level||'').toUpperCase())} Level<br>${date}</div><div class="grade-row"><div class="badge">${grade}</div><div class="grade-text"><strong>${pct}% Overall Performance — ${gradeLabel}</strong><span>${reportScore}/${maxScore} points · ${(simState.results||[]).filter(r=>getResultScoreValue(r)>=70).length}/${decs.length} decisions passed</span></div></div></section><main class="content"><div class="metrics"><div class="metric"><div class="mv">${pct}%</div><div class="ml">Performance</div></div><div class="metric"><div class="mv">${grade}</div><div class="ml">Grade</div></div><div class="metric"><div class="mv">${reportScore}/${maxScore}</div><div class="ml">Score</div></div><div class="metric"><div class="mv">${decs.length}</div><div class="ml">Decisions</div></div></div>${sectionHtml}<section class="section"><div class="section-kicker">APPENDIX A</div><h2>Skill Performance Matrix</h2><table><thead><tr><th>Capability</th><th>Performance</th><th class="num">Score</th><th>Status</th></tr></thead><tbody>${skillRows}</tbody></table></section><section class="section"><div class="section-kicker">APPENDIX B</div><h2>Decision Breakdown</h2><table><thead><tr><th class="num">#</th><th>Decision / Response</th><th class="num">Score</th><th>Assessment</th><th>Finding</th></tr></thead><tbody>${decisionRows}</tbody></table></section><section class="section"><div class="section-kicker">APPENDIX C</div><h2>Framework Alignment</h2><div>${(FW||[]).map(f=>`<span class="chip">${esc(f)}</span>`).join('')}</div></section><div class="footer">Generated by NexaCyberSim · Internal training report only · Not a penetration test or formal audit.</div></main><script>window.onload=()=>setTimeout(()=>window.print(),300)<\/script></body></html>`;
+  const html=`<!doctype html><html><head><meta charset="utf-8"><title>NexaCyberSim Executive Report</title><style>@page{size:A4;margin:15mm 14mm}*{box-sizing:border-box}body{font-family:Arial,Helvetica,sans-serif;color:#172033;margin:0;background:#fff;font-size:11.5px;line-height:1.55;-webkit-print-color-adjust:exact;print-color-adjust:exact}.cover{background:linear-gradient(135deg,#071527,#0f3557);color:#fff;padding:32px 34px 26px;border-radius:0 0 18px 18px}.brand{font-size:12px;letter-spacing:2.4px;text-transform:uppercase;color:#8fe8ff;font-weight:800}.title{font-size:31px;font-weight:800;margin:23px 0 8px}.sub{color:#d9eaf7;font-size:12.5px}.grade-row{margin-top:24px;display:flex;align-items:center;gap:18px}.badge{width:82px;height:82px;border-radius:18px;background:${gradeColor};display:flex;align-items:center;justify-content:center;color:#fff;font-size:44px;font-weight:800}.grade-text strong{display:block;font-size:19px}.grade-text span{color:#d9eaf7}.content{padding:24px 0}.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:0 0 18px}.metric{border:1px solid #d8e2ea;border-radius:13px;padding:12px;background:#f8fbfd}.mv{font-size:23px;font-weight:800;color:#0f3557}.ml{font-size:9.5px;color:#667085;text-transform:uppercase;letter-spacing:.7px}.section{border:1px solid #d8e2ea;border-radius:14px;padding:16px 18px;margin:14px 0;background:#fff;page-break-inside:avoid}.section-kicker{font-size:9.5px;color:#64748b;letter-spacing:1.5px;font-weight:800}.section h2{font-size:16px;color:#0f3557;margin:2px 0 9px;border-bottom:2px solid #e2e8f0;padding-bottom:7px}.section p{margin:6px 0}.section ul{margin:8px 0 0 18px;padding:0}.section li{margin:5px 0}.skill-card{display:flex;justify-content:space-between;gap:14px;align-items:center;border:1px solid #e2e8f0;border-left:5px solid #0f3557;border-radius:10px;padding:9px 11px;margin:7px 0;background:#f8fbfd}.skill-card p{margin:2px 0 0;color:#475569}.score{min-width:72px;text-align:center;font-size:18px;font-weight:800}.score span{display:block;font-size:9px;letter-spacing:.8px}.pass{color:#0F766E}.warn{color:#B45309}.fail{color:#B91C1C}.bar{height:8px;background:#edf2f7;border-radius:99px;overflow:hidden}.bar span{display:block;height:100%;border-radius:99px}.bar span.pass{background:#0F766E}.bar span.warn{background:#B45309}.bar span.fail{background:#B91C1C}.pill{display:inline-block;border-radius:999px;padding:3px 8px;font-size:9px;font-weight:800;color:#fff}.pill.pass{background:#0F766E;color:#fff}.pill.warn{background:#B45309;color:#fff}.pill.fail{background:#B91C1C;color:#fff}table{width:100%;border-collapse:collapse;margin-top:9px}th{background:#0f3557;color:#fff;text-align:left;padding:8px;font-size:10px;text-transform:uppercase}td{border-bottom:1px solid #e5edf3;padding:8px;vertical-align:top}.num{font-family:Consolas,monospace;text-align:right;white-space:nowrap;font-weight:800}small{color:#667085}.chip{display:inline-block;border:1px solid #d8e2ea;background:#f8fbfd;border-radius:20px;padding:4px 9px;margin:2px;font-size:10px;color:#344054}.footer{margin-top:20px;border-top:1px solid #d8e2ea;padding-top:10px;color:#667085;font-size:10px;text-align:center}@media print{.cover{border-radius:0}.section{break-inside:avoid}}</style></head><body><section class="cover"><div class="brand">NexaCyberSim Confidential Report</div><div class="title">Cyber Crisis Simulation Report</div><div class="sub">${client?esc(client.name)+' · ':''}${esc(s.title)} · ${esc(String(simState.level||'').toUpperCase())} Level<br>${date}</div><div class="grade-row"><div class="badge">${grade}</div><div class="grade-text"><strong>${pct}% Overall Performance — ${gradeLabel}</strong><span>Team readiness view · ${correct}/${decs.length} decisions passed · ${execMetrics.participantCount||1} participant(s) · ${execMetrics.submissions} submissions</span></div></div></section><main class="content"><div class="metrics"><div class="metric"><div class="mv">${pct}%</div><div class="ml">Team Readiness</div></div><div class="metric"><div class="mv">${grade}</div><div class="ml">Grade</div></div><div class="metric"><div class="mv">${correct}/${decs.length}</div><div class="ml">Decisions Passed</div></div><div class="metric"><div class="mv">${execMetrics.participantCount||1}</div><div class="ml">Participants</div></div></div>${sectionHtml}<section class="section"><div class="section-kicker">APPENDIX A</div><h2>Skill Performance Matrix</h2><table><thead><tr><th>Capability</th><th>Performance</th><th class="num">Score</th><th>Status</th></tr></thead><tbody>${skillRows}</tbody></table></section><section class="section"><div class="section-kicker">APPENDIX B</div><h2>Decision Breakdown</h2><table><thead><tr><th class="num">#</th><th>Decision / Response</th><th class="num">Score</th><th>Assessment</th><th>Finding</th></tr></thead><tbody>${decisionRows}</tbody></table></section><section class="section"><div class="section-kicker">APPENDIX C</div><h2>Framework Alignment</h2><div>${(FW||[]).map(f=>`<span class="chip">${esc(f)}</span>`).join('')}</div></section><div class="footer">Generated by NexaCyberSim · Internal training report only · Not a penetration test or formal audit.</div></main><script>window.onload=()=>setTimeout(()=>window.print(),300)<\/script></body></html>`;
   const w=window.open('', '_blank');
   if(!w){ alert('Popup blocked. Please allow popups to export PDF.'); return; }
   w.document.write(html); w.document.close();
@@ -4652,7 +4973,7 @@ document.addEventListener('DOMContentLoaded', function(){
 // ══════════════════════════════════════════════════════════
 // LIVE EXERCISE MODE — admin + public participant/observer
 // ══════════════════════════════════════════════════════════
-let livePublic = { sessionId:null, role:'participant', name:'', team:'Unassigned', participantId:null, session:null, selectedOption:null, decisionStartedAt:Date.now(), stream:null, joined:false };
+let livePublic = { sessionId:null, role:'participant', name:'', team:'Unassigned', participantId:null, session:null, selectedOption:null, decisionStartedAt:Date.now(), stream:null, joined:false, endNotifiedSessionId:null };
 function liveLink(sessionId, role){
   const base = location.origin + location.pathname;
   return `${base}?session=${encodeURIComponent(sessionId)}&role=${encodeURIComponent(role)}`;
@@ -4727,15 +5048,20 @@ function openLiveRunReport(sessionId){
     const level=sess.level||'management';
     const decs=(scenario.decisions&&scenario.decisions[level])||scenario.decisions?.management||[];
     const answers=sess.answers||[];
-    const skillScores={technical:0,communication:0,decision:0,leadership:0,compliance:0,coordination:0};
     const results=answers.map(a=>{
       const d=decs[Number(a.step||0)]||{};
       const score=Number(a.score??a.aiScore??(a.correct?100:0));
       const skill=a.skillTested||d.skillTested||'decision';
-      if(skillScores.hasOwnProperty(skill)) skillScores[skill]+=score;
       return {participantName:a.participantName||'Participant',team:a.team||'Unassigned',decisionIndex:Number(a.step||0),question:a.question||d.question||'',skillTested:skill,skill,mcqAnswer:a.mcqAnswer||'',freeTextAnswer:a.freeText||'',expectedActions:a.expectedActions||d.expectedActions||'',aiScore:score,aiFeedback:a.aiFeedback||a.feedback||'',branch:a.branch||'',correct:score>=70,feedback:a.aiFeedback||a.feedback||'',playbookAlignmentScore:a.playbookAlignmentScore??null,bestPracticeScore:a.bestPracticeScore??score,playbookGaps:a.playbookGaps||[],consultantInsight:a.consultantInsight||''};
     });
-    simState.scenario=scenario; simState.level=level; simState.client=DB.clients.find(c=>c.id===scenario.clientId)||null; simState.results=results; simState.skillScores=skillScores; simState.score=calculateTotalScore(results); simState.timeLeft=0; simState.stateEnabled=!!sess.stateEnabled; simState.crisisState=sess.state||null; simState.isViewingPastResult=true; simState.viewingResultId=null; simState.savedConclusionForView=null;
+    const execMetrics=calculateExecutiveMetrics(results,decs.length);
+    const skillScores={technical:0,communication:0,decision:0,leadership:0,compliance:0,coordination:0};
+    aggregateResultsForExecutive(results,decs.length).forEach(row=>{
+      const d=decs[row.decisionIndex]||{};
+      const skill=d.skillTested||row.items?.[0]?.skillTested||'decision';
+      if(skillScores.hasOwnProperty(skill)) skillScores[skill]+=row.score;
+    });
+    simState.scenario=scenario; simState.level=level; simState.client=DB.clients.find(c=>c.id===scenario.clientId)||null; simState.results=results; simState.skillScores=skillScores; simState.score=execMetrics.score; simState.timeLeft=0; simState.stateEnabled=!!sess.stateEnabled; simState.crisisState=sess.state||null; simState.isViewingPastResult=true; simState.viewingResultId=null; simState.savedConclusionForView=null;
     showReport();
   }).catch(err=>alert(err.message||'Unable to open live report.'));
 }
@@ -4758,7 +5084,7 @@ async function renderLiveAdmin(){
     const answers=(sess.answers||[]).slice(-5).reverse().map(a=>`<div style="padding:8px 0;border-bottom:1px solid var(--border);"><strong>${escapeHTML(a.participantName)}</strong> <span style="color:var(--muted)">(${escapeHTML(a.team||'Unassigned')})</span> — ${escapeHTML(a.mcqAnswer||'Typed response')} <span style="color:${scoreColor(a.score??a.aiScore??0)}">${a.score??a.aiScore??'-'}%</span><br><span style="color:var(--muted)">${escapeHTML((a.freeText||'').slice(0,160))}</span></div>`).join('') || '<span style="color:var(--muted)">No answers yet.</span>';
     const notes=(sess.notes||[]).slice(-5).reverse().map(n=>`<div style="padding:8px 0;border-bottom:1px solid var(--border);"><strong>${escapeHTML(n.tag)}</strong> — ${escapeHTML(n.observerName)}<br><span style="color:var(--muted)">${escapeHTML(n.note)}</span></div>`).join('') || '<span style="color:var(--muted)">No notes yet.</span>';
     return `<div class="card-sm" id="live-card-${sess.id}" style="background:linear-gradient(180deg,rgba(10,20,37,.98),rgba(3,7,15,.86));border:1px solid rgba(0,229,255,.14);border-radius:14px;padding:18px;box-shadow:0 18px 45px rgba(0,0,0,.22);">
-      <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap;"><div><div style="font-family:var(--head);font-size:16px;font-weight:800;color:var(--white);">${escapeHTML(sess.title)}</div><div style="font-family:var(--mono);font-size:11px;color:var(--cyan);margin-top:2px;">SESSION ${sess.id} · ${escapeHTML(sess.status)}${sess.locked?' · LOCKED':''}</div></div><div style="display:flex;gap:6px;flex-wrap:wrap;"><button class="btn btn-sm btn-outline" onclick="controlLive('${sess.id}','start',this)">Start</button><button class="btn btn-sm btn-ghost" onclick="controlLive('${sess.id}','previous',this)">Prev</button><button class="btn btn-sm btn-primary" onclick="controlLive('${sess.id}','next',this)">Next</button><button class="btn btn-sm btn-ghost" onclick="controlLive('${sess.id}','${sess.locked?'unlock':'lock'}',this)">${sess.locked?'Unlock':'Lock'}</button><button class="btn btn-sm btn-danger" onclick="controlLive('${sess.id}','end',this)">End</button></div></div>
+      <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap;"><div><div style="font-family:var(--head);font-size:16px;font-weight:800;color:var(--white);">${escapeHTML(sess.title)}</div><div style="font-family:var(--mono);font-size:11px;color:var(--cyan);margin-top:2px;">SESSION ${sess.id} · ${escapeHTML(sess.status)}${sess.locked?' · LOCKED':''}</div></div><div style="display:flex;gap:6px;flex-wrap:wrap;"><button class="btn btn-sm btn-outline" onclick="controlLive('${sess.id}','start',this)">Start</button><button class="btn btn-sm btn-ghost" onclick="controlLive('${sess.id}','previous',this)">Prev</button><button class="btn btn-sm btn-primary" onclick="controlLive('${sess.id}','next',this)">Next</button><button class="btn btn-sm btn-ghost" onclick="controlLive('${sess.id}','${sess.locked?'unlock':'lock'}',this)">${sess.locked?'Unlock':'Lock'}</button><button class="btn btn-sm btn-danger" onclick="controlLive('${sess.id}','end',this)">End</button><button class="btn btn-sm btn-danger" onclick="deleteLiveSession('${sess.id}',this)">Delete</button></div></div>
       <div style="margin-top:14px;display:grid;grid-template-columns:repeat(4,1fr);gap:10px;"><div class="stat-card card-sm"><div class="stat-val" style="font-size:20px;color:${scoreColor(avg)}">${avg}%</div><div class="stat-label">Live Avg</div></div><div class="stat-card card-sm"><div class="stat-val" style="font-size:20px;">${(sess.participants||[]).filter(p=>p.role==='participant').length}</div><div class="stat-label">Participants</div></div><div class="stat-card card-sm"><div class="stat-val" style="font-size:20px;">${(sess.answers||[]).length}</div><div class="stat-label">Answers</div></div><div class="stat-card card-sm"><div class="stat-val" style="font-size:20px;">${progress.current}/${progress.total}</div><div class="stat-label">Progress</div></div></div>
       <div style="margin-top:12px;height:6px;background:var(--border);border-radius:4px;overflow:hidden;"><div style="height:100%;width:${progress.pct}%;background:var(--cyan);transition:width .25s ease;"></div></div>
       <div class="grid-2" style="margin-top:12px;"><div><label class="lbl">Participant Link</label><input readonly value="${pLink}" onclick="this.select();navigator.clipboard?.writeText(this.value)"></div><div><label class="lbl">Observer Link</label><input readonly value="${oLink}" onclick="this.select();navigator.clipboard?.writeText(this.value)"></div></div>
@@ -4780,6 +5106,20 @@ async function controlLive(id, action, btn){
   }catch(e){ alert(e.message||'Live control failed.'); }
   finally{ if(btn){btn.disabled=false;btn.textContent=oldText;} if(card) card.style.opacity='1'; }
 }
+
+async function deleteLiveSession(id, btn){
+  if(!confirm('Delete this live exercise session and all previous participant/observer data? This cannot be undone.')) return;
+  const oldText=btn?.textContent;
+  if(btn){btn.disabled=true;btn.textContent='Deleting…';}
+  try{
+    const res=await fetch(`/api/live-sessions/${id}`,{method:'DELETE',headers:authHeaders()});
+    const data=await res.json().catch(()=>null);
+    if(!res.ok) throw new Error(data?.error||'Delete failed');
+    await renderLiveAdmin();
+  }catch(e){ alert(e.message||'Failed to delete session.'); }
+  finally{ if(btn){btn.disabled=false;btn.textContent=oldText;} }
+}
+
 function getDecisionFromLive(sess){
   const level=sess.scenario?.decisions?.management ? 'management' : Object.keys(sess.scenario?.decisions||{})[0];
   const decs=sess.scenario?.decisions?.[level]||[];
@@ -4800,6 +5140,27 @@ function persistLivePublic(){
 function clearLivePublicStorage(){
   ['nexa_live_session_id','nexa_live_role','nexa_live_participant_id','nexa_live_name','nexa_live_team'].forEach(k=>localStorage.removeItem(k));
 }
+
+function showLiveEndedPopup(sess){
+  if(!sess || livePublic.endNotifiedSessionId === sess.id) return;
+  livePublic.endNotifiedSessionId = sess.id;
+  const old=document.getElementById('live-ended-popup');
+  if(old) old.remove();
+  const div=document.createElement('div');
+  div.id='live-ended-popup';
+  div.className='live-ended-overlay';
+  div.innerHTML=`<div class="live-ended-modal">
+    <div class="live-ended-icon">✓</div>
+    <div class="live-ended-title">Scenario Ended</div>
+    <div class="live-ended-copy">The facilitator has ended this live exercise. Your final result and exercise summary are now available.</div>
+    <div class="live-ended-actions">
+      <button class="btn btn-primary" onclick="document.getElementById('live-ended-popup')?.remove();document.getElementById('public-activity')?.scrollIntoView({behavior:'smooth',block:'center'});">View Summary</button>
+      <button class="btn btn-ghost" onclick="document.getElementById('live-ended-popup')?.remove();">Close</button>
+    </div>
+  </div>`;
+  document.body.appendChild(div);
+}
+
 function renderLivePublicSession(sess){
   if(livePublic.session && livePublic.session.currentStep!==sess.currentStep){
     livePublic.decisionStartedAt=Date.now();
@@ -4807,6 +5168,7 @@ function renderLivePublicSession(sess){
     const msg=document.getElementById('public-submit-msg'); if(msg) msg.textContent='';
   }
   livePublic.session=sess;
+  if(sess.status==='ended') showLiveEndedPopup(sess);
   document.getElementById('public-live-title').textContent=sess.title||'Live Exercise';
   document.getElementById('public-live-status').textContent=(sess.status||'waiting').toUpperCase()+` · STEP ${(sess.currentStep||0)+1}`+(sess.locked?' · LOCKED':'');
   const d=getDecisionFromLive(sess);
@@ -4901,7 +5263,7 @@ function startLiveStream(){
     return;
   }
   livePublic.stream=new EventSource(`/api/live-sessions/${livePublic.sessionId}/stream`);
-  livePublic.stream.onmessage=(ev)=>{try{const data=JSON.parse(ev.data); if(data.session) renderLivePublicSession(data.session);}catch(e){}};
+  livePublic.stream.onmessage=(ev)=>{try{const data=JSON.parse(ev.data); if(data.type==='deleted'){alert('This live exercise session was deleted by the facilitator.'); clearLivePublicStorage(); location.href=location.pathname; return;} if(data.session) renderLivePublicSession(data.session);}catch(e){}};
 }
 async function bootLivePublicIfNeeded(){
   const qs=new URLSearchParams(location.search);
@@ -4990,6 +5352,141 @@ document.addEventListener('keydown', e => {
 
 const _origSS=saveScenario;saveScenario=function(){_origSS();queueSaveData();};
 addDecBlock();
+
+/* ── Management-level view refinements ── */
+(function(){
+  function pct(n){ n = Number(n || 0); return Math.max(0, Math.min(100, Math.round(n))); }
+  function readinessLabel(score){
+    score = pct(score);
+    if(score >= 85) return "Resilient";
+    if(score >= 70) return "Operationally Ready";
+    if(score >= 50) return "Needs Improvement";
+    return "Critical Exposure";
+  }
+  function statusClass(score){
+    score = pct(score);
+    if(score >= 70) return "ok";
+    if(score >= 50) return "watch";
+    return "risk";
+  }
+  function uniqBy(arr, keyFn){
+    const m = new Map();
+    (arr||[]).forEach(x => {
+      const k = keyFn(x);
+      if(!m.has(k)) m.set(k, x);
+    });
+    return Array.from(m.values());
+  }
+  window.__nexaManagementView = {
+    pct, readinessLabel, statusClass, uniqBy,
+    render(container, data){
+      if(!container) return;
+      const client = data.client || {};
+      const scenario = data.scenario || {};
+      const results = data.results || data.simResults || [];
+      const uniqueParticipants = uniqBy(results, r => r.participantId || r.email || r.name || r.userName || JSON.stringify(r.answers||[]));
+      const participantCount = Math.max(1, uniqueParticipants.length || data.participantCount || 1);
+      const decisions = data.decisions || scenario.decisions || [];
+      const totalDecisionPoints = Math.max(1, decisions.length * participantCount);
+      const correct = Number(data.correctCount ?? data.correct ?? 0);
+      const rawScore = Number(data.score ?? data.totalScore ?? 0);
+      const readiness = pct(data.readinessScore ?? data.percent ?? data.accuracy ?? (correct / totalDecisionPoints * 100));
+      const avgTime = data.avgTime || data.timeTaken || "—";
+      const skills = data.skills || data.skillScores || [];
+      const topRisks = data.topRisks || data.failures || [];
+      const recs = data.recommendations || [];
+      container.classList.add("hide-game-metrics");
+      container.innerHTML = `
+        <div class="mgmt-hero">
+          <div class="mgmt-panel">
+            <div class="mgmt-label">Board-Level Cyber Simulation Report</div>
+            <div class="mgmt-title">${client.name || "Client"} — Executive Readiness Review</div>
+            <div class="mgmt-sub">
+              Management-level view of crisis response quality, decision governance, communication discipline,
+              and operational readiness. Metrics are aggregated by participant and decision point to avoid duplicated scoring.
+            </div>
+            <div class="mgmt-meta-row">
+              <span class="mgmt-chip">${scenario.title || scenario.name || "Scenario"}</span>
+              <span class="mgmt-chip">${participantCount} participant${participantCount>1?"s":""}</span>
+              <span class="mgmt-chip">${decisions.length || "—"} decision point${decisions.length===1?"":"s"}</span>
+              <span class="mgmt-chip">Management Level</span>
+            </div>
+          </div>
+          <div class="mgmt-panel mgmt-risk-card">
+            <div>
+              <div class="mgmt-label">Overall Readiness</div>
+              <div class="mgmt-risk-score"><div class="num">${readiness}</div><div class="unit">/100</div></div>
+              <div class="mgmt-risk-pill">${readinessLabel(readiness)}</div>
+            </div>
+            <div class="mgmt-sub">This score reflects team readiness, not a game-style performance percentage.</div>
+          </div>
+        </div>
+
+        <div class="mgmt-kpi-grid">
+          <div class="mgmt-kpi"><div class="kpi-value">${readiness}%</div><div class="kpi-label">Team Readiness</div><div class="kpi-note">Normalized to 100%</div></div>
+          <div class="mgmt-kpi"><div class="kpi-value">${correct}/${totalDecisionPoints}</div><div class="kpi-label">Validated Decisions</div><div class="kpi-note">Across all participants</div></div>
+          <div class="mgmt-kpi"><div class="kpi-value">${participantCount}</div><div class="kpi-label">Participants</div><div class="kpi-note">Duplicate runs removed</div></div>
+          <div class="mgmt-kpi"><div class="kpi-value">${avgTime}</div><div class="kpi-label">Response Time</div><div class="kpi-note">Management response cycle</div></div>
+        </div>
+
+        <div class="mgmt-grid-2">
+          <div class="mgmt-panel">
+            <div class="mgmt-section-head"><div class="mgmt-section-title">Capability Domains</div><div class="mgmt-section-note">Executive control view</div></div>
+            <table class="mgmt-table">
+              <thead><tr><th>Domain</th><th>Score</th><th>Status</th></tr></thead>
+              <tbody>
+                ${(skills.length?skills:[
+                  {name:"Decision Governance", score:readiness},
+                  {name:"Crisis Communication", score:readiness},
+                  {name:"Compliance Awareness", score:readiness},
+                  {name:"Leadership Coordination", score:readiness}
+                ]).map(s => {
+                  const name = s.name || s.label || s.skill || "Domain";
+                  const score = pct(s.score ?? s.value ?? readiness);
+                  return `<tr>
+                    <td>${name}</td>
+                    <td><div class="mgmt-bar"><span style="width:${score}%"></span></div><div class="mgmt-muted-score">${score}%</div></td>
+                    <td><span class="mgmt-status ${statusClass(score)}">${readinessLabel(score)}</span></td>
+                  </tr>`;
+                }).join("")}
+              </tbody>
+            </table>
+          </div>
+
+          <div class="mgmt-panel">
+            <div class="mgmt-section-head"><div class="mgmt-section-title">Management Risk Themes</div><div class="mgmt-section-note">Priority concerns</div></div>
+            <div class="mgmt-risk-list">
+              ${(topRisks.length?topRisks:[
+                {title:"Decision Delay", text:"Delayed escalation can increase containment cost and regulatory exposure."},
+                {title:"Communication Control", text:"Board, customer, and regulator messaging requires tighter governance."},
+                {title:"Playbook Execution", text:"Runbook steps should be clearer for live incident ownership and approvals."}
+              ]).slice(0,4).map(r => `<div class="mgmt-risk-item">
+                <div class="risk-title">${r.title || r.name || "Risk Theme"}</div>
+                <div class="risk-copy">${r.text || r.description || r.summary || r}</div>
+              </div>`).join("")}
+            </div>
+          </div>
+        </div>
+
+        <div class="mgmt-panel">
+          <div class="mgmt-section-head"><div class="mgmt-section-title">Executive Action Plan</div><div class="mgmt-section-note">Prioritised remediation</div></div>
+          <div class="mgmt-actions">
+            ${(recs.length?recs:[
+              {horizon:"Immediate", title:"Clarify Incident Command", copy:"Assign decision authority, escalation owner, and communications lead before the next exercise."},
+              {horizon:"30 Days", title:"Update Response Playbook", copy:"Convert policy into practical executive steps for containment, notification, and board reporting."},
+              {horizon:"Next Quarter", title:"Run Management Re-Test", copy:"Repeat the scenario with role-based scorecards and compare readiness trend."}
+            ]).slice(0,3).map((a,i) => `<div class="mgmt-action">
+              <div class="horizon">${a.horizon || ["Immediate","30 Days","Next Quarter"][i] || "Action"}</div>
+              <div class="action-title">${a.title || "Recommended Action"}</div>
+              <div class="action-copy">${a.copy || a.text || a.description || a}</div>
+            </div>`).join("")}
+          </div>
+        </div>
+      `;
+    }
+  };
+})();
+
 </script>
 
 <!-- MAGNIFY MODAL -->
