@@ -837,9 +837,23 @@ input[type=text],input[type=email],input[type=password],input[type=number],texta
 .report-kpi-grid .rm-val{font-family:var(--head);font-size:28px;font-weight:850;color:var(--white);line-height:1.05;}
 .report-kpi-grid .rm-lbl{font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:8px;text-transform:uppercase;letter-spacing:.5px;}
 .report-two-col{display:grid;grid-template-columns:1.1fr .9fr;gap:14px;}
-.readiness-trend-viz{height:230px;position:relative;background:rgba(3,7,15,.35);border:1px solid var(--border);border-radius:12px;overflow:hidden;padding:10px;}
-.readiness-trend-viz svg{width:100%;height:100%;display:block;}
-.trend-score-badge{position:absolute;right:18px;top:20px;background:var(--blue);color:#fff;font-family:var(--mono);font-size:12px;padding:5px 8px;border-radius:7px;font-weight:700;}
+.readiness-trend-viz{min-height:330px;position:relative;background:rgba(3,7,15,.35);border:1px solid var(--border);border-radius:12px;overflow:hidden;padding:18px;}
+.readiness-trend-viz svg{width:100%;height:235px;display:block;overflow:visible;}
+.trend-intro{font-size:13px;color:var(--text);margin:0 190px 14px 0;line-height:1.55;}
+.trend-score-badge{position:absolute;right:18px;top:18px;background:rgba(41,121,255,.12);border:1px solid rgba(41,121,255,.35);color:#fff;font-family:var(--head);font-size:28px;padding:12px 18px;border-radius:12px;font-weight:800;text-align:center;min-width:130px;}
+.trend-score-badge small{display:block;font-family:var(--mono);font-size:10px;font-weight:500;color:var(--text);margin-bottom:3px;letter-spacing:.4px;}
+.trend-score-badge span{display:block;font-family:var(--mono);font-size:10px;font-weight:700;color:var(--green);background:rgba(0,230,118,.14);border-radius:999px;padding:2px 8px;margin-top:6px;}
+.trend-legend{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;border-top:1px solid var(--border);padding-top:12px;margin-top:10px;}
+.trend-legend-item{display:flex;gap:8px;align-items:flex-start;font-size:11px;color:var(--text);line-height:1.35;}
+.trend-dot{width:8px;height:8px;border-radius:50%;margin-top:4px;flex-shrink:0;}
+.trend-legend-item strong{display:block;color:var(--white);font-size:11px;}
+.timeline-note{font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:10px;}
+.report-timeline-v2 .tl-item{display:grid;grid-template-columns:72px 40px 1fr;gap:14px;align-items:center;}
+.report-timeline-v2 .tl-time{font-family:var(--mono);font-size:10px;color:var(--cyan);min-width:62px;padding-top:0;line-height:1.35;}
+.report-timeline-v2 .tl-time strong{display:block;font-family:var(--head);font-size:14px;color:var(--white);margin:3px 0;}
+.timeline-status{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:17px;background:rgba(255,45,85,.12);color:var(--red);border:1px solid rgba(255,45,85,.25);}
+.timeline-status.ok{background:rgba(0,230,118,.12);color:var(--green);border-color:rgba(0,230,118,.25);}
+.timeline-status.mid{background:rgba(255,179,0,.12);color:var(--amber);border-color:rgba(255,179,0,.25);}
 .report-skill-bars .sr-row{display:grid;grid-template-columns:34px 1fr 42px;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);}
 .report-skill-bars .sr-row:last-child{border-bottom:0;}
 .report-skill-bars .sr-name{font-size:12px;color:var(--white);margin-bottom:5px;}
@@ -1884,14 +1898,17 @@ body.theme-light #screen-login > div > div:nth-child(2),body.theme-light .card,b
         <div class="report-kpi-grid" id="rpt-metrics"></div>
 
         <div class="report-card report-card-large" id="report-performance">
-          <div class="report-card-head"><h3>Management Readiness Trend</h3><span>Board-level trend</span></div>
-          <div class="readiness-trend-viz">
-            <svg viewBox="0 0 600 190" preserveAspectRatio="none">
-              <defs><linearGradient id="rptGrad" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="rgba(124,92,255,.55)"/><stop offset="1" stop-color="rgba(0,229,255,.03)"/></linearGradient></defs>
-              <polyline points="0,120 90,100 180,122 270,132 360,112 450,124 600,98" fill="none" stroke="var(--blue)" stroke-width="4" stroke-linecap="round"/>
-              <polygon points="0,120 90,100 180,122 270,132 360,112 450,124 600,98 600,190 0,190" fill="url(#rptGrad)"/>
-            </svg>
-            <div class="trend-score-badge" id="rpt-trend-badge">62%</div>
+          <div class="report-card-head"><h3>Management Readiness Trend</h3><span>Board-level readiness over time</span></div>
+          <div class="readiness-trend-viz" id="readiness-trend-viz">
+            <p class="trend-intro">Tracks management decision quality over time during the exercise. Each point shows the running readiness average after a submitted decision.</p>
+            <div class="trend-score-badge" id="rpt-trend-badge"><small>Current Readiness</small>62%<span>GOOD</span></div>
+            <div id="rpt-trend-chart"></div>
+            <div class="trend-legend">
+              <div class="trend-legend-item"><i class="trend-dot" style="background:var(--red)"></i><div><strong>0–39%</strong>Critical</div></div>
+              <div class="trend-legend-item"><i class="trend-dot" style="background:var(--amber)"></i><div><strong>40–59%</strong>Needs improvement</div></div>
+              <div class="trend-legend-item"><i class="trend-dot" style="background:var(--blue)"></i><div><strong>60–79%</strong>Good</div></div>
+              <div class="trend-legend-item"><i class="trend-dot" style="background:var(--green)"></i><div><strong>80–100%</strong>Strong readiness</div></div>
+            </div>
           </div>
         </div>
 
@@ -1939,8 +1956,8 @@ body.theme-light #screen-login > div > div:nth-child(2),body.theme-light .card,b
         </div>
 
         <div class="report-card" id="report-timeline">
-          <div class="report-card-head"><h3>Timeline & Events</h3><span>Chronological replay</span></div>
-          <div id="exercise-timeline" class="report-timeline-v2"></div>
+          <div class="report-card-head"><h3>Timeline & Events</h3><span id="timeline-timezone-label">All times shown in local time</span></div>
+          <div id="exercise-timeline" class="report-timeline-v2"></div><div class="timeline-note" id="timeline-note"></div>
         </div>
 
         <div class="report-card" id="report-decisions">
@@ -4108,6 +4125,61 @@ async function fetchAIConclusion(scenario, simState, decisions, resultId){
 }
 
 
+function formatReportLocalTime(value){
+  if(!value) return {main:'—', alt:'', full:'No timestamp'};
+  const d = new Date(value);
+  if(Number.isNaN(d.getTime())) return {main:'—', alt:'', full:'Invalid timestamp'};
+  const hh24 = String(d.getHours()).padStart(2,'0');
+  const mm = String(d.getMinutes()).padStart(2,'0');
+  const h12 = d.getHours()%12 || 12;
+  const ampm = d.getHours() >= 12 ? 'PM' : 'AM';
+  return { main:`${String(h12).padStart(2,'0')}:${mm} ${ampm}`, alt:`(${hh24}:${mm})`, full:d.toLocaleString() };
+}
+function localTimezoneLabel(){
+  try{
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'local time';
+    const off = -new Date().getTimezoneOffset();
+    const sign = off >= 0 ? '+' : '-';
+    const hh = String(Math.floor(Math.abs(off)/60)).padStart(2,'0');
+    const mm = String(Math.abs(off)%60).padStart(2,'0');
+    return `All times shown in local time (${tz}, UTC ${sign}${hh}:${mm})`;
+  }catch(e){ return 'All times shown in local time'; }
+}
+function readinessBand(pct){
+  pct = Number(pct)||0;
+  if(pct >= 80) return {label:'STRONG', color:'var(--green)'};
+  if(pct >= 60) return {label:'GOOD', color:'var(--blue)'};
+  if(pct >= 40) return {label:'IMPROVE', color:'var(--amber)'};
+  return {label:'CRITICAL', color:'var(--red)'};
+}
+function renderReadinessTrend(results, finalPct){
+  const chart=document.getElementById('rpt-trend-chart');
+  const badge=document.getElementById('rpt-trend-badge');
+  const tz=document.getElementById('timeline-timezone-label');
+  if(tz) tz.textContent=localTimezoneLabel();
+  const band=readinessBand(finalPct);
+  if(badge) badge.innerHTML=`<small>Current Readiness</small>${Math.round(Number(finalPct)||0)}%<span style="color:${band.color}">${band.label}</span>`;
+  if(!chart) return;
+  const rows=[...(results||[])].sort((a,b)=>String(a.submittedAt||a.createdAt||'').localeCompare(String(b.submittedAt||b.createdAt||'')));
+  let running=[];
+  let sum=0;
+  rows.forEach((r,i)=>{ sum += Number(scoreOfResult(r)) || 0; running.push({pct:Math.round(sum/(i+1)), time:r.submittedAt||r.createdAt, label:`D${Number(r.decisionIndex ?? r.step ?? i)+1}`}); });
+  if(!running.length){ running=[{pct:0,label:'Start'},{pct:Math.round(Number(finalPct)||0),label:'Now'}]; }
+  const W=640,H=235,left=54,right=22,top=18,bottom=46;
+  const cw=W-left-right,ch=H-top-bottom;
+  const xFor=i=>left+(running.length===1?cw: i*cw/(running.length-1));
+  const yFor=p=>top+ch-(Math.max(0,Math.min(100,p))/100)*ch;
+  const pts=running.map((p,i)=>`${xFor(i).toFixed(1)},${yFor(p.pct).toFixed(1)}`).join(' ');
+  const area=`${pts} ${left+cw},${top+ch} ${left},${top+ch}`;
+  const yTicks=[0,25,50,75,100].map(v=>`<g><line x1="${left}" y1="${yFor(v)}" x2="${left+cw}" y2="${yFor(v)}" stroke="rgba(184,212,240,.14)" stroke-dasharray="4 5"/><text x="${left-12}" y="${yFor(v)+4}" text-anchor="end" fill="rgba(184,212,240,.75)" font-size="11" font-family="var(--mono)">${v}%</text></g>`).join('');
+  const maxLabels=running.length>7?7:running.length;
+  const idxs=[...new Set(Array.from({length:maxLabels},(_,k)=>Math.round(k*(running.length-1)/(maxLabels-1||1))))];
+  const xLabels=idxs.map(i=>{ const t=formatReportLocalTime(running[i].time); const label=running[i].time ? t.alt.replace(/[()]/g,'') : running[i].label; return `<text x="${xFor(i)}" y="${H-18}" text-anchor="middle" fill="rgba(184,212,240,.8)" font-size="11" font-family="var(--mono)">${escapeHTML(label)}</text>`; }).join('');
+  const circles=running.map((p,i)=>`<circle cx="${xFor(i)}" cy="${yFor(p.pct)}" r="4.5" fill="#e8f4ff" stroke="var(--blue)" stroke-width="3"><title>${escapeHTML(p.label)} — ${p.pct}% ${p.time?formatReportLocalTime(p.time).full:''}</title></circle>`).join('');
+  chart.innerHTML=`<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="Management readiness trend over time"><defs><linearGradient id="rptGradLive" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="rgba(124,92,255,.55)"/><stop offset="1" stop-color="rgba(0,229,255,.04)"/></linearGradient></defs>${yTicks}<line x1="${left}" y1="${top}" x2="${left}" y2="${top+ch}" stroke="rgba(184,212,240,.5)"/><line x1="${left}" y1="${top+ch}" x2="${left+cw}" y2="${top+ch}" stroke="rgba(184,212,240,.5)"/><polygon points="${area}" fill="url(#rptGradLive)"/><polyline points="${pts}" fill="none" stroke="var(--blue)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>${circles}${xLabels}</svg>`;
+}
+
+
 function scoreOfResult(r){
   if(typeof r.aiScore === 'number' && !Number.isNaN(r.aiScore)) return r.aiScore;
   if(typeof r.score === 'number' && !Number.isNaN(r.score)) return r.score;
@@ -4116,6 +4188,7 @@ function scoreOfResult(r){
 function renderExerciseTimeline(results){
   const el=document.getElementById('exercise-timeline');
   if(!el) return;
+  const note=document.getElementById('timeline-note'); if(note) note.textContent=localTimezoneLabel();
   if(!results || !results.length){el.innerHTML='<div style="color:var(--muted);font-size:12px;">No timeline data available.</div>';return;}
   const sorted=[...results].sort((a,b)=>{
     const da=(a.decisionIndex??a.step??0)-(b.decisionIndex??b.step??0);
@@ -4126,7 +4199,11 @@ function renderExerciseTimeline(results){
     const score=scoreOfResult(r);
     const color=score>=80?'var(--green)':score>=50?'var(--amber)':'var(--red)';
     const dNo=Number(r.decisionIndex ?? r.step ?? i)+1;
-    return `<div class="tl-item"><div class="tl-time">D${dNo}</div><div class="tl-content"><strong>${escapeHTML(r.participantName||r.name||'Participant')}</strong> <span style="color:var(--muted)">(${escapeHTML(r.team||'Unassigned')})</span><br>${escapeHTML(r.question||'Decision submitted')}<br><span style="color:${color};font-family:var(--mono);font-size:10px;">Score: ${score}%</span> · <span style="font-family:var(--mono);font-size:10px;color:var(--muted);">Branch: ${(r.branch||'n/a').toUpperCase()} · Time: ${r.responseTimeSec||0}s</span></div></div>`;
+    const t=formatReportLocalTime(r.submittedAt||r.createdAt||r.at);
+    const statusClass=score>=80?'ok':score>=50?'mid':'';
+    const statusIcon=score>=80?'✓':score>=50?'!':'×';
+    const taken=Number(r.responseTimeSec||r.timeTakenSec||0);
+    return `<div class="tl-item"><div class="tl-time"><span>D${dNo}</span><strong>${escapeHTML(t.main)}</strong><span>${escapeHTML(t.alt)}</span></div><div class="timeline-status ${statusClass}">${statusIcon}</div><div class="tl-content"><strong>${escapeHTML(r.participantName||r.name||'Participant')}</strong> <span style="color:var(--muted)">(${escapeHTML(r.team||'Unassigned')})</span><br>${escapeHTML(r.question||'Decision submitted')}<br><span style="color:${color};font-family:var(--mono);font-size:10px;">Score: ${score}%</span> · <span style="font-family:var(--mono);font-size:10px;color:var(--muted);">Branch: ${(r.branch||'n/a').toUpperCase()} · Time Taken: ${taken}s</span></div></div>`;
   }).join('');
 }
 
@@ -4160,6 +4237,7 @@ function renderAdvisoryAssessment(results){
 function renderDecisionReplay(results){
   const el=document.getElementById('decision-replay');
   if(!el) return;
+  const note=document.getElementById('timeline-note'); if(note) note.textContent=localTimezoneLabel();
   if(!results || !results.length){el.innerHTML='<div style="color:var(--muted);font-size:12px;">No replay data available.</div>';return;}
   el.innerHTML=results.map((r,i)=>{
     const score=scoreOfResult(r);
@@ -4171,6 +4249,7 @@ function renderDecisionReplay(results){
 function renderDecisionHeatmap(results){
   const el=document.getElementById('decision-heatmap');
   if(!el) return;
+  const note=document.getElementById('timeline-note'); if(note) note.textContent=localTimezoneLabel();
   if(!results || !results.length){el.innerHTML='<div style="color:var(--muted);font-size:12px;">No heatmap data available.</div>';return;}
   const by={};
   results.forEach((r,i)=>{const key=Number(r.decisionIndex ?? r.step ?? i)+1; if(!by[key]) by[key]=[]; by[key].push(r);});
@@ -4213,6 +4292,7 @@ function showReport(){
   circle.style.color=gc;
   circle.style.boxShadow=`0 0 40px ${gc}33`;
   const tb=document.getElementById('rpt-trend-badge'); if(tb) tb.textContent=pct+'%';
+  renderReadinessTrend(simState.results, pct);
   document.getElementById('rpt-headline').textContent=pct>=90?'Excellent Response — Outstanding':pct>=70?'Strong Response — Well Done':pct>=50?'Adequate Response — Room to Improve':'Response Needs Significant Improvement';
   document.getElementById('rpt-score-line').textContent=`${s.title} · ${simState.level.toUpperCase()} LEVEL · Team readiness: ${pct}% · ${correct}/${decs.length} decisions passed · ${execMetrics.participantCount||1} participant(s) · ${execMetrics.submissions} submissions`;
   const timeTaken=(s.duration==='20 min'?1200:s.duration==='30 min'?1800:900)-simState.timeLeft;
@@ -5777,13 +5857,13 @@ function buildManagementThemes(results, good){
       try{
         const s=simState.scenario || {};
         const decs=(s.decisions&&s.decisions[simState.level])||[];
-        const maxScore=decs.length*100;
-        const reportScore=calculateTotalScore(simState.results||[]);
-        const pct=maxScore>0?Math.round((reportScore/maxScore)*100):0;
+        const execMetrics=(typeof calculateExecutiveMetrics==='function') ? calculateExecutiveMetrics(simState.results||[], decs.length) : null;
+        const pct=execMetrics ? execMetrics.pct : (decs.length?Math.round(calculateTotalScore(simState.results||[])/(decs.length*100)*100):0);
         const client=simState.client;
         const breadcrumb=document.getElementById('rpt-breadcrumb-title'); if(breadcrumb) breadcrumb.textContent=s.title||'Simulation';
         const sideScore=document.getElementById('rpt-side-score'); if(sideScore) sideScore.textContent=pct+'%';
         const trend=document.getElementById('rpt-trend-badge'); if(trend) trend.textContent=pct+'%';
+        if(typeof renderReadinessTrend==='function') renderReadinessTrend(simState.results||[], pct);
         const label=document.getElementById('rpt-side-label'); if(label) label.textContent=pct>=80?'Strong':pct>=60?'Moderate':pct>=40?'Developing':'Critical';
         const ring=document.querySelector('.mini-ring'); if(ring){
           const col=pct>=80?'var(--green)':pct>=60?'var(--cyan)':pct>=40?'var(--amber)':'var(--red)';
