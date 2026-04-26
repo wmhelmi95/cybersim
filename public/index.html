@@ -3004,15 +3004,8 @@ function renderDashboard(){
   const scenarios = DB.scenarios || [];
   const results = DB.simResults || [];
   const total = results.length;
-  const passing = results.filter(r => {
-    const max = Number(r.maxScore || 100) || 100;
-    const score = Number(r.score || 0);
-    return (score / max) >= 0.7;
-  }).length;
-  const avgScore = total ? Math.round(results.reduce((a,r)=>{
-    const max = Number(r.maxScore || 100) || 100;
-    return a + (Number(r.score || 0) / max) * 100;
-  },0)/total) : 0;
+  const passing = results.filter(r => getNormalisedResultPct(r) >= 70).length;
+  const avgScore = total ? Math.round(results.reduce((a,r)=>a + getNormalisedResultPct(r),0)/total) : 0;
   const participantCount = results.reduce((sum,r)=>sum + Number(r.participants || r.totalParticipants || (Array.isArray(r.participantResults)?r.participantResults.length:0) || 0),0);
   const playbookReady = clients.filter(c => (c.playbookText || '').trim().length > 20).length;
 
@@ -3063,7 +3056,7 @@ function renderDashboard(){
       const client = clients.find(c=>c.id===r.clientId);
       const scenario = scenarios.find(s=>s.id===r.scenarioId);
       const max = Number(r.maxScore || 100) || 100;
-      const pct = Math.round((Number(r.score || 0)/max)*100);
+      const pct = getNormalisedResultPct(r);
       const simName = `${client?.name || 'Client'} — ${scenario?.title || 'Simulation'}`;
       const participants = Number(r.participants || r.totalParticipants || (Array.isArray(r.participantResults)?r.participantResults.length:0) || 1);
       return `<tr>
@@ -3129,12 +3122,12 @@ function renderClients(){
       <div class="client-grid">`;
     groups[ind].forEach(cl=>{
       const results=DB.simResults.filter(r=>r.clientId===cl.id);
-      const avgScore=results.length?Math.round(results.reduce((a,r)=>a+(r.score/r.maxScore)*100,0)/results.length):null;
+      const avgScore=results.length?Math.round(results.reduce((a,r)=>a+getNormalisedResultPct(r),0)/results.length):null;
       let trendHtml='';
       if(results.length>=2){
         const sorted=[...results].sort((a,b)=>new Date(a.date)-new Date(b.date));
-        const prev=Math.round((sorted[sorted.length-2].score/sorted[sorted.length-2].maxScore)*100);
-        const last=Math.round((sorted[sorted.length-1].score/sorted[sorted.length-1].maxScore)*100);
+        const prev=getNormalisedResultPct(sorted[sorted.length-2]);
+        const last=getNormalisedResultPct(sorted[sorted.length-1]);
         const diff=last-prev;
         if(diff>0) trendHtml=`<div class="client-trend"><span class="trend-lbl">vs last run</span><span class="trend-up">↑ +${diff}%</span></div>`;
         else if(diff<0) trendHtml=`<div class="client-trend"><span class="trend-lbl">vs last run</span><span class="trend-down">↓ ${diff}%</span></div>`;
@@ -3164,8 +3157,8 @@ function openClientProfile(clientId){
     <div><div class="cp-name">${client.name}</div><div class="cp-meta">${client.industry} · ${client.size} employees · ${client.contact} · ${client.email}</div></div>
     <div class="cp-actions"><button class="btn btn-ghost btn-sm" onclick="openEditClientModal('${client.id}')">✎ Edit Info</button><button class="btn btn-outline btn-sm" onclick="openAssignModal()">+ Assign Scenario</button></div>`;
   const results=DB.simResults.filter(r=>r.clientId===clientId);
-  const avgScore=results.length?Math.round(results.reduce((a,r)=>a+(r.score/r.maxScore)*100,0)/results.length):null;
-  const passing=results.filter(r=>(r.score/r.maxScore)>=0.7).length;
+  const avgScore=results.length?Math.round(results.reduce((a,r)=>a+getNormalisedResultPct(r),0)/results.length):null;
+  const passing=results.filter(r=>getNormalisedResultPct(r)>=70).length;
   document.getElementById('cp-stats').innerHTML=`
     <div class="stat-card"><div class="stat-val">${client.assignedScenarios.length}</div><div class="stat-label">Assigned Scenarios</div></div>
     <div class="stat-card"><div class="stat-val">${results.length}</div><div class="stat-label">Simulations Run</div></div>
@@ -3189,7 +3182,7 @@ function renderAssignedTable(client){
       <td><span class="sev-badge sev-${s.severity.toLowerCase()}">${s.severity}</span></td>
       <td>${skillTags}</td>
       <td style="font-family:var(--mono);font-size:12px">${clientResults.length}</td>
-      <td style="font-family:var(--mono);font-size:12px;color:var(--cyan)">${lastResult?Math.round((lastResult.score/lastResult.maxScore)*100)+'%':'—'}</td>
+      <td style="font-family:var(--mono);font-size:12px;color:var(--cyan)">${lastResult?getNormalisedResultPct(lastResult)+'%':'—'}</td>
       <td style="display:flex;gap:6px;padding:10px;flex-wrap:wrap;"><button class="btn btn-primary btn-sm" onclick="launchBriefing('${sid}','${client.id}')">▶ Run</button><button class="btn btn-outline btn-sm" onclick="createLiveSessionFromClient('${sid}','${client.id}')">▣ Live</button><button class="btn btn-danger btn-sm" onclick="unassignScenario('${client.id}','${sid}')">✕</button></td>
     </tr>`;
   }).join('')||'<tr><td colspan="6" style="padding:20px;text-align:center;color:var(--muted)">No scenarios assigned. Click "+ Assign Scenario" to add.</td></tr>';
@@ -3212,7 +3205,7 @@ function renderClientHistory(clientId){
   const results=DB.simResults.filter(r=>r.clientId===clientId);
   document.getElementById('cp-history-body').innerHTML=[...results].reverse().map(r=>{
     const s=DB.scenarios.find(sc=>sc.id===r.scenarioId);
-    const pct=Math.round((r.score/r.maxScore)*100);
+    const pct=getNormalisedResultPct(r);
     const grade=getGrade(pct);
     return `<tr>
       <td style="font-family:var(--mono);font-size:10px;color:var(--muted)">${r.date}</td>
@@ -3812,13 +3805,41 @@ function calculateExecutiveMetrics(results, decisionCount){
   const decisions=aggregateResultsForExecutive(results, decisionCount);
   const maxScore=Math.max(1, decisions.length) * 100;
   const score=Math.round(decisions.reduce((sum,d)=>sum+d.score,0));
-  const pct=Math.round((score/maxScore)*100);
+  const pct=clampScorePct((score/maxScore)*100);
   const passed=decisions.filter(d=>d.correct).length;
   const submissions=(results||[]).length;
   const participantNames=[...new Set((results||[]).map(r=>r.participantName||r.name).filter(Boolean))];
   return {decisions,maxScore,score,pct,passed,submissions,participantCount:participantNames.length};
 }
 function calculateAverageScore(results){return results&&results.length?Math.round(calculateTotalScore(results)/results.length):0;}
+function clampScorePct(value){
+  const n = Number(value);
+  if(!Number.isFinite(n)) return 0;
+  return Math.max(0, Math.min(100, Math.round(n)));
+}
+function getResultParticipantCount(r){
+  const fromArray = Array.isArray(r?.participantResults) ? r.participantResults.length : 0;
+  const fromDecisions = Array.isArray(r?.decisions) ? new Set(r.decisions.map(x=>x.participantName||x.participantId||x.name).filter(Boolean)).size : 0;
+  return Math.max(1, Number(r?.participantCount || r?.totalParticipants || r?.participants || fromArray || fromDecisions || 1));
+}
+function getNormalisedResultMax(r){
+  const rawMax = Math.max(1, Number(r?.maxScore || 100));
+  const score = Math.max(0, Number(r?.score || 0));
+  const participants = getResultParticipantCount(r);
+  return (score > rawMax && participants > 1) ? rawMax * participants : rawMax;
+}
+function getNormalisedResultPct(r){
+  return clampScorePct((Number(r?.score || 0) / getNormalisedResultMax(r)) * 100);
+}
+function calculateSkillReadinessFromResults(results, skills){
+  const out={};
+  (skills||[]).forEach(k=>{
+    const rows=(results||[]).filter(r=>(r.skillTested||r.skill)===k);
+    out[k]=rows.length ? clampScorePct(rows.reduce((sum,r)=>sum+getResultScoreValue(r),0)/rows.length) : 0;
+  });
+  return out;
+}
+
 function groupByKey(arr,key){return (arr||[]).reduce((acc,item)=>{const k=item?.[key]||'Unassigned';(acc[k]=acc[k]||[]).push(item);return acc;},{});}
 function scoreBySkill(rows){const grouped=groupByKey(rows,'skillTested');return Object.entries(grouped).map(([skill,items])=>({skill,score:calculateAverageScore(items)}));}
 function strongestSkill(rows){const list=scoreBySkill(rows).sort((a,b)=>b.score-a.score);return list[0]?`${SKILLS[list[0].skill]?.label||list[0].skill} (${list[0].score}%)`:'N/A';}
@@ -4070,7 +4091,7 @@ async function fetchAIConclusion(scenario, simState, decisions, resultId){
 
   } catch(err) {
     console.error('AI conclusion error:', err);
-    const pct = maxScore > 0 ? Math.round((calculateTotalScore(simState.results)/maxScore)*100) : 0;
+    const pct = maxScore > 0 ? clampScorePct((calculateTotalScore(simState.results)/maxScore)*100) : 0;
     const worstSkill = Object.entries(skillScores).sort((a,b)=>a[1]-b[1])[0];
     conclusionEl.innerHTML = `
       <div style="background:rgba(255,179,0,0.06);border-left:3px solid var(--amber);border-radius:0 8px 8px 0;padding:14px 16px;margin-bottom:12px;">
@@ -4178,7 +4199,7 @@ function showReport(){
   const grade=getGrade(pct);
   const gradeColors={A:'#00e676',B:'#00e5ff',C:'#ffb300',D:'#ff2d55'};
   const gc=gradeColors[grade];
-  const resultObj={id:'r'+Date.now(),clientId:simState.client?.id||null,scenarioId:s.id,level:simState.level,score:reportScore,maxScore,date:new Date().toISOString().split('T')[0],skillScores:{...simState.skillScores},decisions:simState.results.map(r=>({...r})),stateEnabled:simState.stateEnabled,finalState:simState.crisisState?{money:simState.crisisState.money,reputation:simState.crisisState.reputation}:null,savedConclusion:null};
+  const resultObj={id:'r'+Date.now(),clientId:simState.client?.id||null,scenarioId:s.id,level:simState.level,score:reportScore,maxScore,date:new Date().toISOString().split('T')[0],skillScores:{...simState.skillScores},decisions:simState.results.map(r=>({...r})),participantCount:execMetrics.participantCount||1,totalParticipants:execMetrics.participantCount||1,submissions:execMetrics.submissions,stateEnabled:simState.stateEnabled,finalState:simState.crisisState?{money:simState.crisisState.money,reputation:simState.crisisState.reputation}:null,savedConclusion:null};
   if(!simState.isViewingPastResult){DB.simResults.push(resultObj);simState.lastResultId=resultObj.id;}
   const client=simState.client;
   document.getElementById('rpt-client-header').innerHTML=client?`
@@ -4204,9 +4225,10 @@ function showReport(){
   fetchAIConclusion(s,simState,decs,simState.lastResultId||simState.viewingResultId);
   const skillCounts={};
   decs.forEach(d=>{if(d.skillTested) skillCounts[d.skillTested]=(skillCounts[d.skillTested]||0)+1;});
+  const skillReadiness = calculateSkillReadinessFromResults(simState.results, s.skills);
+  simState.normalisedSkillScores = skillReadiness;
   document.getElementById('rpt-skill-rows').innerHTML=s.skills.map(k=>{
-    const max=(skillCounts[k]||1)*100;
-    const p=Math.round(((simState.skillScores[k]||0)/max)*100);
+    const p=skillReadiness[k] || 0;
     return `<div class="sr-row"><div class="sr-icon">${SKILLS[k].icon}</div><div class="sr-info"><div class="sr-name">${SKILLS[k].label}</div><div class="sr-bar"><div class="sr-fill" style="width:${p}%;background:${SKILLS[k].color}"></div></div></div><div class="sr-pct" style="color:${SKILLS[k].color}">${p}%</div></div>`;
   }).join('');
   drawRadar(s.skills,skillCounts);
@@ -4256,7 +4278,7 @@ function drawRadar(skills,skillCounts){
   const angles=skills.map((_,i)=>(Math.PI*2*i/n)-Math.PI/2);
   [0.25,0.5,0.75,1].forEach(sc=>{ctx.beginPath();angles.forEach((a,i)=>{const x=cx+r*sc*Math.cos(a),y=cy+r*sc*Math.sin(a);i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});ctx.closePath();ctx.strokeStyle='rgba(255,255,255,0.05)';ctx.lineWidth=1;ctx.stroke();});
   angles.forEach(a=>{ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+r*Math.cos(a),cy+r*Math.sin(a));ctx.strokeStyle='rgba(255,255,255,0.05)';ctx.stroke();});
-  const vals=skills.map(k=>{const max=(skillCounts[k]||1)*100;return Math.max(0.05,(simState.skillScores[k]||0)/max);});
+  const vals=skills.map(k=>{const pct=(simState.normalisedSkillScores&&simState.normalisedSkillScores[k]!==undefined)?simState.normalisedSkillScores[k]:clampScorePct(((simState.skillScores[k]||0)/((skillCounts[k]||1)*100))*100);return Math.max(0.05,pct/100);});
   ctx.beginPath();angles.forEach((a,i)=>{const x=cx+r*vals[i]*Math.cos(a),y=cy+r*vals[i]*Math.sin(a);i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});ctx.closePath();ctx.fillStyle='rgba(0,229,255,0.12)';ctx.fill();ctx.strokeStyle='#00e5ff';ctx.lineWidth=2;ctx.stroke();
   angles.forEach((a,i)=>{const x=cx+r*vals[i]*Math.cos(a),y=cy+r*vals[i]*Math.sin(a);ctx.beginPath();ctx.arc(x,y,4,0,Math.PI*2);ctx.fillStyle='#00e5ff';ctx.fill();});
   ctx.font='12px JetBrains Mono,monospace';ctx.fillStyle='rgba(184,212,240,0.7)';ctx.textAlign='center';
@@ -4733,7 +4755,7 @@ function renderRankings(){
     let results=DB.simResults.filter(r=>r.clientId===cl.id);
     if(lvlFilter) results=results.filter(r=>r.level===lvlFilter);
     if(!results.length) return null;
-    const scores=results.map(r=>Math.round((r.score/r.maxScore)*100));
+    const scores=results.map(r=>getNormalisedResultPct(r));
     const avg=Math.round(scores.reduce((a,b)=>a+b,0)/scores.length);
     const best=Math.max(...scores);
     return{cl,avg,best,sims:results.length};
