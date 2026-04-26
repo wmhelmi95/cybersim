@@ -913,6 +913,8 @@ app.post('/api/export-word', requireAuth, async (req, res) => {
       const SECTION_KW = [
         'Executive Summary','Cyber Resilience Posture','Skill Domain Performance',
         'Decision Failures','Decision Analysis','Correct Responses',
+        'Team & Individual Insights','Timeline, Replay & Heatmap Insights',
+        'MITRE ATT&CK / Threat Behaviour Mapping','Playbook Advisory Assessment',
         'Prioritised Recommendations','Recommendations',
         "Consultant's Verdict",'Verdict','Key Findings','Overall Assessment','Overall Verdict',
       ];
@@ -921,6 +923,7 @@ app.post('/api/export-word', requireAuth, async (req, res) => {
       let cleaned = raw
         .replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{27BF}\u{FE00}-\u{FE0F}]/gu, '')
         .replace(/SECTION\s+\d+/gi, '')
+        .replace(/Executive Summary\s*\n\s*Executive Summary/i, 'Executive Summary')
         .replace(/&amp;/gi,'&').replace(/&apos;/gi,"'").replace(/&quot;/gi,'"')
         .replace(/&lt;/gi,'<').replace(/&gt;/gi,'>')
         .replace(/<br\s*\/?>/gi, '\n')
