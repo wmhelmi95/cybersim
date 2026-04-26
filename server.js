@@ -1688,6 +1688,29 @@ app.post('/api/live-sessions/:id/control', requireAuth, (req, res) => {
   }
 });
 
+app.delete('/api/live-sessions/:id', requireAuth, (req, res) => {
+  try {
+    const id = String(req.params.id).toUpperCase();
+    const db = readDB();
+    const sessions = ensureLiveStore(db);
+    if(!sessions[id]) return res.status(404).json({ error:'Session not found' });
+    delete sessions[id];
+    db.liveSessions = sessions;
+    writeDB(db);
+    const set = liveStreams.get(id);
+    if(set){
+      const payload = `data: ${JSON.stringify({ type:'deleted', sessionId:id })}\n\n`;
+      for(const stream of [...set]){ try { stream.write(payload); } catch(e) {} }
+      liveStreams.delete(id);
+    }
+    res.json({ ok:true, deleted:id });
+  } catch(err) {
+    console.error('Delete live session error:', err.message);
+    res.status(500).json({ error:'Failed to delete live session' });
+  }
+});
+
+
 app.post('/api/live-sessions/:id/join', (req, res) => {
   try {
     const id = String(req.params.id).toUpperCase();
