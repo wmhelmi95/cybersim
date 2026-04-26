@@ -913,8 +913,6 @@ app.post('/api/export-word', requireAuth, async (req, res) => {
       const SECTION_KW = [
         'Executive Summary','Cyber Resilience Posture','Skill Domain Performance',
         'Decision Failures','Decision Analysis','Correct Responses',
-        'Team & Individual Insights','Timeline, Replay & Heatmap Insights',
-        'MITRE ATT&CK / Threat Behaviour Mapping','Playbook Advisory Assessment',
         'Prioritised Recommendations','Recommendations',
         "Consultant's Verdict",'Verdict','Key Findings','Overall Assessment','Overall Verdict',
       ];
@@ -923,7 +921,6 @@ app.post('/api/export-word', requireAuth, async (req, res) => {
       let cleaned = raw
         .replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{27BF}\u{FE00}-\u{FE0F}]/gu, '')
         .replace(/SECTION\s+\d+/gi, '')
-        .replace(/Executive Summary\s*\n\s*Executive Summary/i, 'Executive Summary')
         .replace(/&amp;/gi,'&').replace(/&apos;/gi,"'").replace(/&quot;/gi,'"')
         .replace(/&lt;/gi,'<').replace(/&gt;/gi,'>')
         .replace(/<br\s*\/?>/gi, '\n')
@@ -1688,29 +1685,6 @@ app.post('/api/live-sessions/:id/control', requireAuth, (req, res) => {
   }
 });
 
-app.delete('/api/live-sessions/:id', requireAuth, (req, res) => {
-  try {
-    const id = String(req.params.id).toUpperCase();
-    const db = readDB();
-    const sessions = ensureLiveStore(db);
-    if(!sessions[id]) return res.status(404).json({ error:'Session not found' });
-    delete sessions[id];
-    db.liveSessions = sessions;
-    writeDB(db);
-    const set = liveStreams.get(id);
-    if(set){
-      const payload = `data: ${JSON.stringify({ type:'deleted', sessionId:id })}\n\n`;
-      for(const stream of [...set]){ try { stream.write(payload); } catch(e) {} }
-      liveStreams.delete(id);
-    }
-    res.json({ ok:true, deleted:id });
-  } catch(err) {
-    console.error('Delete live session error:', err.message);
-    res.status(500).json({ error:'Failed to delete live session' });
-  }
-});
-
-
 app.post('/api/live-sessions/:id/join', (req, res) => {
   try {
     const id = String(req.params.id).toUpperCase();
@@ -1910,3 +1884,115 @@ initDB()
     console.error('[FATAL] Database initialisation failed:', err.message);
     process.exit(1);
   });
+
+
+// ENTERPRISE SYSTEM V2 — DB schema-ready APIs and analytics
+async function ensureEnterpriseSchema(){
+  if(!pool||typeof pool.query!=='function') return;
+  await pool.query(`
+    CREATE EXTENSION IF NOT EXISTS pgcrypto;
+    CREATE TABLE IF NOT EXISTS enterprise_exercises (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      client_id TEXT, scenario_id TEXT, title TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'draft',
+      started_at TIMESTAMPTZ, ended_at TIMESTAMPTZ,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+    CREATE TABLE IF NOT EXISTS enterprise_participants (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      exercise_id UUID REFERENCES enterprise_exercises(id) ON DELETE CASCADE,
+      participant_key TEXT NOT NULL, display_name TEXT, email TEXT, role TEXT,
+      observer BOOLEAN DEFAULT FALSE, joined_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      UNIQUE(exercise_id, participant_key)
+    );
+    CREATE TABLE IF NOT EXISTS enterprise_decision_records (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      exercise_id UUID REFERENCES enterprise_exercises(id) ON DELETE CASCADE,
+      participant_id UUID REFERENCES enterprise_participants(id) ON DELETE CASCADE,
+      decision_id TEXT NOT NULL, selected_option TEXT,
+      is_validated BOOLEAN DEFAULT FALSE, is_borderline BOOLEAN DEFAULT FALSE,
+      risk_impact TEXT DEFAULT 'medium', business_impact TEXT,
+      response_time_ms INTEGER, submitted_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      UNIQUE(exercise_id, participant_id, decision_id)
+    );
+    CREATE TABLE IF NOT EXISTS enterprise_audit_events (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      exercise_id UUID REFERENCES enterprise_exercises(id) ON DELETE CASCADE,
+      actor_key TEXT, actor_role TEXT, event_type TEXT NOT NULL,
+      event_payload JSONB DEFAULT '{}'::jsonb,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+    CREATE TABLE IF NOT EXISTS enterprise_playbook_expectations (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      exercise_id UUID REFERENCES enterprise_exercises(id) ON DELETE CASCADE,
+      decision_id TEXT NOT NULL, expected_action TEXT NOT NULL,
+      owner_role TEXT, severity TEXT DEFAULT 'medium',
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      UNIQUE(exercise_id, decision_id)
+    );
+  `);
+}
+function enterpriseScore(validated,total){
+  const t=Math.max(1,Number(total||1)), v=Math.max(0,Math.min(t,Number(validated||0)));
+  return {readinessIndex:Math.round(v/t*100),validatedDecisions:v,riskDecisions:t-v,totalDecisionRecords:t};
+}
+async function enterpriseAudit(exerciseId,actorKey,actorRole,eventType,payload={}){
+  if(!pool||typeof pool.query!=='function') return;
+  await pool.query(`INSERT INTO enterprise_audit_events (exercise_id,actor_key,actor_role,event_type,event_payload) VALUES ($1,$2,$3,$4,$5)`,
+    [exerciseId,actorKey||'system',actorRole||'system',eventType,payload]);
+}
+app.post('/api/enterprise/schema/init', requireAuth, async(req,res)=>{
+  try{await ensureEnterpriseSchema();res.json({ok:true,message:'Enterprise schema ready'});}
+  catch(e){console.error(e);res.status(500).json({error:'Failed to initialise enterprise schema'});}
+});
+app.post('/api/enterprise/exercises', requireAuth, async(req,res)=>{
+  try{await ensureEnterpriseSchema();const{clientId,scenarioId,title}=req.body||{};
+    const r=await pool.query(`INSERT INTO enterprise_exercises (client_id,scenario_id,title,status) VALUES ($1,$2,$3,'draft') RETURNING *`,[clientId||null,scenarioId||null,title||'Enterprise Cyber Exercise']);
+    await enterpriseAudit(r.rows[0].id,req.user?.username,req.user?.role,'exercise_created',{title});res.json(r.rows[0]);
+  }catch(e){console.error(e);res.status(500).json({error:'Failed to create enterprise exercise'});}
+});
+app.post('/api/enterprise/exercises/:id/status', requireAuth, async(req,res)=>{
+  try{await ensureEnterpriseSchema();const{status}=req.body||{};if(!['draft','live','paused','ended','archived'].includes(status))return res.status(400).json({error:'Invalid status'});
+    const patch=status==='live'?`status=$2, started_at=COALESCE(started_at,NOW())`:status==='ended'?`status=$2, ended_at=COALESCE(ended_at,NOW())`:`status=$2`;
+    const r=await pool.query(`UPDATE enterprise_exercises SET ${patch} WHERE id=$1 RETURNING *`,[req.params.id,status]);
+    await enterpriseAudit(req.params.id,req.user?.username,req.user?.role,`exercise_${status}`,{});res.json(r.rows[0]);
+  }catch(e){console.error(e);res.status(500).json({error:'Failed to update exercise status'});}
+});
+app.post('/api/enterprise/exercises/:id/participants', async(req,res)=>{
+  try{await ensureEnterpriseSchema();const{participantKey,displayName,email,role,observer}=req.body||{};if(!participantKey)return res.status(400).json({error:'participantKey required'});
+    const r=await pool.query(`INSERT INTO enterprise_participants (exercise_id,participant_key,display_name,email,role,observer) VALUES ($1,$2,$3,$4,$5,$6)
+      ON CONFLICT (exercise_id,participant_key) DO UPDATE SET display_name=EXCLUDED.display_name,email=EXCLUDED.email,role=EXCLUDED.role,observer=EXCLUDED.observer RETURNING *`,
+      [req.params.id,participantKey,displayName||null,email||null,role||'Participant',!!observer]);
+    await enterpriseAudit(req.params.id,participantKey,role||'Participant','participant_joined',{observer:!!observer});res.json(r.rows[0]);
+  }catch(e){console.error(e);res.status(500).json({error:'Failed to register participant'});}
+});
+app.post('/api/enterprise/exercises/:id/decisions', async(req,res)=>{
+  try{await ensureEnterpriseSchema();const{participantId,decisionId,selectedOption,isValidated,isBorderline,riskImpact,businessImpact,responseTimeMs}=req.body||{};
+    if(!participantId||!decisionId)return res.status(400).json({error:'participantId and decisionId required'});
+    const r=await pool.query(`INSERT INTO enterprise_decision_records (exercise_id,participant_id,decision_id,selected_option,is_validated,is_borderline,risk_impact,business_impact,response_time_ms)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+      ON CONFLICT (exercise_id,participant_id,decision_id) DO UPDATE SET selected_option=EXCLUDED.selected_option,is_validated=EXCLUDED.is_validated,is_borderline=EXCLUDED.is_borderline,risk_impact=EXCLUDED.risk_impact,business_impact=EXCLUDED.business_impact,response_time_ms=EXCLUDED.response_time_ms,submitted_at=NOW() RETURNING *`,
+      [req.params.id,participantId,decisionId,selectedOption||null,!!isValidated,!!isBorderline,riskImpact||'medium',businessImpact||null,responseTimeMs||null]);
+    await enterpriseAudit(req.params.id,participantId,'participant','decision_submitted',{decisionId,isValidated:!!isValidated,isBorderline:!!isBorderline});res.json(r.rows[0]);
+  }catch(e){console.error(e);res.status(500).json({error:'Failed to submit decision'});}
+});
+app.get('/api/enterprise/exercises/:id/analytics', requireAuth, async(req,res)=>{
+  try{await ensureEnterpriseSchema();
+    const ex=await pool.query(`SELECT * FROM enterprise_exercises WHERE id=$1`,[req.params.id]);
+    const ps=await pool.query(`SELECT * FROM enterprise_participants WHERE exercise_id=$1 ORDER BY joined_at`,[req.params.id]);
+    const rec=await pool.query(`SELECT * FROM enterprise_decision_records WHERE exercise_id=$1 ORDER BY submitted_at`,[req.params.id]);
+    const exp=await pool.query(`SELECT * FROM enterprise_playbook_expectations WHERE exercise_id=$1 ORDER BY decision_id`,[req.params.id]);
+    const pc=Math.max(1,ps.rows.filter(p=>!p.observer).length||ps.rows.length||1), dc=Math.max(1,[...new Set(rec.rows.map(r=>r.decision_id))].length||exp.rows.length||1);
+    const score=enterpriseScore(rec.rows.filter(r=>r.is_validated).length,pc*dc);
+    const roleMap={}; ps.rows.filter(p=>!p.observer).forEach(p=>{roleMap[p.role||'Participant']||={role:p.role||'Participant',participants:0,validated:0,total:0};roleMap[p.role||'Participant'].participants++});
+    rec.rows.forEach(r=>{const p=ps.rows.find(x=>String(x.id)===String(r.participant_id));const role=p?.role||'Participant';roleMap[role]||={role,participants:0,validated:0,total:0};roleMap[role].validated+=r.is_validated?1:0;roleMap[role].total++});
+    const roleAnalytics=Object.values(roleMap).map(r=>({...r,readinessIndex:enterpriseScore(r.validated,Math.max(1,r.total)).readinessIndex}));
+    res.json({exercise:ex.rows[0],...score,participantCount:pc,decisionCount:dc,participants:ps.rows,records:rec.rows,roleAnalytics,playbookExpectations:exp.rows});
+  }catch(e){console.error(e);res.status(500).json({error:'Failed to load enterprise analytics'});}
+});
+app.get('/api/enterprise/exercises/:id/audit.csv', requireAuth, async(req,res)=>{
+  try{await ensureEnterpriseSchema();const r=await pool.query(`SELECT created_at,actor_key,actor_role,event_type,event_payload FROM enterprise_audit_events WHERE exercise_id=$1 ORDER BY created_at`,[req.params.id]);
+    const rows=[['timestamp','actor','role','event','payload'],...r.rows.map(x=>[x.created_at?.toISOString?.()||x.created_at,x.actor_key,x.actor_role,x.event_type,JSON.stringify(x.event_payload||{})])];
+    const csv=rows.map(row=>row.map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(',')).join('\n');res.setHeader('Content-Type','text/csv');res.setHeader('Content-Disposition','attachment; filename="enterprise-audit-log.csv"');res.send(csv);
+  }catch(e){console.error(e);res.status(500).json({error:'Failed to export audit log'});}
+});
