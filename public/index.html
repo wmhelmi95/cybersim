@@ -837,13 +837,21 @@ input[type=text],input[type=email],input[type=password],input[type=number],texta
 .report-kpi-grid .rm-val{font-family:var(--head);font-size:28px;font-weight:850;color:var(--white);line-height:1.05;}
 .report-kpi-grid .rm-lbl{font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:8px;text-transform:uppercase;letter-spacing:.5px;}
 .report-two-col{display:grid;grid-template-columns:1.1fr .9fr;gap:14px;}
-.readiness-trend-viz{min-height:330px;position:relative;background:rgba(3,7,15,.35);border:1px solid var(--border);border-radius:12px;overflow:hidden;padding:18px;}
-.readiness-trend-viz svg{width:100%;height:235px;display:block;overflow:visible;}
-.trend-intro{font-size:13px;color:var(--text);margin:0 190px 14px 0;line-height:1.55;}
+.readiness-trend-viz{min-height:390px;position:relative;background:rgba(3,7,15,.35);border:1px solid var(--border);border-radius:12px;overflow:hidden;padding:18px 22px 16px;}
+.readiness-trend-viz svg{width:100%;height:250px;display:block;overflow:visible;}
+.trend-intro{font-size:13px;color:var(--text);margin:0 190px 8px 0;line-height:1.55;}
 .trend-score-badge{position:absolute;right:18px;top:18px;background:rgba(41,121,255,.12);border:1px solid rgba(41,121,255,.35);color:#fff;font-family:var(--head);font-size:28px;padding:12px 18px;border-radius:12px;font-weight:800;text-align:center;min-width:130px;}
 .trend-score-badge small{display:block;font-family:var(--mono);font-size:10px;font-weight:500;color:var(--text);margin-bottom:3px;letter-spacing:.4px;}
 .trend-score-badge span{display:block;font-family:var(--mono);font-size:10px;font-weight:700;color:var(--green);background:rgba(0,230,118,.14);border-radius:999px;padding:2px 8px;margin-top:6px;}
-.trend-legend{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;border-top:1px solid var(--border);padding-top:12px;margin-top:10px;}
+.trend-legend{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;border-top:1px solid var(--border);padding-top:12px;margin-top:6px;}
+.trend-tooltip{position:absolute;z-index:20;display:none;min-width:155px;padding:9px 11px;border-radius:9px;background:rgba(3,7,15,.96);border:1px solid rgba(41,121,255,.45);box-shadow:0 14px 32px rgba(0,0,0,.35);pointer-events:none;font-family:var(--mono);font-size:10px;color:var(--text);line-height:1.45;}
+.trend-tooltip strong{display:block;font-family:var(--head);font-size:13px;color:var(--white);margin-bottom:2px;}
+.trend-path{stroke-dasharray:1200;stroke-dashoffset:1200;animation:trendDraw 1.25s ease forwards;}
+.trend-area{opacity:0;animation:trendFill .65s ease forwards .55s;}
+.trend-point{opacity:0;transform-box:fill-box;transform-origin:center;animation:trendPoint .35s ease forwards;}
+@keyframes trendDraw{to{stroke-dashoffset:0}}
+@keyframes trendFill{to{opacity:1}}
+@keyframes trendPoint{from{opacity:0;transform:scale(.45)}to{opacity:1;transform:scale(1)}}
 .trend-legend-item{display:flex;gap:8px;align-items:flex-start;font-size:11px;color:var(--text);line-height:1.35;}
 .trend-dot{width:8px;height:8px;border-radius:50%;margin-top:4px;flex-shrink:0;}
 .trend-legend-item strong{display:block;color:var(--white);font-size:11px;}
@@ -1903,6 +1911,7 @@ body.theme-light #screen-login > div > div:nth-child(2),body.theme-light .card,b
             <p class="trend-intro">Tracks management decision quality over time during the exercise. Each point shows the running readiness average after a submitted decision.</p>
             <div class="trend-score-badge" id="rpt-trend-badge"><small>Current Readiness</small>62%<span>GOOD</span></div>
             <div id="rpt-trend-chart"></div>
+            <div class="trend-tooltip" id="rpt-trend-tooltip"></div>
             <div class="trend-legend">
               <div class="trend-legend-item"><i class="trend-dot" style="background:var(--red)"></i><div><strong>0–39%</strong>Critical</div></div>
               <div class="trend-legend-item"><i class="trend-dot" style="background:var(--amber)"></i><div><strong>40–59%</strong>Needs improvement</div></div>
@@ -3848,11 +3857,29 @@ function getNormalisedResultMax(r){
 function getNormalisedResultPct(r){
   return clampScorePct((Number(r?.score || 0) / getNormalisedResultMax(r)) * 100);
 }
+function getAssessedSkillCounts(decisions){
+  const counts={};
+  (decisions||[]).forEach(d=>{
+    const k=d && d.skillTested;
+    if(k) counts[k]=(counts[k]||0)+1;
+  });
+  return counts;
+}
+function getAssessedSkillKeys(decisions){
+  return Object.keys(getAssessedSkillCounts(decisions));
+}
+function getSkillAssessment(k, skillCounts, skillScores){
+  const assessed = !!(skillCounts && skillCounts[k]);
+  if(!assessed) return {assessed:false, score:null, status:'NOT ASSESSED', cls:'na'};
+  const max=Math.max(1,(skillCounts[k]||0)*100);
+  const p=clampScorePct(((skillScores&&skillScores[k])||0)/max*100);
+  return {assessed:true, score:p, status:p>=70?'PASS':p>=50?'DEVELOPING':'FAIL', cls:p>=70?'pass':p>=50?'warn':'fail'};
+}
 function calculateSkillReadinessFromResults(results, skills){
   const out={};
   (skills||[]).forEach(k=>{
     const rows=(results||[]).filter(r=>(r.skillTested||r.skill)===k);
-    out[k]=rows.length ? clampScorePct(rows.reduce((sum,r)=>sum+getResultScoreValue(r),0)/rows.length) : 0;
+    if(rows.length) out[k]=clampScorePct(rows.reduce((sum,r)=>sum+getResultScoreValue(r),0)/rows.length);
   });
   return out;
 }
@@ -3873,13 +3900,12 @@ function renderParticipantTeamReport(results){
 
 function updateSkillBars(){
   const decs=simState.scenario.decisions[simState.level];
-  const counts={};
-  decs.forEach(d=>{if(d.skillTested) counts[d.skillTested]=(counts[d.skillTested]||0)+1;});
+  const counts=getAssessedSkillCounts(decs);
   Object.keys(simState.skillScores).forEach(k=>{
-    const max=(counts[k]||1)*100;
-    const pct=Math.round((simState.skillScores[k]/max)*100);
-    const f=document.getElementById('sf-'+k);if(f) f.style.width=pct+'%';
-    const v=document.getElementById('sv-'+k);if(v) v.textContent=pct+'%';
+    const a=getSkillAssessment(k, counts, simState.skillScores);
+    const pct=a.assessed ? a.score : 0;
+    const f=document.getElementById('sf-'+k);if(f) f.style.width=(a.assessed?pct:0)+'%';
+    const v=document.getElementById('sv-'+k);if(v) v.textContent=a.assessed ? pct+'%' : 'N/A';
   });
 }
 
@@ -4038,12 +4064,13 @@ async function fetchAIConclusion(scenario, simState, decisions, resultId){
       <span style="font-family:var(--mono);font-size:11px;letter-spacing:0.5px;">Generating AI consultant report...</span>
     </div>`;
 
-  // Build skill scores as percentages
-  const skillCounts = {};
-  decisions.forEach(d => { if(d.skillTested) skillCounts[d.skillTested] = (skillCounts[d.skillTested]||0)+1; });
+  // Build skill scores as percentages. Only include domains actually tested by decisions.
+  // Scenario-level skills that were not mapped to any question are treated as Not Assessed, not 0% FAIL.
+  const skillCounts = getAssessedSkillCounts(decisions);
+  const assessedSkillKeys = getAssessedSkillKeys(decisions);
   const skillScores = {};
-  scenario.skills.forEach(k => {
-    const max = (skillCounts[k]||1)*100;
+  assessedSkillKeys.forEach(k => {
+    const max = Math.max(1,(skillCounts[k]||0)*100);
     skillScores[k] = Math.round(((simState.skillScores[k]||0)/max)*100);
   });
 
@@ -4083,6 +4110,7 @@ async function fetchAIConclusion(scenario, simState, decisions, resultId){
         clientName: simState.client?.name || null,
         decisionHistory,
         skillScores,
+        assessedSkillDomains: assessedSkillKeys,
         timeTaken,
       })
     });
@@ -4152,31 +4180,73 @@ function readinessBand(pct){
   if(pct >= 40) return {label:'IMPROVE', color:'var(--amber)'};
   return {label:'CRITICAL', color:'var(--red)'};
 }
+function smoothBezierPath(points){
+  if(!points || points.length===0) return '';
+  if(points.length===1) return `M ${points[0].x} ${points[0].y}`;
+  let d=`M ${points[0].x.toFixed(1)} ${points[0].y.toFixed(1)}`;
+  for(let i=0;i<points.length-1;i++){
+    const p0=points[i-1] || points[i];
+    const p1=points[i];
+    const p2=points[i+1];
+    const p3=points[i+2] || p2;
+    const tension=.18;
+    const c1x=p1.x+(p2.x-p0.x)*tension;
+    const c1y=p1.y+(p2.y-p0.y)*tension;
+    const c2x=p2.x-(p3.x-p1.x)*tension;
+    const c2y=p2.y-(p3.y-p1.y)*tension;
+    d+=` C ${c1x.toFixed(1)} ${c1y.toFixed(1)}, ${c2x.toFixed(1)} ${c2y.toFixed(1)}, ${p2.x.toFixed(1)} ${p2.y.toFixed(1)}`;
+  }
+  return d;
+}
 function renderReadinessTrend(results, finalPct){
   const chart=document.getElementById('rpt-trend-chart');
   const badge=document.getElementById('rpt-trend-badge');
   const tz=document.getElementById('timeline-timezone-label');
+  const tooltip=document.getElementById('rpt-trend-tooltip');
   if(tz) tz.textContent=localTimezoneLabel();
   const band=readinessBand(finalPct);
   if(badge) badge.innerHTML=`<small>Current Readiness</small>${Math.round(Number(finalPct)||0)}%<span style="color:${band.color}">${band.label}</span>`;
   if(!chart) return;
-  const rows=[...(results||[])].sort((a,b)=>String(a.submittedAt||a.createdAt||'').localeCompare(String(b.submittedAt||b.createdAt||'')));
+  const rows=[...(results||[])].sort((a,b)=>String(a.submittedAt||a.createdAt||a.at||'').localeCompare(String(b.submittedAt||b.createdAt||b.at||'')));
   let running=[];
   let sum=0;
-  rows.forEach((r,i)=>{ sum += Number(scoreOfResult(r)) || 0; running.push({pct:Math.round(sum/(i+1)), time:r.submittedAt||r.createdAt, label:`D${Number(r.decisionIndex ?? r.step ?? i)+1}`}); });
+  rows.forEach((r,i)=>{
+    sum += Number(scoreOfResult(r)) || 0;
+    const pct=Math.max(0,Math.min(100,Math.round(sum/(i+1))));
+    running.push({pct, time:r.submittedAt||r.createdAt||r.at, label:`D${Number(r.decisionIndex ?? r.step ?? i)+1}`, taken:r.responseTimeSec||r.timeTakenSec||r.timeTaken||0});
+  });
   if(!running.length){ running=[{pct:0,label:'Start'},{pct:Math.round(Number(finalPct)||0),label:'Now'}]; }
-  const W=640,H=235,left=54,right=22,top=18,bottom=46;
+  const W=640,H=250,left=54,right=22,top=12,bottom=46;
   const cw=W-left-right,ch=H-top-bottom;
   const xFor=i=>left+(running.length===1?cw: i*cw/(running.length-1));
   const yFor=p=>top+ch-(Math.max(0,Math.min(100,p))/100)*ch;
-  const pts=running.map((p,i)=>`${xFor(i).toFixed(1)},${yFor(p.pct).toFixed(1)}`).join(' ');
-  const area=`${pts} ${left+cw},${top+ch} ${left},${top+ch}`;
+  const points=running.map((p,i)=>({x:xFor(i),y:yFor(p.pct),...p}));
+  const path=smoothBezierPath(points);
+  const areaPath=`${path} L ${(left+cw).toFixed(1)} ${(top+ch).toFixed(1)} L ${left.toFixed(1)} ${(top+ch).toFixed(1)} Z`;
   const yTicks=[0,25,50,75,100].map(v=>`<g><line x1="${left}" y1="${yFor(v)}" x2="${left+cw}" y2="${yFor(v)}" stroke="rgba(184,212,240,.14)" stroke-dasharray="4 5"/><text x="${left-12}" y="${yFor(v)+4}" text-anchor="end" fill="rgba(184,212,240,.75)" font-size="11" font-family="var(--mono)">${v}%</text></g>`).join('');
   const maxLabels=running.length>7?7:running.length;
   const idxs=[...new Set(Array.from({length:maxLabels},(_,k)=>Math.round(k*(running.length-1)/(maxLabels-1||1))))];
-  const xLabels=idxs.map(i=>{ const t=formatReportLocalTime(running[i].time); const label=running[i].time ? t.alt.replace(/[()]/g,'') : running[i].label; return `<text x="${xFor(i)}" y="${H-18}" text-anchor="middle" fill="rgba(184,212,240,.8)" font-size="11" font-family="var(--mono)">${escapeHTML(label)}</text>`; }).join('');
-  const circles=running.map((p,i)=>`<circle cx="${xFor(i)}" cy="${yFor(p.pct)}" r="4.5" fill="#e8f4ff" stroke="var(--blue)" stroke-width="3"><title>${escapeHTML(p.label)} — ${p.pct}% ${p.time?formatReportLocalTime(p.time).full:''}</title></circle>`).join('');
-  chart.innerHTML=`<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="Management readiness trend over time"><defs><linearGradient id="rptGradLive" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="rgba(124,92,255,.55)"/><stop offset="1" stop-color="rgba(0,229,255,.04)"/></linearGradient></defs>${yTicks}<line x1="${left}" y1="${top}" x2="${left}" y2="${top+ch}" stroke="rgba(184,212,240,.5)"/><line x1="${left}" y1="${top+ch}" x2="${left+cw}" y2="${top+ch}" stroke="rgba(184,212,240,.5)"/><polygon points="${area}" fill="url(#rptGradLive)"/><polyline points="${pts}" fill="none" stroke="var(--blue)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>${circles}${xLabels}</svg>`;
+  const xLabels=idxs.map(i=>{ const t=formatReportLocalTime(running[i].time); const label=running[i].time ? t.alt.replace(/[()]/g,'') : running[i].label; return `<text x="${xFor(i)}" y="${H-16}" text-anchor="middle" fill="rgba(184,212,240,.8)" font-size="11" font-family="var(--mono)">${escapeHTML(label)}</text>`; }).join('');
+  const circles=points.map((p,i)=>{
+    const t=formatReportLocalTime(p.time);
+    const safeTime=p.time?t.full:'No timestamp';
+    const taken=p.taken?`${Math.round(Number(p.taken)||0)}s`:'—';
+    return `<circle class="trend-point" style="animation-delay:${(.7+i*.09).toFixed(2)}s" cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="5" fill="#e8f4ff" stroke="var(--blue)" stroke-width="3" data-label="${escapeHTML(p.label)}" data-score="${p.pct}%" data-time="${escapeHTML(safeTime)}" data-taken="${escapeHTML(taken)}"><title>${escapeHTML(p.label)} — ${p.pct}% ${safeTime}</title></circle>`;
+  }).join('');
+  chart.innerHTML=`<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="Management readiness trend over time"><defs><linearGradient id="rptGradLive" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="rgba(124,92,255,.55)"/><stop offset="1" stop-color="rgba(0,229,255,.04)"/></linearGradient></defs>${yTicks}<line x1="${left}" y1="${top}" x2="${left}" y2="${top+ch}" stroke="rgba(184,212,240,.5)"/><line x1="${left}" y1="${top+ch}" x2="${left+cw}" y2="${top+ch}" stroke="rgba(184,212,240,.5)"/><path class="trend-area" d="${areaPath}" fill="url(#rptGradLive)"/><path class="trend-path" d="${path}" fill="none" stroke="var(--blue)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>${circles}${xLabels}</svg>`;
+  if(tooltip){
+    chart.querySelectorAll('.trend-point').forEach(pt=>{
+      pt.addEventListener('mousemove', ev=>{
+        const host=document.getElementById('readiness-trend-viz');
+        const rect=host.getBoundingClientRect();
+        tooltip.innerHTML=`<strong>${pt.dataset.label} · ${pt.dataset.score}</strong><div>${pt.dataset.time}</div><div>Time taken: ${pt.dataset.taken}</div>`;
+        tooltip.style.display='block';
+        tooltip.style.left=Math.min(rect.width-175, Math.max(10, ev.clientX-rect.left+12))+'px';
+        tooltip.style.top=Math.max(10, ev.clientY-rect.top-48)+'px';
+      });
+      pt.addEventListener('mouseleave', ()=>{ tooltip.style.display='none'; });
+    });
+  }
 }
 
 
@@ -4292,7 +4362,7 @@ function showReport(){
   circle.style.color=gc;
   circle.style.boxShadow=`0 0 40px ${gc}33`;
   const tb=document.getElementById('rpt-trend-badge'); if(tb) tb.textContent=pct+'%';
-  renderReadinessTrend(simState.results, pct);
+  renderReadinessTrend((simState.summary&&simState.summary.readinessTrend)||simState.results, pct);
   document.getElementById('rpt-headline').textContent=pct>=90?'Excellent Response — Outstanding':pct>=70?'Strong Response — Well Done':pct>=50?'Adequate Response — Room to Improve':'Response Needs Significant Improvement';
   document.getElementById('rpt-score-line').textContent=`${s.title} · ${simState.level.toUpperCase()} LEVEL · Team readiness: ${pct}% · ${correct}/${decs.length} decisions passed · ${execMetrics.participantCount||1} participant(s) · ${execMetrics.submissions} submissions`;
   const timeTaken=(s.duration==='20 min'?1200:s.duration==='30 min'?1800:900)-simState.timeLeft;
@@ -4358,7 +4428,7 @@ function drawRadar(skills,skillCounts){
   const angles=skills.map((_,i)=>(Math.PI*2*i/n)-Math.PI/2);
   [0.25,0.5,0.75,1].forEach(sc=>{ctx.beginPath();angles.forEach((a,i)=>{const x=cx+r*sc*Math.cos(a),y=cy+r*sc*Math.sin(a);i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});ctx.closePath();ctx.strokeStyle='rgba(255,255,255,0.05)';ctx.lineWidth=1;ctx.stroke();});
   angles.forEach(a=>{ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+r*Math.cos(a),cy+r*Math.sin(a));ctx.strokeStyle='rgba(255,255,255,0.05)';ctx.stroke();});
-  const vals=skills.map(k=>{const pct=(simState.normalisedSkillScores&&simState.normalisedSkillScores[k]!==undefined)?simState.normalisedSkillScores[k]:clampScorePct(((simState.skillScores[k]||0)/((skillCounts[k]||1)*100))*100);return Math.max(0.05,pct/100);});
+  const vals=skills.map(k=>{const pct=(simState.normalisedSkillScores&&simState.normalisedSkillScores[k]!==undefined)?simState.normalisedSkillScores[k]:(skillCounts[k]?clampScorePct(((simState.skillScores[k]||0)/(skillCounts[k]*100))*100):0);return Math.max(0.05,pct/100);});
   ctx.beginPath();angles.forEach((a,i)=>{const x=cx+r*vals[i]*Math.cos(a),y=cy+r*vals[i]*Math.sin(a);i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});ctx.closePath();ctx.fillStyle='rgba(0,229,255,0.12)';ctx.fill();ctx.strokeStyle='#00e5ff';ctx.lineWidth=2;ctx.stroke();
   angles.forEach((a,i)=>{const x=cx+r*vals[i]*Math.cos(a),y=cy+r*vals[i]*Math.sin(a);ctx.beginPath();ctx.arc(x,y,4,0,Math.PI*2);ctx.fillStyle='#00e5ff';ctx.fill();});
   ctx.font='12px JetBrains Mono,monospace';ctx.fillStyle='rgba(184,212,240,0.7)';ctx.textAlign='center';
@@ -4436,8 +4506,8 @@ function exportPDF(){
     flush(); return html || '<p>No narrative available.</p>';
   }
 
-  const skillCounts={}; decs.forEach(d=>{ if(d.skillTested) skillCounts[d.skillTested]=(skillCounts[d.skillTested]||0)+1; });
-  const skillRows=(s.skills||[]).map(k=>{ const max=(skillCounts[k]||1)*100; const p=Math.round(((simState.skillScores[k]||0)/max)*100); const label=SKILLS[k]?.label||k; const status=p>=70?'PASS':p>=50?'DEVELOPING':'FAIL'; const cls=p>=70?'pass':p>=50?'warn':'fail'; return `<tr><td>${esc(label)}</td><td><div class="bar"><span class="${cls}" style="width:${Math.max(3,p)}%"></span></div></td><td class="num ${cls}">${p}%</td><td><span class="pill ${cls}">${status}</span></td></tr>`; }).join('');
+  const skillCounts=getAssessedSkillCounts(decs);
+  const skillRows=(s.skills||[]).map(k=>{ const a=getSkillAssessment(k, skillCounts, simState.skillScores); const label=SKILLS[k]?.label||k; if(!a.assessed){ return `<tr><td>${esc(label)}</td><td><div class="bar"><span class="na" style="width:0%"></span></div></td><td class="num na">N/A</td><td><span class="pill na">NOT ASSESSED</span></td></tr>`; } const p=a.score; return `<tr><td>${esc(label)}</td><td><div class="bar"><span class="${a.cls}" style="width:${Math.max(3,p)}%"></span></div></td><td class="num ${a.cls}">${p}%</td><td><span class="pill ${a.cls}">${a.status}</span></td></tr>`; }).join('');
   const decisionRows=(simState.results||[]).map((r,i)=>{ const d=decs[r.decisionIndex??i]||{}; const score=getResultScoreValue(r); const cls=score>=70?'pass':score>=50?'warn':'fail'; return `<tr><td class="num">${i+1}</td><td><strong>${esc(r.question||d.question||'Decision')}</strong><br><small>${esc(r.mcqAnswer||r.freeTextAnswer||'No response recorded')}</small></td><td class="num ${cls}">${score}%</td><td><span class="pill ${cls}">${score>=70?'PASS':score>=50?'PARTIAL':'FAIL'}</span></td><td>${esc(r.aiFeedback||r.feedback||(r.correct?d.goodFeedback:d.badFeedback)||'')}</td></tr>`; }).join('');
   const rawConclusion=document.getElementById('rpt-conclusion')?.innerText||'Executive analysis is not available yet.';
   const sections=parseExecutiveSections(rawConclusion);
@@ -4445,7 +4515,7 @@ function exportPDF(){
   const sectionMap=Object.fromEntries(sections.map(x=>[x.title,x.body]));
   const sectionHtml=preferred.filter(t=>sectionMap[t]).map((title,idx)=>`<section class="section"><div class="section-kicker">SECTION ${String(idx+1).padStart(2,'0')}</div><h2>${esc(title)}</h2><div class="section-body">${bodyToHtml(sectionMap[title], title)}</div></section>`).join('') || `<section class="section"><h2>Management Executive Summary</h2>${bodyToHtml(rawConclusion)}</section>`;
 
-  const html=`<!doctype html><html><head><meta charset="utf-8"><title>NexaCyberSim Executive Report</title><style>@page{size:A4;margin:15mm 14mm}*{box-sizing:border-box}body{font-family:Arial,Helvetica,sans-serif;color:#172033;margin:0;background:#fff;font-size:11.5px;line-height:1.55;-webkit-print-color-adjust:exact;print-color-adjust:exact}.cover{background:linear-gradient(135deg,#071527,#0f3557);color:#fff;padding:32px 34px 26px;border-radius:0 0 18px 18px}.brand{font-size:12px;letter-spacing:2.4px;text-transform:uppercase;color:#8fe8ff;font-weight:800}.title{font-size:31px;font-weight:800;margin:23px 0 8px}.sub{color:#d9eaf7;font-size:12.5px}.grade-row{margin-top:24px;display:flex;align-items:center;gap:18px}.badge{width:82px;height:82px;border-radius:18px;background:${gradeColor};display:flex;align-items:center;justify-content:center;color:#fff;font-size:44px;font-weight:800}.grade-text strong{display:block;font-size:19px}.grade-text span{color:#d9eaf7}.content{padding:24px 0}.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:0 0 18px}.metric{border:1px solid #d8e2ea;border-radius:13px;padding:12px;background:#f8fbfd}.mv{font-size:23px;font-weight:800;color:#0f3557}.ml{font-size:9.5px;color:#667085;text-transform:uppercase;letter-spacing:.7px}.section{border:1px solid #d8e2ea;border-radius:14px;padding:16px 18px;margin:14px 0;background:#fff;page-break-inside:avoid}.section-kicker{font-size:9.5px;color:#64748b;letter-spacing:1.5px;font-weight:800}.section h2{font-size:16px;color:#0f3557;margin:2px 0 9px;border-bottom:2px solid #e2e8f0;padding-bottom:7px}.section p{margin:6px 0}.section ul{margin:8px 0 0 18px;padding:0}.section li{margin:5px 0}.skill-card{display:flex;justify-content:space-between;gap:14px;align-items:center;border:1px solid #e2e8f0;border-left:5px solid #0f3557;border-radius:10px;padding:9px 11px;margin:7px 0;background:#f8fbfd}.skill-card p{margin:2px 0 0;color:#475569}.score{min-width:72px;text-align:center;font-size:18px;font-weight:800}.score span{display:block;font-size:9px;letter-spacing:.8px}.pass{color:#0F766E}.warn{color:#B45309}.fail{color:#B91C1C}.bar{height:8px;background:#edf2f7;border-radius:99px;overflow:hidden}.bar span{display:block;height:100%;border-radius:99px}.bar span.pass{background:#0F766E}.bar span.warn{background:#B45309}.bar span.fail{background:#B91C1C}.pill{display:inline-block;border-radius:999px;padding:3px 8px;font-size:9px;font-weight:800;color:#fff}.pill.pass{background:#0F766E;color:#fff}.pill.warn{background:#B45309;color:#fff}.pill.fail{background:#B91C1C;color:#fff}table{width:100%;border-collapse:collapse;margin-top:9px}th{background:#0f3557;color:#fff;text-align:left;padding:8px;font-size:10px;text-transform:uppercase}td{border-bottom:1px solid #e5edf3;padding:8px;vertical-align:top}.num{font-family:Consolas,monospace;text-align:right;white-space:nowrap;font-weight:800}small{color:#667085}.chip{display:inline-block;border:1px solid #d8e2ea;background:#f8fbfd;border-radius:20px;padding:4px 9px;margin:2px;font-size:10px;color:#344054}.footer{margin-top:20px;border-top:1px solid #d8e2ea;padding-top:10px;color:#667085;font-size:10px;text-align:center}@media print{.cover{border-radius:0}.section{break-inside:avoid}}</style></head><body><section class="cover"><div class="brand">NexaCyberSim Confidential Report</div><div class="title">Cyber Crisis Simulation Report</div><div class="sub">${client?esc(client.name)+' · ':''}${esc(s.title)} · ${esc(String(simState.level||'').toUpperCase())} Level<br>${date}</div><div class="grade-row"><div class="badge">${grade}</div><div class="grade-text"><strong>${pct}% Overall Readiness — ${gradeLabel}</strong><span>Team readiness view · ${correct}/${decs.length} decisions passed · ${execMetrics.participantCount||1} participant(s) · ${execMetrics.submissions} submissions</span></div></div></section><main class="content"><div class="metrics"><div class="metric"><div class="mv">${pct}%</div><div class="ml">Team Readiness</div></div><div class="metric"><div class="mv">${grade}</div><div class="ml">Grade</div></div><div class="metric"><div class="mv">${correct}/${decs.length}</div><div class="ml">Decisions Passed</div></div><div class="metric"><div class="mv">${execMetrics.participantCount||1}</div><div class="ml">Participants</div></div></div>${sectionHtml}<section class="section"><div class="section-kicker">APPENDIX A</div><h2>Skill Readiness Matrix</h2><table><thead><tr><th>Capability</th><th>Readiness</th><th class="num">Score</th><th>Status</th></tr></thead><tbody>${skillRows}</tbody></table></section><section class="section"><div class="section-kicker">APPENDIX B</div><h2>Decision Breakdown</h2><table><thead><tr><th class="num">#</th><th>Decision / Response</th><th class="num">Score</th><th>Assessment</th><th>Finding</th></tr></thead><tbody>${decisionRows}</tbody></table></section><section class="section"><div class="section-kicker">APPENDIX C</div><h2>Framework Alignment</h2><div>${(FW||[]).map(f=>`<span class="chip">${esc(f)}</span>`).join('')}</div></section><div class="footer">Generated by NexaCyberSim · Internal training report only · Not a penetration test or formal audit.</div></main><script>window.onload=()=>setTimeout(()=>window.print(),300)<\/script></body></html>`;
+  const html=`<!doctype html><html><head><meta charset="utf-8"><title>NexaCyberSim Executive Report</title><style>@page{size:A4;margin:15mm 14mm}*{box-sizing:border-box}body{font-family:Arial,Helvetica,sans-serif;color:#172033;margin:0;background:#fff;font-size:11.5px;line-height:1.55;-webkit-print-color-adjust:exact;print-color-adjust:exact}.cover{background:linear-gradient(135deg,#071527,#0f3557);color:#fff;padding:32px 34px 26px;border-radius:0 0 18px 18px}.brand{font-size:12px;letter-spacing:2.4px;text-transform:uppercase;color:#8fe8ff;font-weight:800}.title{font-size:31px;font-weight:800;margin:23px 0 8px}.sub{color:#d9eaf7;font-size:12.5px}.grade-row{margin-top:24px;display:flex;align-items:center;gap:18px}.badge{width:82px;height:82px;border-radius:18px;background:${gradeColor};display:flex;align-items:center;justify-content:center;color:#fff;font-size:44px;font-weight:800}.grade-text strong{display:block;font-size:19px}.grade-text span{color:#d9eaf7}.content{padding:24px 0}.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:0 0 18px}.metric{border:1px solid #d8e2ea;border-radius:13px;padding:12px;background:#f8fbfd}.mv{font-size:23px;font-weight:800;color:#0f3557}.ml{font-size:9.5px;color:#667085;text-transform:uppercase;letter-spacing:.7px}.section{border:1px solid #d8e2ea;border-radius:14px;padding:16px 18px;margin:14px 0;background:#fff;page-break-inside:avoid}.section-kicker{font-size:9.5px;color:#64748b;letter-spacing:1.5px;font-weight:800}.section h2{font-size:16px;color:#0f3557;margin:2px 0 9px;border-bottom:2px solid #e2e8f0;padding-bottom:7px}.section p{margin:6px 0}.section ul{margin:8px 0 0 18px;padding:0}.section li{margin:5px 0}.skill-card{display:flex;justify-content:space-between;gap:14px;align-items:center;border:1px solid #e2e8f0;border-left:5px solid #0f3557;border-radius:10px;padding:9px 11px;margin:7px 0;background:#f8fbfd}.skill-card p{margin:2px 0 0;color:#475569}.score{min-width:72px;text-align:center;font-size:18px;font-weight:800}.score span{display:block;font-size:9px;letter-spacing:.8px}.pass{color:#0F766E}.warn{color:#B45309}.fail{color:#B91C1C}.na{color:#64748b}.bar{height:8px;background:#edf2f7;border-radius:99px;overflow:hidden}.bar span{display:block;height:100%;border-radius:99px}.bar span.pass{background:#0F766E}.bar span.warn{background:#B45309}.bar span.fail{background:#B91C1C}.pill{display:inline-block;border-radius:999px;padding:3px 8px;font-size:9px;font-weight:800;color:#fff}.pill.pass{background:#0F766E;color:#fff}.pill.warn{background:#B45309;color:#fff}.pill.fail{background:#B91C1C;color:#fff}.pill.na{background:#64748b;color:#fff}table{width:100%;border-collapse:collapse;margin-top:9px}th{background:#0f3557;color:#fff;text-align:left;padding:8px;font-size:10px;text-transform:uppercase}td{border-bottom:1px solid #e5edf3;padding:8px;vertical-align:top}.num{font-family:Consolas,monospace;text-align:right;white-space:nowrap;font-weight:800}small{color:#667085}.chip{display:inline-block;border:1px solid #d8e2ea;background:#f8fbfd;border-radius:20px;padding:4px 9px;margin:2px;font-size:10px;color:#344054}.footer{margin-top:20px;border-top:1px solid #d8e2ea;padding-top:10px;color:#667085;font-size:10px;text-align:center}@media print{.cover{border-radius:0}.section{break-inside:avoid}}</style></head><body><section class="cover"><div class="brand">NexaCyberSim Confidential Report</div><div class="title">Cyber Crisis Simulation Report</div><div class="sub">${client?esc(client.name)+' · ':''}${esc(s.title)} · ${esc(String(simState.level||'').toUpperCase())} Level<br>${date}</div><div class="grade-row"><div class="badge">${grade}</div><div class="grade-text"><strong>${pct}% Overall Readiness — ${gradeLabel}</strong><span>Team readiness view · ${correct}/${decs.length} decisions passed · ${execMetrics.participantCount||1} participant(s) · ${execMetrics.submissions} submissions</span></div></div></section><main class="content"><div class="metrics"><div class="metric"><div class="mv">${pct}%</div><div class="ml">Team Readiness</div></div><div class="metric"><div class="mv">${grade}</div><div class="ml">Grade</div></div><div class="metric"><div class="mv">${correct}/${decs.length}</div><div class="ml">Decisions Passed</div></div><div class="metric"><div class="mv">${execMetrics.participantCount||1}</div><div class="ml">Participants</div></div></div>${sectionHtml}<section class="section"><div class="section-kicker">APPENDIX A</div><h2>Skill Readiness Matrix</h2><table><thead><tr><th>Capability</th><th>Readiness</th><th class="num">Score</th><th>Status</th></tr></thead><tbody>${skillRows}</tbody></table></section><section class="section"><div class="section-kicker">APPENDIX B</div><h2>Decision Breakdown</h2><table><thead><tr><th class="num">#</th><th>Decision / Response</th><th class="num">Score</th><th>Assessment</th><th>Finding</th></tr></thead><tbody>${decisionRows}</tbody></table></section><section class="section"><div class="section-kicker">APPENDIX C</div><h2>Framework Alignment</h2><div>${(FW||[]).map(f=>`<span class="chip">${esc(f)}</span>`).join('')}</div></section><div class="footer">Generated by NexaCyberSim · Internal training report only · Not a penetration test or formal audit.</div></main><script>window.onload=()=>setTimeout(()=>window.print(),300)<\/script></body></html>`;
   const w=window.open('', '_blank');
   if(!w){ alert('Popup blocked. Please allow popups to export PDF.'); return; }
   w.document.write(html); w.document.close();
@@ -4478,9 +4548,8 @@ async function exportWord(){
       totalDecisions:decs.length,
       aiConclusion,
       skills:s.skills.map(k=>{
-        const max=(skillCounts[k]||1)*100;
-        const p=Math.round(((simState.skillScores[k]||0)/max)*100);
-        return{label:SKILLS[k].label,icon:SKILLS[k].icon,score:p,pass:p>=70};
+        const a=getSkillAssessment(k, skillCounts, simState.skillScores);
+        return{label:SKILLS[k].label,icon:SKILLS[k].icon,score:a.assessed?a.score:null,pass:a.assessed?a.score>=70:null,assessed:a.assessed,status:a.status};
       }),
       decisions:simState.results.map((r,i)=>{
         const d=decs[i];if(!d)return null;
@@ -5863,7 +5932,7 @@ function buildManagementThemes(results, good){
         const breadcrumb=document.getElementById('rpt-breadcrumb-title'); if(breadcrumb) breadcrumb.textContent=s.title||'Simulation';
         const sideScore=document.getElementById('rpt-side-score'); if(sideScore) sideScore.textContent=pct+'%';
         const trend=document.getElementById('rpt-trend-badge'); if(trend) trend.textContent=pct+'%';
-        if(typeof renderReadinessTrend==='function') renderReadinessTrend(simState.results||[], pct);
+        if(typeof renderReadinessTrend==='function') renderReadinessTrend((simState.summary&&simState.summary.readinessTrend)||simState.results||[], pct);
         const label=document.getElementById('rpt-side-label'); if(label) label.textContent=pct>=80?'Strong':pct>=60?'Moderate':pct>=40?'Developing':'Critical';
         const ring=document.querySelector('.mini-ring'); if(ring){
           const col=pct>=80?'var(--green)':pct>=60?'var(--cyan)':pct>=40?'var(--amber)':'var(--red)';
