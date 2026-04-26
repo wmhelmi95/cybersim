@@ -880,6 +880,25 @@ body.theme-light .mini-ring:after{background:#fff;}
 @media(max-width:760px){.report-shell{width:calc(100% - 24px);padding-top:88px}.report-topbar-v2{flex-direction:column}.report-actions-v2{width:100%;justify-content:flex-start}.report-actions-v2 .btn{flex:1}.report-title-row h1{font-size:24px}.report-kpi-grid{grid-template-columns:1fr 1fr}.report-two-col,.two-list-card{grid-template-columns:1fr}.threat-outcome-wrap{flex-direction:column;align-items:flex-start}.report-tabs-v2{gap:16px}}
 @media(max-width:460px){.report-kpi-grid{grid-template-columns:1fr}.report-actions-v2 .btn{flex-basis:100%}.readiness-score-side{align-items:flex-start}.mini-ring{width:82px;height:82px}.mini-ring span{font-size:18px}}
 
+
+/* === FINAL AUTH / LAYOUT FIX: isolate login, hide app shell until authenticated === */
+body:not(.authenticated):not(.public-live-mode) #main-topnav,
+body:not(.authenticated):not(.public-live-mode) .topnav,
+body:not(.authenticated):not(.public-live-mode) .screen:not(#screen-login){display:none!important;visibility:hidden!important;pointer-events:none!important;}
+body.authenticated #screen-login{display:none!important;}
+body.public-live-mode #screen-login,body.public-live-mode #main-topnav,body.public-live-mode .topnav{display:none!important;}
+#screen-login{width:100%!important;min-height:100svh!important;min-height:100dvh!important;display:flex;align-items:center!important;justify-content:center!important;padding:calc(24px + env(safe-area-inset-top)) 18px calc(24px + env(safe-area-inset-bottom))!important;box-sizing:border-box!important;}
+#screen-login > div{width:min(100%,420px)!important;margin:0 auto!important;transform:none!important;}
+#screen-login > div > div:first-child{margin-bottom:28px!important;text-align:center!important;}
+#screen-login > div > div:first-child > div:nth-child(2){justify-content:center!important;display:flex!important;width:100%!important;}
+#screen-login > div > div:nth-child(2){padding:clamp(22px,4vw,34px)!important;border-radius:22px!important;}
+#screen-login input{width:100%!important;box-sizing:border-box!important;}
+#screen-login #login-btn{width:100%!important;min-height:48px!important;border-radius:12px!important;}
+@media(max-width:760px){#screen-login{align-items:center!important;padding:24px 16px!important;}#screen-login > div{max-width:390px!important;}#screen-login > div > div:first-child{margin-bottom:22px!important;}#screen-login > div > div:nth-child(2){padding:22px!important;}}
+body.theme-light{--bg:#eef5fb!important;--surface:#ffffff!important;--card:#ffffff!important;--border:rgba(15,85,130,.16)!important;--border2:rgba(15,85,130,.22)!important;--text:#102033!important;--muted:#60748c!important;--white:#102033!important;--app-bg:#eef5fb!important;--app-bg-2:#f4f8fc!important;--app-panel:#ffffff!important;--app-panel-2:#f7fbff!important;--app-panel-3:#eef6ff!important;--app-line:rgba(15,85,130,.16)!important;--app-text:#102033!important;--app-muted:#60748c!important;background:radial-gradient(circle at 50% -20%,rgba(0,153,210,.14),transparent 32%),linear-gradient(180deg,#eef5fb,#f7fbff 100%)!important;}
+body.theme-light::before{opacity:.16!important;}
+body.theme-light #screen-login > div > div:nth-child(2),body.theme-light .card,body.theme-light .panel,body.theme-light .dash-card,body.theme-light .stat-card{box-shadow:0 18px 45px rgba(32,72,110,.12)!important;}
+
 </style>
 </head>
 <body>
@@ -4509,6 +4528,10 @@ let currentUser=null;
 let authToken=null;
 
 async function doLogin(){
+  document.body.classList.remove('authenticated');
+  document.getElementById('main-topnav')?.style.setProperty('display','none','important');
+  document.querySelectorAll('.screen:not(#screen-login)').forEach(s=>{s.classList.remove('active');s.style.display='none';});
+  document.getElementById('screen-login')?.style.setProperty('display','flex','important');
   const u=document.getElementById('login-user').value.trim();
   const p=document.getElementById('login-pass').value;
   const errEl=document.getElementById('login-error');
@@ -4547,9 +4570,10 @@ function togglePassword(){
   else{passInput.type='password';eyeIcon.innerHTML='<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>';}
 }
 async function enterApp(){
-  document.getElementById('screen-login').style.display='none';
   document.body.classList.add('authenticated');
-  document.getElementById('main-topnav').style.display='flex';
+  document.body.classList.remove('public-live-mode');
+  document.getElementById('screen-login')?.style.setProperty('display','none','important');
+  document.getElementById('main-topnav')?.style.setProperty('display','flex','important');
   document.querySelectorAll('.screen:not(#screen-login)').forEach(s=>s.style.removeProperty('display'));
   document.querySelector('.admin-badge').textContent=currentUser.role;
   await loadData();
@@ -4559,8 +4583,9 @@ async function enterApp(){
 function doLogout(){
   saveData();sessionStorage.removeItem('nexa_token');sessionStorage.removeItem('nexa_user');authToken=null;currentUser=null;
   document.body.classList.remove('authenticated');
-  document.getElementById('screen-login').style.display='flex';
-  document.getElementById('main-topnav').style.display='none';
+  document.body.classList.remove('public-live-mode');
+  document.getElementById('screen-login')?.style.setProperty('display','flex','important');
+  document.getElementById('main-topnav')?.style.setProperty('display','none','important');
   document.querySelectorAll('.screen:not(#screen-login)').forEach(s=>{s.classList.remove('active');s.style.display='none';});
   document.getElementById('login-user').value='';document.getElementById('login-pass').value='';
   if(document.getElementById('login-pass').type==='text') togglePassword();
@@ -4568,6 +4593,9 @@ function doLogout(){
 }
 
 // INIT
+document.body.classList.remove('authenticated');
+document.getElementById('main-topnav')?.style.setProperty('display','none','important');
+document.getElementById('screen-login')?.style.setProperty('display','flex','important');
 document.querySelectorAll('.screen:not(#screen-login)').forEach(s=>s.style.display='none');
 const _token=sessionStorage.getItem('nexa_token');
 const _user=sessionStorage.getItem('nexa_user');
