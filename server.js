@@ -5,6 +5,7 @@ const helmet   = require('helmet');
 const rateLimit= require('express-rate-limit');
 const bcrypt   = require('bcryptjs');
 const jwt      = require('jsonwebtoken');
+const { Pool }  = require('pg');
 const { OpenAI } = require('openai');
 const fs   = require('fs');
 const path = require('path');
@@ -333,68 +334,129 @@ function sanitiseNumber(val, fallback = 0) {
 }
 
 // ─────────────────────────────────────────────
-// DB FILE HELPERS
+// PERSISTENCE — PostgreSQL on Railway, db.json fallback locally
 // ─────────────────────────────────────────────
 const DB_FILE = path.join(__dirname, 'db.json');
+const USE_POSTGRES = !!process.env.DATABASE_URL;
+const pool = USE_POSTGRES ? new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false },
+}) : null;
 
-function readDB() {
+let cachedDB = {
+  schemaVersion: 2,
+  savedAt: null,
+  clients: [],
+  scenarios: [],
+  customScenarios: [],
+  simResults: [],
+  liveSessions: {},
+};
+
+function normaliseDB(data = {}) {
+  const scenarios = Array.isArray(data.scenarios) ? data.scenarios
+    : (Array.isArray(data.customScenarios) ? data.customScenarios : []);
+  return {
+    ...data,
+    schemaVersion: data.schemaVersion || 2,
+    savedAt: data.savedAt || null,
+    clients: Array.isArray(data.clients) ? data.clients : [],
+    scenarios,
+    customScenarios: Array.isArray(data.customScenarios) ? data.customScenarios : scenarios,
+    simResults: Array.isArray(data.simResults) ? data.simResults : [],
+    liveSessions: data.liveSessions && typeof data.liveSessions === 'object' ? data.liveSessions : {},
+  };
+}
+
+async function initDB() {
+  if (USE_POSTGRES) {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS app_data (
+        id TEXT PRIMARY KEY,
+        data JSONB NOT NULL,
+        updated_at TIMESTAMPTZ DEFAULT NOW()
+      );
+    `);
+
+    await pool.query(`
+      INSERT INTO app_data (id, data, updated_at)
+      VALUES ('main', '{}'::jsonb, NOW())
+      ON CONFLICT (id) DO NOTHING;
+    `);
+
+    const result = await pool.query(`SELECT data FROM app_data WHERE id = 'main'`);
+    cachedDB = normaliseDB(result.rows[0]?.data || {});
+    console.log('[DB] PostgreSQL persistence enabled');
+    return;
+  }
+
   try {
-    if (!fs.existsSync(DB_FILE)) return {};
-    const raw = fs.readFileSync(DB_FILE, 'utf-8');
-    const parsed = JSON.parse(raw);
-    // A08 — basic schema validation
-    if (typeof parsed !== 'object' || Array.isArray(parsed)) throw new Error('Invalid db format');
-    return parsed;
+    if (fs.existsSync(DB_FILE)) {
+      const raw = fs.readFileSync(DB_FILE, 'utf-8');
+      cachedDB = normaliseDB(JSON.parse(raw));
+    }
+    console.log('[DB] Local db.json fallback enabled');
   } catch (err) {
-    console.error('DB read error:', err.message);
-    return {};
+    console.error('[DB] Local db.json load failed:', err.message);
+    cachedDB = normaliseDB({});
   }
 }
 
-function writeDB(data) {
-  // A08 — validate before writing
-  if (typeof data !== 'object' || Array.isArray(data)) throw new Error('Invalid data shape');
+async function persistDB(data) {
+  if (USE_POSTGRES) {
+    await pool.query(`
+      INSERT INTO app_data (id, data, updated_at)
+      VALUES ('main', $1::jsonb, NOW())
+      ON CONFLICT (id)
+      DO UPDATE SET data = EXCLUDED.data, updated_at = NOW()
+    `, [JSON.stringify(data)]);
+    return;
+  }
   fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2), 'utf-8');
 }
 
+function readDB() {
+  return normaliseDB(cachedDB);
+}
+
+function writeDB(data) {
+  if (typeof data !== 'object' || Array.isArray(data)) throw new Error('Invalid data shape');
+  cachedDB = normaliseDB(data);
+  persistDB(cachedDB).catch(err => console.error('[DB] Persist failed:', err.message));
+}
 
 // ─────────────────────────────────────────────
 // DATA ENDPOINTS — protected by requireAuth
 // ─────────────────────────────────────────────
-app.get('/api/data', requireAuth, (req, res) => {
+app.get('/api/data', requireAuth, async (req, res) => {
   try {
     const db = readDB();
-    res.json({
-      schemaVersion: db.schemaVersion || 2,
-      savedAt: db.savedAt || null,
-      clients: Array.isArray(db.clients) ? db.clients : [],
-      scenarios: Array.isArray(db.scenarios) ? db.scenarios : (Array.isArray(db.customScenarios) ? db.customScenarios : []),
-      customScenarios: Array.isArray(db.customScenarios) ? db.customScenarios : [],
-      simResults: Array.isArray(db.simResults) ? db.simResults : [],
-      liveSessions: db.liveSessions && typeof db.liveSessions === 'object' ? db.liveSessions : {}
-    });
+    res.json(normaliseDB(db));
   } catch (err) {
     console.error('Load error:', err.message);
     res.status(500).json({ error: 'Failed to load data' });
   }
 });
 
-app.post('/api/data', requireAuth, (req, res) => {
+app.post('/api/data', requireAuth, async (req, res) => {
   try {
     const incoming = req.body || {};
     const current = readDB();
-    const merged = {
+    const merged = normaliseDB({
       ...current,
+      ...incoming,
       schemaVersion: 2,
       savedAt: new Date().toISOString(),
-      clients: Array.isArray(incoming.clients) ? incoming.clients : (Array.isArray(current.clients) ? current.clients : []),
-      scenarios: Array.isArray(incoming.scenarios) ? incoming.scenarios : (Array.isArray(current.scenarios) ? current.scenarios : []),
-      customScenarios: Array.isArray(incoming.customScenarios) ? incoming.customScenarios : (Array.isArray(current.customScenarios) ? current.customScenarios : []),
-      simResults: Array.isArray(incoming.simResults) ? incoming.simResults : (Array.isArray(current.simResults) ? current.simResults : []),
-      liveSessions: current.liveSessions && typeof current.liveSessions === 'object' ? current.liveSessions : {}
-    };
-    writeDB(merged);
-    res.json({ ok: true, savedAt: merged.savedAt });
+      clients: Array.isArray(incoming.clients) ? incoming.clients : current.clients,
+      scenarios: Array.isArray(incoming.scenarios) ? incoming.scenarios : current.scenarios,
+      customScenarios: Array.isArray(incoming.customScenarios) ? incoming.customScenarios : (Array.isArray(incoming.scenarios) ? incoming.scenarios : current.customScenarios),
+      simResults: Array.isArray(incoming.simResults) ? incoming.simResults : current.simResults,
+      liveSessions: current.liveSessions && typeof current.liveSessions === 'object' ? current.liveSessions : {},
+    });
+
+    cachedDB = merged;
+    await persistDB(merged);
+    res.json({ ok: true, savedAt: merged.savedAt, storage: USE_POSTGRES ? 'postgres' : 'db.json' });
   } catch (err) {
     console.error('Save error:', err.message);
     res.status(500).json({ error: 'Failed to save data' });
@@ -527,7 +589,7 @@ IMPORTANT FREE-TEXT AND PARTICIPANT ANALYSIS RULES:
 
 Write the full executive debrief using ONLY these HTML tags: <strong>, <br>, <ul>, <li>. No markdown. No other tags.
 
-Use EXACTLY these 9 section headings — each must be wrapped in <strong>Title</strong><br> on its own line:
+Use EXACTLY these 11 section headings — each must be wrapped in <strong>Title</strong><br> on its own line:
 
 <strong>Executive Summary</strong><br>
 [3 sentences: what was tested, overall result, key finding]
@@ -550,6 +612,12 @@ Use EXACTLY these 9 section headings — each must be wrapped in <strong>Title</
 <strong>Timeline, Replay & Heatmap Insights</strong><br>
 [Identify the most failed decision, repeated weak branches, and whether response quality improved or degraded over time.]
 
+<strong>MITRE ATT&CK / Threat Behaviour Mapping</strong><br>
+[Map observed failures to likely ATT&CK tactics/techniques when enough context exists. If no explicit MITRE data exists, infer cautiously and state it is inferred.]
+
+<strong>Playbook Advisory Assessment</strong><br>
+[Evaluate whether failures came from participant execution, weak playbook/SOP, or both. Mention playbook gaps if playbook data exists.]
+
 <strong>Prioritised Recommendations</strong><br>
 [Exactly 3 <ul><li> items. Start each with [IMMEDIATE], [30 DAYS], or [NEXT QUARTER] followed by the recommendation.]
 
@@ -564,7 +632,7 @@ Use EXACTLY these 9 section headings — each must be wrapped in <strong>Title</
         { role: 'user',   content: userPrompt },
       ],
       temperature: 0.25,
-      max_tokens: 1600,
+      max_tokens: 2200,
     });
 
     res.json({ conclusion: completion.choices[0].message.content });
@@ -1769,7 +1837,14 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 8080;
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`NexaCyberSim running on port ${PORT}`);
-  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-});
+initDB()
+  .then(() => {
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(`NexaCyberSim running on port ${PORT}`);
+      console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+    });
+  })
+  .catch(err => {
+    console.error('[FATAL] Database initialisation failed:', err.message);
+    process.exit(1);
+  });
