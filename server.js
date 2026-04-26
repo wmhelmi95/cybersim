@@ -1516,8 +1516,23 @@ function ensureLiveStore(db){
   if(!db.liveSessions || typeof db.liveSessions !== 'object' || Array.isArray(db.liveSessions)) db.liveSessions = {};
   return db.liveSessions;
 }
-function publicSessionView(session){
+function publicSessionView(session, revealResults){
   if(!session) return null;
+  const reveal = !!revealResults || session.status === 'ended';
+  const safeAnswer = (a)=> reveal ? a : {
+    id: a.id,
+    participantId: a.participantId,
+    step: a.step,
+    question: a.question,
+    participantName: a.participantName,
+    team: a.team,
+    optionIndex: a.optionIndex,
+    mcqAnswer: a.mcqAnswer,
+    freeText: a.freeText,
+    skillTested: a.skillTested,
+    submittedAt: a.submittedAt,
+    responseTimeSec: a.responseTimeSec
+  };
   return {
     id: session.id,
     title: session.title,
@@ -1529,16 +1544,17 @@ function publicSessionView(session){
     createdAt: session.createdAt,
     updatedAt: session.updatedAt,
     participants: session.participants || [],
-    answers: session.answers || [],
+    answers: (session.answers || []).map(safeAnswer),
     notes: session.notes || [],
     state: session.state || null,
-    summary: session.summary || null
+    summary: reveal ? (session.summary || null) : null
   };
 }
+
 function broadcastLive(sessionId){
   const db = readDB();
   const session = ensureLiveStore(db)[sessionId];
-  const payload = `data: ${JSON.stringify({ type:'session', session: publicSessionView(session) })}\n\n`;
+  const payload = `data: ${JSON.stringify({ type:'session', session: publicSessionView(session, session.status === 'ended') })}\n\n`;
   const set = liveStreams.get(sessionId);
   if(!set) return;
   for(const res of [...set]){
@@ -1609,7 +1625,7 @@ app.post('/api/live-sessions', requireAuth, (req, res) => {
       updatedAt: new Date().toISOString()
     };
     writeDB(db);
-    res.json(publicSessionView(sessions[id]));
+    res.json(publicSessionView(sessions[id], true));
     broadcastLive(id);
   } catch(err) {
     console.error('Create live session error:', err.message);
@@ -1619,13 +1635,13 @@ app.post('/api/live-sessions', requireAuth, (req, res) => {
 
 app.get('/api/live-sessions', requireAuth, (req, res) => {
   const sessions = ensureLiveStore(readDB());
-  res.json(Object.values(sessions).map(publicSessionView).sort((a,b)=>String(b.createdAt).localeCompare(String(a.createdAt))));
+  res.json(Object.values(sessions).map(x=>publicSessionView(x, true)).sort((a,b)=>String(b.createdAt).localeCompare(String(a.createdAt))));
 });
 
 app.get('/api/live-sessions/:id', (req, res) => {
   const session = ensureLiveStore(readDB())[String(req.params.id).toUpperCase()];
   if(!session) return res.status(404).json({ error:'Session not found' });
-  res.json(publicSessionView(session));
+  res.json(publicSessionView(session, session.status === 'ended'));
 });
 
 app.get('/api/live-sessions/:id/stream', (req, res) => {
@@ -1638,7 +1654,7 @@ app.get('/api/live-sessions/:id/stream', (req, res) => {
   res.flushHeaders?.();
   if(!liveStreams.has(id)) liveStreams.set(id, new Set());
   liveStreams.get(id).add(res);
-  res.write(`data: ${JSON.stringify({ type:'session', session: publicSessionView(session) })}\n\n`);
+  res.write(`data: ${JSON.stringify({ type:'session', session: publicSessionView(session, session.status === 'ended') })}\n\n`);
   req.on('close', () => liveStreams.get(id)?.delete(res));
 });
 
@@ -1661,7 +1677,7 @@ app.post('/api/live-sessions/:id/control', requireAuth, (req, res) => {
     if(action === 'goto') session.currentStep = Math.max(0, Math.min(Number(step || 0), Math.max(0, decs.length - 1)));
     session.updatedAt = new Date().toISOString();
     writeDB(db);
-    res.json(publicSessionView(session));
+    res.json(publicSessionView(session, true));
     broadcastLive(id);
   } catch(err) {
     console.error('Live control error:', err.message);
@@ -1723,7 +1739,7 @@ app.post('/api/live-sessions/:id/answers', async (req, res) => {
     session.answers = session.answers || [];
     const existingAnswer = participantId ? session.answers.find(a => a.participantId === participantId && Number(a.step) === Number(session.currentStep || 0)) : null;
     if(existingAnswer && req.body.allowResubmit !== true){
-      return res.status(409).json({ error:'Answer already submitted for this step', answer: existingAnswer, session: publicSessionView(session) });
+      return res.status(409).json({ error:'Answer already submitted for this step', answer: session.status === 'ended' ? existingAnswer : { id: existingAnswer.id, participantId: existingAnswer.participantId, step: existingAnswer.step, submittedAt: existingAnswer.submittedAt }, session: publicSessionView(session) });
     }
     const optionIndex = Number(req.body.optionIndex);
     const chosen = Number.isInteger(optionIndex) ? d.options?.[optionIndex] : null;
@@ -1797,7 +1813,7 @@ Participant response: ${freeText}`;
     session.answers.push(answer);
     session.updatedAt = new Date().toISOString();
     writeDB(db);
-    res.json({ answer, session: publicSessionView(session) });
+    res.json({ answer: session.status === 'ended' ? answer : { id: answer.id, participantId: answer.participantId, step: answer.step, submittedAt: answer.submittedAt }, session: publicSessionView(session) });
     broadcastLive(id);
   } catch(err) {
     console.error('Live answer error:', err.message);
@@ -1855,36 +1871,6 @@ app.use((err, req, res, next) => {
   console.error('Unhandled error:', err.message);
   res.status(500).json({ error: 'Internal server error' });
 });
-
-
-// ─────────────────────────────────────────────
-// PATCH: Professional report metadata endpoint
-// Keeps same report format for solo and live.
-// ─────────────────────────────────────────────
-app.post('/api/report/normalise', (req, res) => {
-  try {
-    const r = req.body || {};
-    const results = Array.isArray(r.results) ? r.results : Array.isArray(r.decisionHistory) ? r.decisionHistory : [];
-    const scores = results.map(x => typeof x.bestPracticeScore === 'number' ? x.bestPracticeScore : typeof x.aiScore === 'number' ? x.aiScore : (x.correct ? 100 : 0));
-    const avg = scores.length ? Math.round(scores.reduce((a,b)=>a+b,0)/scores.length) : 0;
-    const correct = results.filter(x => x.correct || x.branch === 'strong' || (x.aiScore || x.bestPracticeScore || 0) >= 70).length;
-    res.json({
-      ok: true,
-      report: {
-        ...r,
-        mode: r.mode || r.sessionMode || 'live',
-        pct: r.pct ?? avg,
-        correctCount: r.correctCount ?? correct,
-        totalDecisions: r.totalDecisions ?? results.length,
-        generatedAt: new Date().toISOString()
-      }
-    });
-  } catch (err) {
-    console.error('Report normalise error:', err.message);
-    res.status(500).json({ error: 'Failed to normalise report' });
-  }
-});
-
 
 const PORT = process.env.PORT || 8080;
 initDB()
