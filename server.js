@@ -620,7 +620,7 @@ IMPORTANT FREE-TEXT AND PARTICIPANT ANALYSIS RULES:
 - Mention recurring weaknesses by participant and team when the data contains participantName or team.
 - Identify who needs improvement and in which skill domain when enough data is available.
 
-Write the full executive debrief using ONLY these HTML tags: <strong>, <br>, <ul>, <li>. No markdown. No other tags.
+Write the full executive debrief using ONLY these HTML tags: <strong>, <br>, <ul>, <li>. No markdown. No other tags. Never output empty <li> items. Never output standalone bullet symbols. Every bullet must contain a complete sentence.
 
 Use EXACTLY these 11 section headings — each must be wrapped in <strong>Title</strong><br> on its own line:
 
@@ -630,7 +630,7 @@ Use EXACTLY these 11 section headings — each must be wrapped in <strong>Title<
 <strong>Cyber Resilience Posture Assessment</strong><br>
 [3-4 sentences on practical resilience posture]
 
-<strong>Skill Domain Performance</strong><br>
+<strong>Skill Domain Readiness</strong><br>
 [For each assessed skill listed under SKILL SCORES, write: SkillName: XX% [PASS/FAIL] — one sentence observation. Do not include unassessed domains. Skip Technical Response entirely if this is management level unless it is explicitly assessed.]
 
 <strong>Decision Failures & Consequences</strong><br>
@@ -982,11 +982,11 @@ app.post('/api/export-word', requireAuth, async (req, res) => {
       if(!raw) return [bPara('No AI analysis available.',{color:LIGHT})];
 
       const SECTION_KW = [
-        'Executive Summary','Cyber Resilience Posture','Skill Domain Performance',
+        'Executive Summary','Cyber Resilience Posture','Skill Domain Performance','Skill Domain Readiness',
         'Decision Failures','Decision Analysis','Correct Responses',
         'Team & Individual Insights','Timeline, Replay & Heatmap Insights',
         'MITRE ATT&CK / Threat Behaviour Mapping','Playbook Advisory Assessment',
-        'Prioritised Recommendations','Recommendations',
+        'Prioritised Recommendations','Recommendations','Top Strengths','Top Areas for Improvement',
         "Consultant's Verdict",'Verdict','Key Findings','Overall Assessment','Overall Verdict',
       ];
 
@@ -1191,8 +1191,8 @@ app.post('/api/export-word', requireAuth, async (req, res) => {
     const assessedSkillList = (skills||[]).filter(s=>s.assessed !== false && s.score !== null && s.score !== undefined);
     const passedCount=assessedSkillList.filter(s=>s.pass).length;
     const failedCount=assessedSkillList.filter(s=>!s.pass).length;
-    const passNote = assessedSkillList.length ? (passedCount + ' of ' + assessedSkillList.length + ' assessed skill domains met the 70% pass threshold.') : 'No skill domains were individually assessed.' +
-      (failedCount > 0 ? ' ' + failedCount + ' domain' + (failedCount>1?'s':'') + ' require' + (failedCount===1?'s':'') + ' focused remediation.' : ' All domains are performing adequately.');
+    const passNote = assessedSkillList.length ? ((passedCount + ' of ' + assessedSkillList.length + ' assessed skill domains met the 70% pass threshold.') +
+      (failedCount > 0 ? ' ' + failedCount + ' domain' + (failedCount>1?'s':'') + ' require' + (failedCount===1?'s':'') + ' focused remediation.' : ' All domains are performing adequately.')) : 'No skill domains were individually assessed.';
 
     // ── Helper: coloured cover accent bar ──
     function accentBar(color){
