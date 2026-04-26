@@ -546,13 +546,17 @@ app.post('/api/generate-conclusion', requireAuth, aiLimiter, async (req, res) =>
     }
 
     const safeScore    = sanitiseNumber(score);
-    const safeMax      = sanitiseNumber(maxScore, 100);
+    const requestedMax = sanitiseNumber(maxScore, 100);
+    const participantCountForScore = Math.max(1, sanitiseNumber(req.body.participantCount || req.body.totalParticipants || 1, 1));
+    const safeMax      = safeScore > requestedMax && participantCountForScore > 1
+      ? requestedMax * participantCountForScore
+      : requestedMax;
     const safeTitle    = sanitiseString(scenarioTitle, 200);
     const safeClient   = sanitiseString(clientName, 200);
     const safeLevel    = ['management','working'].includes(level) ? level : 'management';
     const safeTime     = sanitiseNumber(timeTaken);
 
-    const pct          = Math.round((safeScore / safeMax) * 100);
+    const pct          = Math.max(0, Math.min(100, Math.round((safeScore / Math.max(1, safeMax)) * 100)));
     const grade        = getGrade(pct);
     const posture      = getResiliencePosture(pct);
     const correctCount = decisionHistory.filter(d => d.correct === true).length;
