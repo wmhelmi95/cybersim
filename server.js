@@ -641,7 +641,7 @@ Use EXACTLY these 11 section headings — each must be wrapped in <strong>Title<
 <strong>Prioritised Recommendations</strong><br>
 [Exactly 3 <ul><li> items. Start each with [IMMEDIATE], [30 DAYS], or [NEXT QUARTER] followed by the recommendation.]
 
-<strong>Consultant's Verdict</strong><br>
+<strong>Top Strengths</strong><br>[Exactly 3 unique bullets. Never repeat the same wording. Tie each to a specific observed behaviour.]<br><strong>Top Areas for Improvement</strong><br>[Exactly 3 unique bullets. Each must include root cause and management action.]<br><strong>Consultant's Verdict</strong><br>
 [2 sentences only: overall verdict and single most important next action.]
 `.trim();
 
@@ -668,6 +668,64 @@ Use EXACTLY these 11 section headings — each must be wrapped in <strong>Title<
     res.status(500).json({ error: clientMsg });
   }
 });
+
+
+
+// ─────────────────────────────────────────────
+// ENTERPRISE MODE — normalized scoring + unique insight helpers
+// ─────────────────────────────────────────────
+function normaliseEnterpriseScore({ correctCount = 0, decisionCount = 0, participantCount = 1 } = {}) {
+  const total = Math.max(1, Number(decisionCount || 0) * Math.max(1, Number(participantCount || 1)));
+  const correct = Math.max(0, Math.min(total, Number(correctCount || 0)));
+  return {
+    correct,
+    total,
+    riskDecisions: total - correct,
+    readinessIndex: Math.round((correct / total) * 100),
+  };
+}
+
+function uniqueEnterpriseBullets(items, fallback) {
+  const seen = new Set();
+  const out = [];
+  for (const item of [...(items || []), ...(fallback || [])]) {
+    const clean = String(item || '').replace(/\s+/g, ' ').trim();
+    if (!clean) continue;
+    const key = clean.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(clean);
+    if (out.length >= 3) break;
+  }
+  return out;
+}
+
+function buildEnterpriseInsightThemes({ skills = [], readinessIndex = 0 } = {}) {
+  const normalised = (skills || []).map(s => ({
+    name: s.name || s.label || s.skill || 'Capability Domain',
+    score: Math.max(0, Math.min(100, Math.round(Number(s.score ?? s.value ?? readinessIndex) || 0))),
+  })).sort((a, b) => b.score - a.score);
+
+  const strengths = uniqueEnterpriseBullets(
+    normalised.filter(s => s.score >= 60).map(s => `${s.name}: comparatively stronger control observed at ${s.score}%, with evidence of repeatable management behaviour.`),
+    [
+      'Executive alignment improved once key incident facts were established.',
+      'The team demonstrated the ability to converge when decision ownership was clear.',
+      'Initial incident activation created a usable base for structured response.'
+    ]
+  );
+
+  const improvements = uniqueEnterpriseBullets(
+    normalised.filter(s => s.score < 70).sort((a,b)=>a.score-b.score).map(s => `${s.name}: strengthen decision ownership, response timing, and evidence-based escalation.`),
+    [
+      'Clarify incident command authority and escalation thresholds.',
+      'Improve board, regulator, customer, and media communication readiness.',
+      'Convert playbook guidance into role-specific action steps and decision checklists.'
+    ]
+  );
+
+  return { strengths, improvements };
+}
 
 // ─────────────────────────────────────────────
 // AI SCENARIO GENERATOR — protected
@@ -913,6 +971,8 @@ app.post('/api/export-word', requireAuth, async (req, res) => {
       const SECTION_KW = [
         'Executive Summary','Cyber Resilience Posture','Skill Domain Performance',
         'Decision Failures','Decision Analysis','Correct Responses',
+        'Team & Individual Insights','Timeline, Replay & Heatmap Insights',
+        'MITRE ATT&CK / Threat Behaviour Mapping','Playbook Advisory Assessment',
         'Prioritised Recommendations','Recommendations',
         "Consultant's Verdict",'Verdict','Key Findings','Overall Assessment','Overall Verdict',
       ];
@@ -921,6 +981,7 @@ app.post('/api/export-word', requireAuth, async (req, res) => {
       let cleaned = raw
         .replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{27BF}\u{FE00}-\u{FE0F}]/gu, '')
         .replace(/SECTION\s+\d+/gi, '')
+        .replace(/Executive Summary\s*\n\s*Executive Summary/i, 'Executive Summary')
         .replace(/&amp;/gi,'&').replace(/&apos;/gi,"'").replace(/&quot;/gi,'"')
         .replace(/&lt;/gi,'<').replace(/&gt;/gi,'>')
         .replace(/<br\s*\/?>/gi, '\n')
@@ -1578,6 +1639,34 @@ function applyLiveEffect(session, option){
 }
 
 
+
+function liveManagementThemes(rows, good){
+  rows = Array.isArray(rows) ? rows : [];
+  const filtered = rows.filter(r => good ? Number(r.score ?? r.aiScore ?? (r.correct?100:0)) >= 70 : Number(r.score ?? r.aiScore ?? (r.correct?100:0)) < 70);
+  const dict = good ? [
+    {title:'Containment Governance', text:'Validated responses showed clear management authority and incident control.'},
+    {title:'Stakeholder Alignment', text:'Responses recognised the need for coordinated board, customer, staff, and regulator messaging.'},
+    {title:'Regulatory Awareness', text:'Participants identified compliance-sensitive decisions and escalation points.'},
+    {title:'Crisis Leadership', text:'The team demonstrated decisive action under time pressure.'}
+  ] : [
+    {title:'Decision Delay', text:'Delayed or partial decisions could increase containment cost and business exposure.'},
+    {title:'Communication Governance', text:'Board, customer, media, and staff communications need clearer ownership and sequencing.'},
+    {title:'Compliance Escalation', text:'Legal and regulatory notification triggers require stronger management discipline.'},
+    {title:'Role Accountability', text:'Incident commander, legal, communications, and technical responsibilities need clearer separation.'},
+    {title:'Playbook Execution', text:'The response playbook needs clearer decision gates and executive approval steps.'}
+  ];
+  const used = new Set();
+  const out = [];
+  filtered.forEach((r, idx) => {
+    const skill = String(r.skillTested || '').toLowerCase();
+    let pick = skill.includes('comm') ? dict[1] : skill.includes('compliance') || skill.includes('legal') ? (good ? dict[2] : dict[2]) : skill.includes('lead') || skill.includes('decision') ? (good ? dict[3] : dict[0]) : dict[idx % dict.length];
+    if(used.has(pick.title)) pick = dict.find(d => !used.has(d.title)) || pick;
+    used.add(pick.title);
+    out.push(pick);
+  });
+  return out.slice(0,3);
+}
+
 function avgLiveScore(rows){ rows=Array.isArray(rows)?rows:[]; if(!rows.length) return 0; return Math.round(rows.reduce((s,a)=>s+Number(a.score ?? a.aiScore ?? (a.correct?100:0)),0)/rows.length); }
 function groupLive(rows,key){ return (rows||[]).reduce((acc,r)=>{ const k=(r[key]||'Unassigned'); (acc[k]||(acc[k]=[])).push(r); return acc; },{}); }
 function strongestWeakest(rows){ const bySkill=groupLive(rows,'skillTested'); let strongest=null,weakest=null; for(const [skill,items] of Object.entries(bySkill)){ const score=avgLiveScore(items); if(!strongest||score>strongest.score) strongest={skill,score}; if(!weakest||score<weakest.score) weakest={skill,score}; } return {strongest,weakest}; }
@@ -1595,7 +1684,16 @@ function buildLiveSummary(session){
   const qCounts={}; advisoryRows.forEach(a=>{const q=a.playbookQuality||'unknown';qCounts[q]=(qCounts[q]||0)+1;});
   const playbookGaps={}; advisoryRows.forEach(a=>(a.playbookGaps||[]).forEach(g=>{playbookGaps[g]=(playbookGaps[g]||0)+1;}));
   const advisory={playbookAlignmentScore:nums(advisoryRows.map(a=>a.playbookAlignmentScore).filter(v=>v!==null&&v!==undefined)),bestPracticeScore:nums(advisoryRows.map(a=>a.bestPracticeScore ?? a.aiScore)),playbookQuality:Object.entries(qCounts).sort((a,b)=>b[1]-a[1])[0]?.[0]||'unknown',playbookGaps:Object.entries(playbookGaps).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([gap,count])=>({gap,count})),consultantInsights:advisoryRows.map(a=>a.consultantInsight).filter(Boolean).slice(0,8)};
-  return {generatedAt:new Date().toISOString(),avgScore:avgLiveScore(participantAnswers),totalParticipants:participants.filter(p=>p.role==='participant').length,totalObservers:participants.filter(p=>p.role==='observer').length,totalAnswers:participantAnswers.length,totalNotes:(session.notes||[]).length,individuals,teams,decisionHeatmap,timeline,replay,weakIssues,advisory};
+  const participantCount = participants.filter(p=>p.role==='participant').length;
+  const scenario = session.scenario || {};
+  const decs = scenario.decisions?.[session.level || 'management'] || scenario.decisions?.management || [];
+  const expectedDecisionPoints = Math.max(1, (decs.length || 0) * Math.max(1, participantCount || 1));
+  const uniqueKeys = new Set();
+  const uniqueAnswers = [];
+  participantAnswers.forEach(a => { const k = (a.participantId || a.participantName || 'anon') + '::' + Number(a.step || 0); if(!uniqueKeys.has(k)){ uniqueKeys.add(k); uniqueAnswers.push(a); } });
+  const validatedDecisions = uniqueAnswers.filter(a => Number(a.score ?? a.aiScore ?? (a.correct?100:0)) >= 70).length;
+  const readinessIndex = Math.max(0, Math.min(100, Math.round(validatedDecisions / expectedDecisionPoints * 100)));
+  return {generatedAt:new Date().toISOString(),avgScore:readinessIndex,readinessIndex,validatedDecisions,riskDecisions:Math.max(0, expectedDecisionPoints-validatedDecisions),expectedDecisionPoints,totalParticipants:participantCount,totalObservers:participants.filter(p=>p.role==='observer').length,totalAnswers:participantAnswers.length,totalNotes:(session.notes||[]).length,individuals,teams,decisionHeatmap,timeline,replay,weakIssues,topStrengths:liveManagementThemes(uniqueAnswers,true),topImprovements:liveManagementThemes(uniqueAnswers,false),advisory};
 }
 
 app.post('/api/live-sessions', requireAuth, (req, res) => {
@@ -1684,6 +1782,29 @@ app.post('/api/live-sessions/:id/control', requireAuth, (req, res) => {
     res.status(500).json({ error:'Failed to control session' });
   }
 });
+
+app.delete('/api/live-sessions/:id', requireAuth, (req, res) => {
+  try {
+    const id = String(req.params.id).toUpperCase();
+    const db = readDB();
+    const sessions = ensureLiveStore(db);
+    if(!sessions[id]) return res.status(404).json({ error:'Session not found' });
+    delete sessions[id];
+    db.liveSessions = sessions;
+    writeDB(db);
+    const set = liveStreams.get(id);
+    if(set){
+      const payload = `data: ${JSON.stringify({ type:'deleted', sessionId:id })}\n\n`;
+      for(const stream of [...set]){ try { stream.write(payload); } catch(e) {} }
+      liveStreams.delete(id);
+    }
+    res.json({ ok:true, deleted:id });
+  } catch(err) {
+    console.error('Delete live session error:', err.message);
+    res.status(500).json({ error:'Failed to delete live session' });
+  }
+});
+
 
 app.post('/api/live-sessions/:id/join', (req, res) => {
   try {
@@ -1884,115 +2005,3 @@ initDB()
     console.error('[FATAL] Database initialisation failed:', err.message);
     process.exit(1);
   });
-
-
-// ENTERPRISE SYSTEM V2 — DB schema-ready APIs and analytics
-async function ensureEnterpriseSchema(){
-  if(!pool||typeof pool.query!=='function') return;
-  await pool.query(`
-    CREATE EXTENSION IF NOT EXISTS pgcrypto;
-    CREATE TABLE IF NOT EXISTS enterprise_exercises (
-      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-      client_id TEXT, scenario_id TEXT, title TEXT NOT NULL,
-      status TEXT NOT NULL DEFAULT 'draft',
-      started_at TIMESTAMPTZ, ended_at TIMESTAMPTZ,
-      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-    );
-    CREATE TABLE IF NOT EXISTS enterprise_participants (
-      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-      exercise_id UUID REFERENCES enterprise_exercises(id) ON DELETE CASCADE,
-      participant_key TEXT NOT NULL, display_name TEXT, email TEXT, role TEXT,
-      observer BOOLEAN DEFAULT FALSE, joined_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-      UNIQUE(exercise_id, participant_key)
-    );
-    CREATE TABLE IF NOT EXISTS enterprise_decision_records (
-      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-      exercise_id UUID REFERENCES enterprise_exercises(id) ON DELETE CASCADE,
-      participant_id UUID REFERENCES enterprise_participants(id) ON DELETE CASCADE,
-      decision_id TEXT NOT NULL, selected_option TEXT,
-      is_validated BOOLEAN DEFAULT FALSE, is_borderline BOOLEAN DEFAULT FALSE,
-      risk_impact TEXT DEFAULT 'medium', business_impact TEXT,
-      response_time_ms INTEGER, submitted_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-      UNIQUE(exercise_id, participant_id, decision_id)
-    );
-    CREATE TABLE IF NOT EXISTS enterprise_audit_events (
-      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-      exercise_id UUID REFERENCES enterprise_exercises(id) ON DELETE CASCADE,
-      actor_key TEXT, actor_role TEXT, event_type TEXT NOT NULL,
-      event_payload JSONB DEFAULT '{}'::jsonb,
-      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-    );
-    CREATE TABLE IF NOT EXISTS enterprise_playbook_expectations (
-      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-      exercise_id UUID REFERENCES enterprise_exercises(id) ON DELETE CASCADE,
-      decision_id TEXT NOT NULL, expected_action TEXT NOT NULL,
-      owner_role TEXT, severity TEXT DEFAULT 'medium',
-      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-      UNIQUE(exercise_id, decision_id)
-    );
-  `);
-}
-function enterpriseScore(validated,total){
-  const t=Math.max(1,Number(total||1)), v=Math.max(0,Math.min(t,Number(validated||0)));
-  return {readinessIndex:Math.round(v/t*100),validatedDecisions:v,riskDecisions:t-v,totalDecisionRecords:t};
-}
-async function enterpriseAudit(exerciseId,actorKey,actorRole,eventType,payload={}){
-  if(!pool||typeof pool.query!=='function') return;
-  await pool.query(`INSERT INTO enterprise_audit_events (exercise_id,actor_key,actor_role,event_type,event_payload) VALUES ($1,$2,$3,$4,$5)`,
-    [exerciseId,actorKey||'system',actorRole||'system',eventType,payload]);
-}
-app.post('/api/enterprise/schema/init', requireAuth, async(req,res)=>{
-  try{await ensureEnterpriseSchema();res.json({ok:true,message:'Enterprise schema ready'});}
-  catch(e){console.error(e);res.status(500).json({error:'Failed to initialise enterprise schema'});}
-});
-app.post('/api/enterprise/exercises', requireAuth, async(req,res)=>{
-  try{await ensureEnterpriseSchema();const{clientId,scenarioId,title}=req.body||{};
-    const r=await pool.query(`INSERT INTO enterprise_exercises (client_id,scenario_id,title,status) VALUES ($1,$2,$3,'draft') RETURNING *`,[clientId||null,scenarioId||null,title||'Enterprise Cyber Exercise']);
-    await enterpriseAudit(r.rows[0].id,req.user?.username,req.user?.role,'exercise_created',{title});res.json(r.rows[0]);
-  }catch(e){console.error(e);res.status(500).json({error:'Failed to create enterprise exercise'});}
-});
-app.post('/api/enterprise/exercises/:id/status', requireAuth, async(req,res)=>{
-  try{await ensureEnterpriseSchema();const{status}=req.body||{};if(!['draft','live','paused','ended','archived'].includes(status))return res.status(400).json({error:'Invalid status'});
-    const patch=status==='live'?`status=$2, started_at=COALESCE(started_at,NOW())`:status==='ended'?`status=$2, ended_at=COALESCE(ended_at,NOW())`:`status=$2`;
-    const r=await pool.query(`UPDATE enterprise_exercises SET ${patch} WHERE id=$1 RETURNING *`,[req.params.id,status]);
-    await enterpriseAudit(req.params.id,req.user?.username,req.user?.role,`exercise_${status}`,{});res.json(r.rows[0]);
-  }catch(e){console.error(e);res.status(500).json({error:'Failed to update exercise status'});}
-});
-app.post('/api/enterprise/exercises/:id/participants', async(req,res)=>{
-  try{await ensureEnterpriseSchema();const{participantKey,displayName,email,role,observer}=req.body||{};if(!participantKey)return res.status(400).json({error:'participantKey required'});
-    const r=await pool.query(`INSERT INTO enterprise_participants (exercise_id,participant_key,display_name,email,role,observer) VALUES ($1,$2,$3,$4,$5,$6)
-      ON CONFLICT (exercise_id,participant_key) DO UPDATE SET display_name=EXCLUDED.display_name,email=EXCLUDED.email,role=EXCLUDED.role,observer=EXCLUDED.observer RETURNING *`,
-      [req.params.id,participantKey,displayName||null,email||null,role||'Participant',!!observer]);
-    await enterpriseAudit(req.params.id,participantKey,role||'Participant','participant_joined',{observer:!!observer});res.json(r.rows[0]);
-  }catch(e){console.error(e);res.status(500).json({error:'Failed to register participant'});}
-});
-app.post('/api/enterprise/exercises/:id/decisions', async(req,res)=>{
-  try{await ensureEnterpriseSchema();const{participantId,decisionId,selectedOption,isValidated,isBorderline,riskImpact,businessImpact,responseTimeMs}=req.body||{};
-    if(!participantId||!decisionId)return res.status(400).json({error:'participantId and decisionId required'});
-    const r=await pool.query(`INSERT INTO enterprise_decision_records (exercise_id,participant_id,decision_id,selected_option,is_validated,is_borderline,risk_impact,business_impact,response_time_ms)
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
-      ON CONFLICT (exercise_id,participant_id,decision_id) DO UPDATE SET selected_option=EXCLUDED.selected_option,is_validated=EXCLUDED.is_validated,is_borderline=EXCLUDED.is_borderline,risk_impact=EXCLUDED.risk_impact,business_impact=EXCLUDED.business_impact,response_time_ms=EXCLUDED.response_time_ms,submitted_at=NOW() RETURNING *`,
-      [req.params.id,participantId,decisionId,selectedOption||null,!!isValidated,!!isBorderline,riskImpact||'medium',businessImpact||null,responseTimeMs||null]);
-    await enterpriseAudit(req.params.id,participantId,'participant','decision_submitted',{decisionId,isValidated:!!isValidated,isBorderline:!!isBorderline});res.json(r.rows[0]);
-  }catch(e){console.error(e);res.status(500).json({error:'Failed to submit decision'});}
-});
-app.get('/api/enterprise/exercises/:id/analytics', requireAuth, async(req,res)=>{
-  try{await ensureEnterpriseSchema();
-    const ex=await pool.query(`SELECT * FROM enterprise_exercises WHERE id=$1`,[req.params.id]);
-    const ps=await pool.query(`SELECT * FROM enterprise_participants WHERE exercise_id=$1 ORDER BY joined_at`,[req.params.id]);
-    const rec=await pool.query(`SELECT * FROM enterprise_decision_records WHERE exercise_id=$1 ORDER BY submitted_at`,[req.params.id]);
-    const exp=await pool.query(`SELECT * FROM enterprise_playbook_expectations WHERE exercise_id=$1 ORDER BY decision_id`,[req.params.id]);
-    const pc=Math.max(1,ps.rows.filter(p=>!p.observer).length||ps.rows.length||1), dc=Math.max(1,[...new Set(rec.rows.map(r=>r.decision_id))].length||exp.rows.length||1);
-    const score=enterpriseScore(rec.rows.filter(r=>r.is_validated).length,pc*dc);
-    const roleMap={}; ps.rows.filter(p=>!p.observer).forEach(p=>{roleMap[p.role||'Participant']||={role:p.role||'Participant',participants:0,validated:0,total:0};roleMap[p.role||'Participant'].participants++});
-    rec.rows.forEach(r=>{const p=ps.rows.find(x=>String(x.id)===String(r.participant_id));const role=p?.role||'Participant';roleMap[role]||={role,participants:0,validated:0,total:0};roleMap[role].validated+=r.is_validated?1:0;roleMap[role].total++});
-    const roleAnalytics=Object.values(roleMap).map(r=>({...r,readinessIndex:enterpriseScore(r.validated,Math.max(1,r.total)).readinessIndex}));
-    res.json({exercise:ex.rows[0],...score,participantCount:pc,decisionCount:dc,participants:ps.rows,records:rec.rows,roleAnalytics,playbookExpectations:exp.rows});
-  }catch(e){console.error(e);res.status(500).json({error:'Failed to load enterprise analytics'});}
-});
-app.get('/api/enterprise/exercises/:id/audit.csv', requireAuth, async(req,res)=>{
-  try{await ensureEnterpriseSchema();const r=await pool.query(`SELECT created_at,actor_key,actor_role,event_type,event_payload FROM enterprise_audit_events WHERE exercise_id=$1 ORDER BY created_at`,[req.params.id]);
-    const rows=[['timestamp','actor','role','event','payload'],...r.rows.map(x=>[x.created_at?.toISOString?.()||x.created_at,x.actor_key,x.actor_role,x.event_type,JSON.stringify(x.event_payload||{})])];
-    const csv=rows.map(row=>row.map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(',')).join('\n');res.setHeader('Content-Type','text/csv');res.setHeader('Content-Disposition','attachment; filename="enterprise-audit-log.csv"');res.send(csv);
-  }catch(e){console.error(e);res.status(500).json({error:'Failed to export audit log'});}
-});
