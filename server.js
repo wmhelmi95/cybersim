@@ -1673,6 +1673,21 @@ function liveManagementThemes(rows, good){
 
 function avgLiveScore(rows){ rows=Array.isArray(rows)?rows:[]; if(!rows.length) return 0; return Math.round(rows.reduce((s,a)=>s+Number(a.score ?? a.aiScore ?? (a.correct?100:0)),0)/rows.length); }
 function groupLive(rows,key){ return (rows||[]).reduce((acc,r)=>{ const k=(r[key]||'Unassigned'); (acc[k]||(acc[k]=[])).push(r); return acc; },{}); }
+
+function formatLocalReportTime(iso){
+  const d = iso ? new Date(iso) : new Date();
+  if(Number.isNaN(d.getTime())) return { localTime:'', time24:'', timestamp:'' };
+  const hh24 = String(d.getHours()).padStart(2,'0');
+  const mm = String(d.getMinutes()).padStart(2,'0');
+  const h12 = d.getHours()%12 || 12;
+  const ampm = d.getHours() >= 12 ? 'PM' : 'AM';
+  return {
+    localTime: `${String(h12).padStart(2,'0')}:${mm} ${ampm}`,
+    time24: `${hh24}:${mm}`,
+    timestamp: d.toISOString()
+  };
+}
+
 function strongestWeakest(rows){ const bySkill=groupLive(rows,'skillTested'); let strongest=null,weakest=null; for(const [skill,items] of Object.entries(bySkill)){ const score=avgLiveScore(items); if(!strongest||score>strongest.score) strongest={skill,score}; if(!weakest||score<weakest.score) weakest={skill,score}; } return {strongest,weakest}; }
 function buildLiveSummary(session){
   const answers=session.answers||[], participants=session.participants||[], participantAnswers=answers.filter(a=>a.participantId);
@@ -1680,8 +1695,8 @@ function buildLiveSummary(session){
   const teams=Object.entries(groupLive(participantAnswers,'team')).map(([team,rows])=>{ const sw=strongestWeakest(rows); return {team,participants:new Set(rows.map(r=>r.participantName)).size,avgScore:avgLiveScore(rows),answers:rows.length,strongest:sw.strongest,weakest:sw.weakest}; }).sort((a,b)=>b.avgScore-a.avgScore);
   const byStep=groupLive(participantAnswers.map(a=>({...a,stepKey:String(a.step??0)})),'stepKey');
   const decisionHeatmap=Object.entries(byStep).map(([step,rows])=>{ const scores=rows.map(r=>Number(r.score ?? r.aiScore ?? (r.correct?100:0))); return {step:Number(step),avgScore:avgLiveScore(rows),strong:scores.filter(s=>s>=80).length,partial:scores.filter(s=>s>=50&&s<80).length,weak:scores.filter(s=>s<50).length,submissions:rows.length}; }).sort((a,b)=>a.step-b.step);
-  const timeline=participantAnswers.slice().sort((a,b)=>String(a.submittedAt||'').localeCompare(String(b.submittedAt||''))).map(a=>({at:a.submittedAt,label:`D${Number(a.step||0)+1}`,text:`${a.participantName||'Participant'} (${a.team||'Unassigned'}) submitted`,score:Number(a.score ?? a.aiScore ?? (a.correct?100:0)),branch:a.branch||''}));
-  const replay=participantAnswers.slice().sort((a,b)=>String(a.submittedAt||'').localeCompare(String(b.submittedAt||''))).map(a=>({participantName:a.participantName,team:a.team,step:a.step,question:a.question,mcqAnswer:a.mcqAnswer,freeText:a.freeText,expectedActions:a.expectedActions,aiFeedback:a.aiFeedback,score:Number(a.score ?? a.aiScore ?? (a.correct?100:0)),branch:a.branch,submittedAt:a.submittedAt}));
+  const timeline=participantAnswers.slice().sort((a,b)=>String(a.submittedAt||'').localeCompare(String(b.submittedAt||''))).map(a=>{ const ft=formatLocalReportTime(a.submittedAt); return {at:a.submittedAt,localTime:ft.localTime,time24:ft.time24,label:`D${Number(a.step||0)+1}`,text:`${a.participantName||'Participant'} (${a.team||'Unassigned'}) submitted`,score:Number(a.score ?? a.aiScore ?? (a.correct?100:0)),branch:a.branch||'',responseTimeSec:a.responseTimeSec||0}; });
+  const replay=participantAnswers.slice().sort((a,b)=>String(a.submittedAt||'').localeCompare(String(b.submittedAt||''))).map(a=>{ const ft=formatLocalReportTime(a.submittedAt); return {participantName:a.participantName,team:a.team,step:a.step,question:a.question,mcqAnswer:a.mcqAnswer,freeText:a.freeText,expectedActions:a.expectedActions,aiFeedback:a.aiFeedback,score:Number(a.score ?? a.aiScore ?? (a.correct?100:0)),branch:a.branch,submittedAt:a.submittedAt,localTime:ft.localTime,time24:ft.time24,responseTimeSec:a.responseTimeSec||0}; });
   const weakIssues=participantAnswers.filter(a=>Number(a.score ?? a.aiScore ?? 0)<50).slice(0,10).map(a=>({participantName:a.participantName,team:a.team,step:a.step,issue:a.aiFeedback||'Weak response',score:Number(a.score ?? a.aiScore ?? 0)}));
   const nums=(arr)=>{arr=arr.map(Number).filter(Number.isFinite);return arr.length?Math.round(arr.reduce((a,b)=>a+b,0)/arr.length):0;};
   const advisoryRows=participantAnswers.filter(a=>a.playbookAlignmentScore!==null||a.bestPracticeScore!==undefined||a.playbookGaps?.length||a.consultantInsight);
@@ -1904,6 +1919,8 @@ Participant response: ${freeText}`;
     const score = aiScore !== null ? aiScore : (chosen ? (correct ? 100 : 0) : 0);
     const branch = aiBranch || chosen?.branch || (score >= 80 ? 'strong' : score >= 50 ? 'partial' : 'weak');
     applyLiveEffect(session, chosen);
+    const submittedAt = new Date().toISOString();
+    const submittedAtFormatted = formatLocalReportTime(submittedAt);
     const answer = {
       id: 'ans_' + Date.now() + '_' + Math.random().toString(36).slice(2,6),
       participantId,
@@ -1932,7 +1949,9 @@ Participant response: ${freeText}`;
       score,
       branch,
       state: session.state || null,
-      submittedAt: new Date().toISOString(),
+      submittedAt,
+      localTime: submittedAtFormatted.localTime,
+      time24: submittedAtFormatted.time24,
       responseTimeSec: sanitiseNumber(req.body.responseTimeSec, 0)
     };
     session.answers.push(answer);
