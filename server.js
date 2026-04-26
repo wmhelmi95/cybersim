@@ -1857,7 +1857,10 @@ app.use((err, req, res, next) => {
 });
 
 
-// Professional report normalisation endpoint (supports live and solo reports)
+// ─────────────────────────────────────────────
+// PATCH: Professional report metadata endpoint
+// Keeps same report format for solo and live.
+// ─────────────────────────────────────────────
 app.post('/api/report/normalise', (req, res) => {
   try {
     const r = req.body || {};
@@ -1865,12 +1868,23 @@ app.post('/api/report/normalise', (req, res) => {
     const scores = results.map(x => typeof x.bestPracticeScore === 'number' ? x.bestPracticeScore : typeof x.aiScore === 'number' ? x.aiScore : (x.correct ? 100 : 0));
     const avg = scores.length ? Math.round(scores.reduce((a,b)=>a+b,0)/scores.length) : 0;
     const correct = results.filter(x => x.correct || x.branch === 'strong' || (x.aiScore || x.bestPracticeScore || 0) >= 70).length;
-    res.json({ ok: true, report: { ...r, mode: r.mode || r.sessionMode || 'live', pct: r.pct ?? avg, correctCount: r.correctCount ?? correct, totalDecisions: r.totalDecisions ?? results.length, generatedAt: new Date().toISOString() } });
+    res.json({
+      ok: true,
+      report: {
+        ...r,
+        mode: r.mode || r.sessionMode || 'live',
+        pct: r.pct ?? avg,
+        correctCount: r.correctCount ?? correct,
+        totalDecisions: r.totalDecisions ?? results.length,
+        generatedAt: new Date().toISOString()
+      }
+    });
   } catch (err) {
     console.error('Report normalise error:', err.message);
     res.status(500).json({ error: 'Failed to normalise report' });
   }
 });
+
 
 const PORT = process.env.PORT || 8080;
 initDB()
