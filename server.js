@@ -517,12 +517,13 @@ function buildDecisionBreakdown(decisionHistory) {
   ].join('\n')).join('\n\n');
 }
 function buildSkillAnalysis(skillScores) {
-  if (!skillScores) return 'Not available';
+  if (!skillScores || Object.keys(skillScores).length === 0) return 'No skill domains were individually assessed.';
   const LABELS = {technical:'Technical Response',communication:'Communication',decision:'Decision Making',leadership:'Leadership',compliance:'Compliance',coordination:'Coordination'};
   return Object.entries(skillScores)
-    .sort((a,b)=>a[1]-b[1])
+    .filter(([_,v]) => v !== null && v !== undefined && !Number.isNaN(Number(v)))
+    .sort((a,b)=>Number(a[1])-Number(b[1]))
     .map(([k,v])=>`  - ${LABELS[k]||k}: ${sanitiseNumber(v)}% [${v>=70?'PASS':v>=50?'BORDERLINE':'FAIL'}]`)
-    .join('\n');
+    .join('\n') || 'No skill domains were individually assessed.';
 }
 
 const SYSTEM_PROMPT = `You are Dr. Marcus Reid, a Senior Cybersecurity Resilience Consultant. Write precise, professional executive debrief reports for corporate clients. Be evidence-based, direct, and grounded in real cybersecurity standards. Use ONLY plain text and basic HTML: <strong>, <br>, <ul>, <li>. No markdown. No # headers.`.trim();
@@ -534,7 +535,7 @@ app.post('/api/generate-conclusion', requireAuth, aiLimiter, async (req, res) =>
   try {
     const {
       score, maxScore, scenarioTitle, level, clientName,
-      decisionHistory, skillScores, timeTaken,
+      decisionHistory, skillScores, assessedSkillDomains, timeTaken,
     } = req.body;
 
     // A03 — validate and sanitise all inputs
@@ -561,8 +562,9 @@ app.post('/api/generate-conclusion', requireAuth, aiLimiter, async (req, res) =>
     const posture      = getResiliencePosture(pct);
     const correctCount = decisionHistory.filter(d => d.correct === true).length;
     const incorrectCount = decisionHistory.length - correctCount;
-    const weakSkills   = skillScores ? Object.entries(skillScores).filter(([_,v])=>v<70).map(([k])=>k) : [];
-    const critSkills   = skillScores ? Object.entries(skillScores).filter(([_,v])=>v<50).map(([k])=>k) : [];
+    const assessedSkills = skillScores ? Object.entries(skillScores).filter(([_,v]) => v !== null && v !== undefined && !Number.isNaN(Number(v))) : [];
+    const weakSkills   = assessedSkills.filter(([_,v])=>Number(v)<70).map(([k])=>k);
+    const critSkills   = assessedSkills.filter(([_,v])=>Number(v)<50).map(([k])=>k);
     const avgTime      = safeTime / decisionHistory.length;
     const timeComment  = avgTime < 15 ? 'Under 15s avg — possible overconfidence.'
                        : avgTime > 90 ? 'Over 90s avg — hesitation in a live incident would cost containment time.'
@@ -578,6 +580,12 @@ Date: ${new Date().toLocaleDateString('en-GB')}
 IMPORTANT CONTEXT:
 If decision records include freeTextAnswer, aiScore, playbookAlignmentScore, bestPracticeScore, playbookQuality, playbookGaps, consultantInsight, timeline, replay, or heatmap data, you MUST use them. Analyse execution quality against client playbook AND independent best practice. Identify whether failures are participant execution failures, weak-playbook failures, or both.
 
+SCORING RULES:
+- Only the domains listed under SKILL SCORES are assessed domains.
+- Do NOT mark unlisted or untested domains as 0%, FAIL, weak, or critical.
+- If all decisions are correct, the Decision Failures & Consequences section must state that no incorrect decisions were recorded.
+- A missing management domain means Not Assessed, not failure.
+
 
 ${safeLevel === 'management'
   ? 'This is a MANAGEMENT LEVEL simulation. Participants are senior leaders, not technical staff. Do NOT assess or criticise Technical Response skills — management are not expected to perform hands-on technical containment. Their role is leadership, communication, compliance, decision-making, and coordination. If Technical Response shows 0%, note that this skill is NOT applicable for management participants.'
@@ -590,8 +598,9 @@ Time: ${formatTime(safeTime)} | Avg per decision: ${Math.round(avgTime)}s — ${
 Posture: ${posture}
 
 SKILL SCORES
+Assessed domains: ${Array.isArray(assessedSkillDomains) && assessedSkillDomains.length ? assessedSkillDomains.join(', ') : (assessedSkills.map(([k])=>k).join(', ') || 'None')}
 ${buildSkillAnalysis(skillScores)}
-${weakSkills.length ? `Below threshold: ${weakSkills.join(', ')}` : 'All skills passed.'}
+${weakSkills.length ? `Below threshold: ${weakSkills.join(', ')}` : 'All assessed skills passed.'}
 ${critSkills.length ? `Critical failures: ${critSkills.join(', ')}` : ''}
 
 DECISIONS
@@ -622,10 +631,10 @@ Use EXACTLY these 11 section headings — each must be wrapped in <strong>Title<
 [3-4 sentences on practical resilience posture]
 
 <strong>Skill Domain Performance</strong><br>
-[For each skill tested, write: SkillName: XX% [PASS/FAIL] — one sentence observation. Skip Technical Response entirely if this is management level.]
+[For each assessed skill listed under SKILL SCORES, write: SkillName: XX% [PASS/FAIL] — one sentence observation. Do not include unassessed domains. Skip Technical Response entirely if this is management level unless it is explicitly assessed.]
 
 <strong>Decision Failures & Consequences</strong><br>
-[List only incorrect decisions with <ul><li> items. If none, state that clearly.]
+[List only incorrect decisions with <ul><li> items. If none, write exactly: No incorrect decisions were recorded during the simulation.]
 
 <strong>Correct Responses</strong><br>
 [List correct decisions with <ul><li> items. Be specific.]
@@ -1179,9 +1188,10 @@ app.post('/api/export-word', requireAuth, async (req, res) => {
     // ── Generate radar chart PNG (pure Node.js, no external deps) ──
     const radarPNG = skills && skills.length ? generateRadarPNG(skills) : null;
 
-    const passedCount=skills.filter(s=>s.pass).length;
-    const failedCount=skills.filter(s=>!s.pass).length;
-    const passNote = passedCount + ' of ' + skills.length + ' skill domains met the 70% pass threshold.' +
+    const assessedSkillList = (skills||[]).filter(s=>s.assessed !== false && s.score !== null && s.score !== undefined);
+    const passedCount=assessedSkillList.filter(s=>s.pass).length;
+    const failedCount=assessedSkillList.filter(s=>!s.pass).length;
+    const passNote = assessedSkillList.length ? (passedCount + ' of ' + assessedSkillList.length + ' assessed skill domains met the 70% pass threshold.') : 'No skill domains were individually assessed.' +
       (failedCount > 0 ? ' ' + failedCount + ' domain' + (failedCount>1?'s':'') + ' require' + (failedCount===1?'s':'') + ' focused remediation.' : ' All domains are performing adequately.');
 
     // ── Helper: coloured cover accent bar ──
@@ -1712,7 +1722,29 @@ function buildLiveSummary(session){
   participantAnswers.forEach(a => { const k = (a.participantId || a.participantName || 'anon') + '::' + Number(a.step || 0); if(!uniqueKeys.has(k)){ uniqueKeys.add(k); uniqueAnswers.push(a); } });
   const validatedDecisions = uniqueAnswers.filter(a => Number(a.score ?? a.aiScore ?? (a.correct?100:0)) >= 70).length;
   const readinessIndex = Math.max(0, Math.min(100, Math.round(validatedDecisions / expectedDecisionPoints * 100)));
-  return {generatedAt:new Date().toISOString(),avgScore:readinessIndex,readinessIndex,validatedDecisions,riskDecisions:Math.max(0, expectedDecisionPoints-validatedDecisions),expectedDecisionPoints,totalParticipants:participantCount,totalObservers:participants.filter(p=>p.role==='observer').length,totalAnswers:participantAnswers.length,totalNotes:(session.notes||[]).length,individuals,teams,decisionHeatmap,timeline,replay,weakIssues,topStrengths:liveManagementThemes(uniqueAnswers,true),topImprovements:liveManagementThemes(uniqueAnswers,false),advisory};
+  // Running readiness points for the executive trend chart.
+  // Keeps the front-end independent from raw answer shape and preserves local-time fields.
+  let trendSum = 0;
+  const readinessTrend = uniqueAnswers
+    .slice()
+    .sort((a,b)=>String(a.submittedAt||'').localeCompare(String(b.submittedAt||'')))
+    .map((a,i)=>{
+      const score = Math.max(0, Math.min(100, Number(a.score ?? a.aiScore ?? (a.correct?100:0)) || 0));
+      trendSum += score;
+      const ft = formatLocalReportTime(a.submittedAt);
+      return {
+        step: Number(a.step || 0),
+        decisionIndex: Number(a.step || 0),
+        label: `D${Number(a.step || 0)+1}`,
+        score,
+        runningReadiness: Math.round(trendSum/(i+1)),
+        submittedAt: a.submittedAt,
+        localTime: ft.localTime,
+        time24: ft.time24,
+        responseTimeSec: a.responseTimeSec || 0
+      };
+    });
+  return {generatedAt:new Date().toISOString(),avgScore:readinessIndex,readinessIndex,readinessTrend,validatedDecisions,riskDecisions:Math.max(0, expectedDecisionPoints-validatedDecisions),expectedDecisionPoints,totalParticipants:participantCount,totalObservers:participants.filter(p=>p.role==='observer').length,totalAnswers:participantAnswers.length,totalNotes:(session.notes||[]).length,individuals,teams,decisionHeatmap,timeline,replay,weakIssues,topStrengths:liveManagementThemes(uniqueAnswers,true),topImprovements:liveManagementThemes(uniqueAnswers,false),advisory};
 }
 
 app.post('/api/live-sessions', requireAuth, (req, res) => {
