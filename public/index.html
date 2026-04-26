@@ -2856,9 +2856,23 @@ function renderAssignedTable(client){
       <td>${skillTags}</td>
       <td style="font-family:var(--mono);font-size:12px">${clientResults.length}</td>
       <td style="font-family:var(--mono);font-size:12px;color:var(--cyan)">${lastResult?Math.round((lastResult.score/lastResult.maxScore)*100)+'%':'—'}</td>
-      <td style="display:flex;gap:6px;padding:10px;"><button class="btn btn-primary btn-sm" onclick="launchBriefing('${sid}','${client.id}')">▶ Run</button><button class="btn btn-danger btn-sm" onclick="unassignScenario('${client.id}','${sid}')">✕</button></td>
+      <td style="display:flex;gap:6px;padding:10px;flex-wrap:wrap;"><button class="btn btn-primary btn-sm" onclick="launchBriefing('${sid}','${client.id}')">▶ Run</button><button class="btn btn-outline btn-sm" onclick="createLiveSessionFromClient('${sid}','${client.id}')">▣ Live</button><button class="btn btn-danger btn-sm" onclick="unassignScenario('${client.id}','${sid}')">✕</button></td>
     </tr>`;
   }).join('')||'<tr><td colspan="6" style="padding:20px;text-align:center;color:var(--muted)">No scenarios assigned. Click "+ Assign Scenario" to add.</td></tr>';
+}
+async function createLiveSessionFromClient(scenarioId, clientId){
+  const scenario=DB.scenarios.find(sc=>sc.id===scenarioId);
+  const client=DB.clients.find(c=>c.id===clientId);
+  if(!scenario){alert('Scenario not found.');return;}
+  const level=(scenario.level||'management').toLowerCase().includes('working')?'working':'management';
+  try{
+    const res=await fetch('/api/live-sessions',{method:'POST',headers:authHeaders(),body:JSON.stringify({scenario:{...scenario,clientId:client?.id||'',clientName:client?.name||'',clientPlaybookText:client?.playbookText||''},title:(client?client.name+' — ':'')+scenario.title,level,clientId:client?.id||'',clientName:client?.name||'',playbookText:client?.playbookText||'',stateEnabled:!!(scenario.stateConfig?.enabled||scenario.state?.enabled)})});
+    const sess=await res.json().catch(()=>null);
+    if(!res.ok) throw new Error(sess?.error||'Failed to create live exercise');
+    gotoTab('live');
+    await renderLiveAdmin();
+    setTimeout(()=>{ const el=document.getElementById('live-card-'+sess.id); if(el){el.scrollIntoView({behavior:'smooth',block:'center'}); el.style.borderColor='var(--cyan)';} },100);
+  }catch(err){alert(err.message||'Failed to create live exercise.');}
 }
 function renderClientHistory(clientId){
   const results=DB.simResults.filter(r=>r.clientId===clientId);
@@ -3251,8 +3265,8 @@ function autoExpireDecision(){
   simState.results.push({participantName:'Admin Run',team:(d.decTeams&&d.decTeams[0])||'Unassigned',decisionIndex:simState.decIdx,question:d.question,skillTested:d.skillTested,skill:d.skillTested,mcqAnswer:null,freeTextAnswer:'',expectedActions:d.expectedActions||'',aiScore:0,aiFeedback:'Time expired — no decision made.',branch:'weak',correct:false,feedback:'Time expired — no decision made.'});
   document.querySelectorAll('.opt-btn').forEach(b=>{b.disabled=true;b.classList.add('dim');});
   const fb=document.getElementById('fb-box');
-  fb.className='fb-box show bad';
-  fb.textContent='⏰ Time expired — no decision made. Marked as incorrect.';
+  fb.className='fb-box show';
+  fb.textContent='⏰ Time expired — no response recorded. Result will be shown after the simulation is completed.';
   document.getElementById('nxt-btn').classList.add('show');
   const dot=document.getElementById('pd-'+simState.decIdx);if(dot) dot.className='prog-dot done';
   const ndot=document.getElementById('pd-'+(simState.decIdx+1));if(ndot) ndot.className='prog-dot cur';
@@ -3347,8 +3361,8 @@ function selectOpt(idx){
   const branchLabel = branch==="strong" ? "STRONG BRANCH" : branch==="partial" ? "PARTIAL BRANCH" : "WEAK BRANCH";
   const branchNote = chosen.branchText ? `<br><br><strong>:</strong> ` : "";
   const fb=document.getElementById("fb-box");
-  fb.className="fb-box show "+(chosen.correct?"good":"bad");
-  fb.innerHTML=(chosen.correct?d.goodFeedback:d.badFeedback)+branchNote+(impactMsg?`<br><br><strong>State impact:</strong> ${escapeHTML(impactMsg)}`:'');
+  fb.className="fb-box show";
+  fb.innerHTML='Response recorded. Result and feedback will be shown after the simulation is completed.'+(impactMsg?`<br><br><strong>State impact:</strong> ${escapeHTML(impactMsg)}`:'');
   simState.results.push({
     participantName:'Admin Run',
     team:(d.decTeams&&d.decTeams[0])||'Unassigned',
@@ -3398,8 +3412,8 @@ async function submitFreeTextAnswer(){
     simState.score += score;
     if(d.skillTested&&simState.skillScores.hasOwnProperty(d.skillTested)) simState.skillScores[d.skillTested]+=score;
     const feedback=result.feedback||'';
-    fb.className='fb-box show '+(correct?'good':'bad');
-    fb.innerHTML=`<strong>AI Score:</strong> ${score}/100<br><strong>Branch:</strong> ${branch.toUpperCase()}<br><br>${escapeHTML(feedback)}${impactMsg?`<br><br><strong>State impact:</strong> ${escapeHTML(impactMsg)}`:''}`;
+    fb.className='fb-box show';
+    fb.innerHTML=`Typed response recorded. Score, branch, and feedback will be shown after the simulation is completed.${impactMsg?`<br><br><strong>State impact:</strong> ${escapeHTML(impactMsg)}`:''}`;
     simState.results.push({
       participantName:'Admin Run',
       team:(d.decTeams&&d.decTeams[0])||'Unassigned',
@@ -3891,62 +3905,28 @@ function drawRadar(skills,skillCounts){
 // EXPORT PDF
 // ══════════════════════════════════════════════════════════
 function exportPDF(){
-  const s=simState.scenario;const client=simState.client;
-  const decs=s.decisions[simState.level];const maxScore=decs.length*100;const reportScore=calculateTotalScore(simState.results);
-  const pct=maxScore>0?Math.round((reportScore/maxScore)*100):0;const grade=getGrade(pct);
-  const skillCounts={};decs.forEach(d=>{if(d.skillTested) skillCounts[d.skillTested]=(skillCounts[d.skillTested]||0)+1;});
-  const skillRows=s.skills.map(k=>{const max=(skillCounts[k]||1)*100;const p=Math.round(((simState.skillScores[k]||0)/max)*100);return `<tr><td style="padding:8px 10px;font-size:12px;">${SKILLS[k].icon} ${SKILLS[k].label}</td><td style="padding:8px 10px;"><div style="height:8px;background:#e0e0e0;border-radius:4px;overflow:hidden;"><div style="height:100%;width:${p}%;background:${SKILLS[k].color};border-radius:4px;"></div></div></td><td style="padding:8px 10px;font-family:monospace;font-size:12px;font-weight:bold;">${p}%</td></tr>`;}).join('');
-  const findingRows=simState.results.map((r,i)=>{const d=decs[i];if(!d) return '';return `<tr style="background:${r.correct?'#f0fff4':'#fff5f5'}"><td style="padding:8px 10px;font-size:11px;">${r.correct?'✅':'⚠️'} Decision ${i+1}</td><td style="padding:8px 10px;font-size:11px;">${d.question.substring(0,60)}...</td><td style="padding:8px 10px;font-size:11px;">${r.correct?'Correct':'Incorrect'}</td></tr>`;}).join('');
-  const aiConclusion=document.getElementById('rpt-conclusion').innerText||'Analysis not available.';
-  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Nexa-CyberSim Report</title><style>body{font-family:Arial,sans-serif;margin:0;padding:0;color:#111;}.cover{background:linear-gradient(135deg,#03070f,#0a1425);color:white;padding:60px 50px;min-height:280px;}.logo{font-size:22px;font-weight:900;color:#00e5ff;letter-spacing:-0.5px;margin-bottom:40px;}.report-title{font-size:32px;font-weight:900;margin-bottom:8px;}.report-sub{font-size:14px;color:#7fa8cc;}.grade-box{display:inline-block;width:80px;height:80px;border-radius:50%;background:${grade==='A'?'#00e676':grade==='B'?'#00e5ff':grade==='C'?'#ffb300':'#ff2d55'};color:#000;font-size:40px;font-weight:900;line-height:80px;text-align:center;margin:20px 0;}.content{padding:30px 50px;}h2{font-size:18px;border-bottom:2px solid #00e5ff;padding-bottom:6px;color:#0a1425;margin-top:30px;}table{width:100%;border-collapse:collapse;margin:10px 0;}th{background:#0a1425;color:white;padding:9px 10px;text-align:left;font-size:12px;}td{border-bottom:1px solid #e0e0e0;}.metric{display:inline-block;background:#f0f7ff;border:1px solid #c0d8f0;border-radius:8px;padding:14px 20px;margin:6px;text-align:center;}.mv{font-size:26px;font-weight:900;color:#0a1425;}.ml{font-size:11px;color:#666;margin-top:2px;}.fw-tag{display:inline-block;background:#e8f4ff;border:1px solid #90c4e8;border-radius:20px;padding:4px 12px;font-size:11px;margin:3px;color:#1a5276;}.ai-box{background:#f9fbff;border-left:4px solid #00e5ff;padding:16px;font-size:13px;line-height:1.6;margin-top:14px;}@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}
-/* ─────────────────────────────────────────────
-   MAIN DASHBOARD REMODEL — Mission Planning Center
-   ───────────────────────────────────────────── */
-.dash-shell{max-width:1380px;width:min(1380px,calc(100% - 44px));}
-.dash-hero{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;margin-bottom:22px;padding:8px 0 4px;}
-.dash-eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:1.6px;color:var(--cyan);margin-bottom:8px;}
-.dash-title{font-family:var(--head);font-size:clamp(30px,3vw,44px);font-weight:800;color:var(--white);letter-spacing:-1.2px;line-height:1.05;}
-.dash-sub{font-size:14px;color:var(--muted);margin-top:8px;max-width:720px;}
-.dash-hero-actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end;}
-.dash-kpi-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px;margin-bottom:16px;}
-.dash-kpi{background:linear-gradient(180deg,rgba(10,20,37,.98),rgba(7,14,28,.94));border:1px solid var(--border);border-radius:14px;padding:17px;position:relative;overflow:hidden;min-height:116px;box-shadow:0 14px 38px rgba(0,0,0,.18);}
-.dash-kpi::after{content:'';position:absolute;right:-20px;top:-20px;width:80px;height:80px;border-radius:50%;background:var(--kpiGlow,rgba(0,229,255,.08));}
-.dash-kpi-label{font-size:11px;color:var(--muted);margin-bottom:10px;position:relative;z-index:1;}
-.dash-kpi-value{font-family:var(--head);font-size:30px;font-weight:800;color:var(--white);line-height:1;position:relative;z-index:1;}
-.dash-kpi-link{margin-top:10px;font-size:11px;color:var(--cyan);position:relative;z-index:1;}
-.dash-kpi-icon{position:absolute;right:17px;bottom:18px;width:42px;height:42px;border-radius:14px;background:rgba(0,229,255,.08);border:1px solid rgba(0,229,255,.14);display:flex;align-items:center;justify-content:center;font-size:20px;z-index:1;}
-.dash-action-band{display:grid;grid-template-columns:1.15fr repeat(5,1fr);gap:12px;background:linear-gradient(180deg,rgba(10,20,37,.92),rgba(7,14,28,.86));border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:16px;box-shadow:0 14px 38px rgba(0,0,0,.18);}
-.dash-action-copy{padding:8px 8px 8px 6px;}
-.dash-action-title{font-family:var(--head);font-size:16px;font-weight:800;color:var(--white);}
-.dash-action-sub{font-size:12px;color:var(--muted);margin-top:2px;}
-.dash-action-card{border:1px solid var(--border);border-radius:12px;background:rgba(41,121,255,.07);color:var(--white);padding:13px 12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:76px;cursor:pointer;transition:all .2s;text-align:center;}
-.dash-action-card:hover{transform:translateY(-2px);border-color:var(--cyan);background:rgba(0,229,255,.08);}
-.dash-action-card span{font-size:19px;color:var(--cyan);}.dash-action-card strong{font-family:var(--head);font-size:12px;}.dash-action-card small{font-size:10px;color:var(--muted);line-height:1.25;}
-.dash-action-card.accent{background:rgba(213,0,249,.08);}.dash-action-card.amber{background:rgba(255,179,0,.08);}.dash-action-card.blue{background:rgba(41,121,255,.08);}
-.dash-main-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}.dash-bottom-grid{display:grid;grid-template-columns:minmax(0,1.85fr) minmax(320px,.75fr);gap:16px;align-items:start;}
-.dash-panel{background:linear-gradient(180deg,rgba(10,20,37,.98),rgba(7,14,28,.94));border:1px solid var(--border);border-radius:14px;padding:18px;box-shadow:0 14px 38px rgba(0,0,0,.18);}
-.dash-panel-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px;border-bottom:1px solid var(--border);padding-bottom:12px;}
-.dash-panel-head h3{font-family:var(--head);font-size:16px;font-weight:800;color:var(--white);margin:0;}.dash-panel-head p{font-size:11px;color:var(--muted);margin:2px 0 0;}
-.dash-list{display:flex;flex-direction:column;gap:8px;}.dash-row{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:11px;padding:10px;border:1px solid transparent;border-bottom:1px solid var(--border);border-radius:10px;transition:all .18s;}.dash-row:last-child{border-bottom:1px solid transparent;}.dash-row:hover{background:rgba(0,229,255,.035);border-color:rgba(0,229,255,.12);}
-.dash-avatar{width:34px;height:34px;border-radius:11px;background:rgba(0,229,255,.08);border:1px solid rgba(0,229,255,.14);display:flex;align-items:center;justify-content:center;font-size:16px;overflow:hidden;}.dash-avatar img{width:100%;height:100%;object-fit:cover;}
-.dash-row-title{font-family:var(--head);font-size:13px;font-weight:750;color:var(--white);line-height:1.25;}.dash-row-sub{font-size:11px;color:var(--muted);margin-top:2px;}.dash-row-meta{text-align:right;font-family:var(--mono);font-size:10px;color:var(--muted);white-space:nowrap;}.dash-status-dot{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:6px;background:var(--green);}
-.dash-chip{display:inline-flex;align-items:center;gap:4px;font-family:var(--mono);font-size:9px;padding:3px 7px;border-radius:6px;border:1px solid rgba(0,229,255,.18);background:rgba(0,229,255,.06);color:var(--cyan);}.dash-table th{font-size:9px;}.dash-table td{font-size:11px;}.dash-mini-divider{height:1px;background:var(--border);margin:14px 0;}.dash-mini-title{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;}.dash-empty{padding:18px;text-align:center;color:var(--muted);font-size:12px;border:1px dashed var(--border2);border-radius:12px;}
-@media(max-width:1180px){.dash-kpi-grid{grid-template-columns:repeat(3,1fr)}.dash-action-band{grid-template-columns:repeat(3,1fr)}.dash-action-copy{grid-column:1/-1}.dash-bottom-grid{grid-template-columns:1fr}.dash-health-panel{order:-1}}
-@media(max-width:820px){.dash-hero{align-items:flex-start;flex-direction:column}.dash-hero-actions{justify-content:flex-start}.dash-kpi-grid,.dash-main-grid,.dash-action-band{grid-template-columns:1fr}.dash-shell{width:calc(100% - 28px)}}
-
-</style></head><body>
-  <div class="cover"><div class="logo">🛡️ Nexa-CyberSim</div><div class="report-title">Simulation Report</div><div class="report-sub">${client?client.name+' · ':''} ${s.title} · ${simState.level.charAt(0).toUpperCase()+simState.level.slice(1)} Level</div><div class="report-sub">${new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})}</div><div class="grade-box">${grade}</div></div>
-  <div class="content"><h2>Executive Summary</h2><div><div class="metric"><div class="mv">${reportScore}/${maxScore}</div><div class="ml">Total Score</div></div><div class="metric"><div class="mv">${pct}%</div><div class="ml">Performance</div></div><div class="metric"><div class="mv">${simState.results.filter(r=>r.correct).length}/${decs.length}</div><div class="ml">Correct Decisions</div></div><div class="metric"><div class="mv">${grade}</div><div class="ml">Grade</div></div></div>
-  <h2>Consultant Analysis</h2><div class="ai-box">${aiConclusion}</div>
-  <h2>Skill Performance</h2><table><thead><tr><th>Skill</th><th>Score Bar</th><th>Score</th></tr></thead><tbody>${skillRows}</tbody></table>
-  <h2>Decision Findings</h2><table><thead><tr><th>Decision</th><th>Question</th><th>Result</th></tr></thead><tbody>${findingRows}</tbody></table>
-  <h2>Framework Alignment</h2><div>${FW.map(f=>`<span class="fw-tag">${f}</span>`).join('')}</div>
-  <p style="margin-top:40px;font-size:11px;color:#999;border-top:1px solid #e0e0e0;padding-top:12px;">Generated by Nexa-CyberSim Enterprise Crisis Simulation Platform · Confidential</p></div>
-
-
-</body></html>`;
-  const w=window.open('','_blank');w.document.write(html);w.document.close();setTimeout(()=>{w.focus();w.print();},500);
+  const s=simState.scenario; const client=simState.client;
+  if(!s){ alert('No report available.'); return; }
+  const decs=(s.decisions&&s.decisions[simState.level])||[];
+  const maxScore=decs.length*100;
+  const reportScore=calculateTotalScore(simState.results||[]);
+  const pct=maxScore>0?Math.round((reportScore/maxScore)*100):0;
+  const grade=getGrade(pct);
+  const gradeColor={A:'#00A86B',B:'#0077B6',C:'#B7791F',D:'#C81E1E'}[grade]||'#0077B6';
+  const skillCounts={}; decs.forEach(d=>{ if(d.skillTested) skillCounts[d.skillTested]=(skillCounts[d.skillTested]||0)+1; });
+  const esc=(v)=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const skillRows=(s.skills||[]).map(k=>{ const max=(skillCounts[k]||1)*100; const p=Math.round(((simState.skillScores[k]||0)/max)*100); return `<tr><td>${esc(SKILLS[k]?.label||k)}</td><td><div class="bar"><span style="width:${p}%;background:${gradeColor}"></span></div></td><td class="num">${p}%</td></tr>`; }).join('');
+  const findingRows=(simState.results||[]).map((r,i)=>{ const d=decs[r.decisionIndex??i]||{}; const score=getResultScoreValue(r); return `<tr><td class="num">${i+1}</td><td><strong>${esc(r.question||d.question||'Decision')}</strong><br><small>${esc(r.mcqAnswer||r.freeTextAnswer||'No response recorded')}</small></td><td class="num">${score}%</td><td>${score>=70?'Pass':'Needs improvement'}</td></tr>`; }).join('');
+  const aiConclusion=esc(document.getElementById('rpt-conclusion')?.innerText||'Executive analysis is not available yet.');
+  const date=new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
+  const html=`<!doctype html><html><head><meta charset="utf-8"><title>Nexa-CyberSim Executive Report</title><style>
+    @page{size:A4;margin:18mm}*{box-sizing:border-box}body{font-family:Arial,Helvetica,sans-serif;color:#172033;margin:0;background:#fff;font-size:12px;line-height:1.5;-webkit-print-color-adjust:exact;print-color-adjust:exact}.cover{background:linear-gradient(135deg,#06111f,#0e2a44);color:#fff;padding:34px 38px;border-radius:0 0 18px 18px;min-height:230px}.brand{font-size:13px;letter-spacing:2px;text-transform:uppercase;color:#8fe8ff;font-weight:700}.title{font-size:32px;font-weight:800;margin:26px 0 8px}.sub{color:#d3e7f5;font-size:13px}.grade{margin-top:24px;display:inline-flex;align-items:center;gap:18px}.badge{width:84px;height:84px;border-radius:18px;background:${gradeColor};display:flex;align-items:center;justify-content:center;color:#fff;font-size:44px;font-weight:800}.grade-text strong{display:block;font-size:18px}.content{padding:28px 4px}.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:0 0 22px}.metric{border:1px solid #d7e2ea;border-radius:12px;padding:13px;background:#f8fbfd}.mv{font-size:24px;font-weight:800;color:#0e2a44}.ml{font-size:10px;color:#667085;text-transform:uppercase;letter-spacing:.6px}h2{font-size:16px;color:#0e2a44;margin:24px 0 8px;border-bottom:2px solid #0e2a44;padding-bottom:6px}table{width:100%;border-collapse:collapse;margin-top:8px;page-break-inside:auto}th{background:#0e2a44;color:#fff;text-align:left;padding:9px;font-size:11px}td{border-bottom:1px solid #e5edf3;padding:9px;vertical-align:top}.num{font-family:Consolas,monospace;text-align:right;white-space:nowrap}.bar{height:8px;background:#edf2f7;border-radius:99px;overflow:hidden}.bar span{display:block;height:100%;border-radius:99px}.box{border:1px solid #d7e2ea;background:#f8fbfd;border-radius:12px;padding:14px;white-space:pre-wrap}.footer{margin-top:26px;border-top:1px solid #d7e2ea;padding-top:10px;color:#667085;font-size:10px}small{color:#667085}.chip{display:inline-block;border:1px solid #d7e2ea;background:#f8fbfd;border-radius:20px;padding:4px 9px;margin:2px;font-size:10px;color:#344054}@media print{.no-print{display:none}.cover{border-radius:0}}
+  </style></head><body><section class="cover"><div class="brand">Nexa-CyberSim Confidential Report</div><div class="title">Cyber Crisis Simulation Report</div><div class="sub">${client?esc(client.name)+' · ':''}${esc(s.title)} · ${esc(String(simState.level||'').toUpperCase())} Level<br>${date}</div><div class="grade"><div class="badge">${grade}</div><div class="grade-text"><strong>${pct}% Overall Performance</strong><span>${reportScore}/${maxScore} points · ${(simState.results||[]).filter(r=>getResultScoreValue(r)>=70).length}/${decs.length} decisions passed</span></div></div></section><main class="content"><div class="metrics"><div class="metric"><div class="mv">${pct}%</div><div class="ml">Performance</div></div><div class="metric"><div class="mv">${grade}</div><div class="ml">Grade</div></div><div class="metric"><div class="mv">${reportScore}/${maxScore}</div><div class="ml">Score</div></div><div class="metric"><div class="mv">${decs.length}</div><div class="ml">Decisions</div></div></div><h2>Executive Summary</h2><div class="box">${aiConclusion}</div><h2>Skill Performance</h2><table><thead><tr><th>Capability</th><th>Performance</th><th class="num">Score</th></tr></thead><tbody>${skillRows}</tbody></table><h2>Decision Breakdown</h2><table><thead><tr><th class="num">#</th><th>Decision / Response</th><th class="num">Score</th><th>Assessment</th></tr></thead><tbody>${findingRows}</tbody></table><h2>Framework Alignment</h2><div>${(FW||[]).map(f=>`<span class="chip">${esc(f)}</span>`).join('')}</div><div class="footer">Generated by NexaCyberSim · Internal training report only · Not a penetration test or formal audit.</div></main><script>window.onload=()=>setTimeout(()=>window.print(),300)<\/script></body></html>`;
+  const w=window.open('', '_blank');
+  if(!w){ alert('Popup blocked. Please allow popups to export PDF.'); return; }
+  w.document.write(html); w.document.close();
 }
+
 async function exportWord(){
   const s=simState.scenario;
   const client=simState.client;
@@ -4684,7 +4664,7 @@ function liveSummaryHtml(sess){
   const timeline=summary.timeline || answers.slice().sort((a,b)=>String(a.submittedAt||'').localeCompare(String(b.submittedAt||''))).map(a=>({label:`D${Number(a.step||0)+1}`, text:`${a.participantName||'Participant'} submitted`, score:a.score??a.aiScore??(a.correct?100:0)}));
   const replay=summary.replay || answers.slice(-10).reverse();
   return `<div style="margin-top:14px;border-top:1px solid var(--border);padding-top:14px;">
-    <div class="section-title" style="font-size:13px;margin-bottom:12px;">Post-Exercise Summary</div>
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px;"><div class="section-title" style="font-size:13px;margin-bottom:0;flex:1;">Post-Exercise Summary</div><button class="btn btn-outline btn-sm" onclick="openLiveRunReport('${sess.id}')">View Standard Report</button></div>
     <div class="stats-row" style="grid-template-columns:repeat(4,1fr);margin-bottom:14px;">
       <div class="stat-card"><div class="stat-val" style="color:${scoreColor(avg)}">${avg}%</div><div class="stat-label">Average Score</div></div>
       <div class="stat-card"><div class="stat-val">${participantCount}</div><div class="stat-label">Participants</div></div>
@@ -4701,6 +4681,27 @@ function liveSummaryHtml(sess){
     </div>
     <div class="card-sm" style="background:rgba(3,7,15,.35);border:1px solid var(--border);border-radius:10px;margin-top:12px;"><label class="lbl">Decision Replay</label>${replay.length?replay.map(r=>`<div class="finding-row"><div class="fi-icon">${Number(r.score??r.aiScore??0)>=70?'✅':Number(r.score??r.aiScore??0)>=50?'⚠️':'❌'}</div><div class="fi-text"><strong>${escapeHTML(r.participantName||'Participant')} — D${Number(r.step??r.decisionIndex??0)+1} · ${Number(r.score??r.aiScore??0)}%</strong><br>${escapeHTML(r.question||'')}<br>${r.freeText?`<span style="color:var(--muted)">${escapeHTML(String(r.freeText).slice(0,220))}</span><br>`:''}${r.aiFeedback?escapeHTML(String(r.aiFeedback).slice(0,220)):''}</div></div>`).join(''):'<div style="color:var(--muted);font-size:12px;">No replay data.</div>'}</div>
   </div>`;
+}
+function openLiveRunReport(sessionId){
+  const cardData = null;
+  fetch('/api/live-sessions',{headers:authHeaders()}).then(r=>r.json()).then(list=>{
+    const sess=(list||[]).find(x=>x.id===sessionId);
+    if(!sess) throw new Error('Live session not found');
+    const scenario=sess.scenario||{};
+    const level=sess.level||'management';
+    const decs=(scenario.decisions&&scenario.decisions[level])||scenario.decisions?.management||[];
+    const answers=sess.answers||[];
+    const skillScores={technical:0,communication:0,decision:0,leadership:0,compliance:0,coordination:0};
+    const results=answers.map(a=>{
+      const d=decs[Number(a.step||0)]||{};
+      const score=Number(a.score??a.aiScore??(a.correct?100:0));
+      const skill=a.skillTested||d.skillTested||'decision';
+      if(skillScores.hasOwnProperty(skill)) skillScores[skill]+=score;
+      return {participantName:a.participantName||'Participant',team:a.team||'Unassigned',decisionIndex:Number(a.step||0),question:a.question||d.question||'',skillTested:skill,skill,mcqAnswer:a.mcqAnswer||'',freeTextAnswer:a.freeText||'',expectedActions:a.expectedActions||d.expectedActions||'',aiScore:score,aiFeedback:a.aiFeedback||a.feedback||'',branch:a.branch||'',correct:score>=70,feedback:a.aiFeedback||a.feedback||'',playbookAlignmentScore:a.playbookAlignmentScore??null,bestPracticeScore:a.bestPracticeScore??score,playbookGaps:a.playbookGaps||[],consultantInsight:a.consultantInsight||''};
+    });
+    simState.scenario=scenario; simState.level=level; simState.client=DB.clients.find(c=>c.id===scenario.clientId)||null; simState.results=results; simState.skillScores=skillScores; simState.score=calculateTotalScore(results); simState.timeLeft=0; simState.stateEnabled=!!sess.stateEnabled; simState.crisisState=sess.state||null; simState.isViewingPastResult=true; simState.viewingResultId=null; simState.savedConclusionForView=null;
+    showReport();
+  }).catch(err=>alert(err.message||'Unable to open live report.'));
 }
 function liveSessionProgress(sess){
   const decs=sess.scenario?.decisions?.[sess.level||'management'] || sess.scenario?.decisions?.management || [];
@@ -4792,7 +4793,7 @@ function renderLivePublicSession(sess){
   if(answered){
     if(textBox) { textBox.value = answered.freeText || ''; textBox.disabled = true; }
     if(submitBtn) submitBtn.disabled = true;
-    if(msg) msg.innerHTML = `Answer submitted. Waiting for facilitator to continue.<br><span style="font-family:var(--mono);color:var(--muted);">Score: ${answered.score ?? '-'} · Branch: ${(answered.branch||'n/a').toUpperCase()}</span>`;
+    if(msg) msg.textContent = sess.status==='ended' ? 'Session ended. Final results are available in the summary.' : 'Answer submitted. Waiting for facilitator to continue.';
   } else {
     if(textBox) { textBox.disabled = false; }
     if(submitBtn) submitBtn.disabled = !d || sess.status==='ended';
@@ -4838,7 +4839,7 @@ async function submitLiveAnswer(){
     return;
   }
   const data=await res.json();
-  msg.textContent=`Submitted. Branch: ${data.answer.branch}. Score: ${data.answer.score ?? '-'}`;
+  msg.textContent='Submitted. Results will be shown after the exercise finishes.';
   document.getElementById('public-free-text').value='';
   livePublic.selectedOption=null;
   renderLivePublicSession(data.session);
