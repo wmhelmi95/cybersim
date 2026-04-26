@@ -304,8 +304,28 @@ app.post('/api/login', loginLimiter, async (req, res) => {
       await bcrypt.compare(password, '$2a$12$fakehashtopreventtiming000000000000000000000');
       return res.status(401).json({ error: 'Invalid credentials' });
     }
-    const valid = await bcrypt.compare(password, process.env.ADMIN_PASSWORD_HASH);
+    const storedHash = (process.env.ADMIN_PASSWORD_HASH || '').trim().replace(/^\$2y\$/, '$2a$');
+    const plainFallback = (process.env.ADMIN_PASSWORD_PLAIN || '').trim();
+
+    let valid = false;
+
+    if (storedHash) {
+      valid = await bcrypt.compare(password, storedHash);
+    }
+
+    // Optional emergency fallback: set ADMIN_PASSWORD_PLAIN in Railway only if you need quick recovery.
+    // Remove ADMIN_PASSWORD_PLAIN after successful login and use ADMIN_PASSWORD_HASH only.
+    if (!valid && plainFallback) {
+      valid = password === plainFallback;
+    }
+
     if (!valid) {
+      console.warn('Invalid login attempt', {
+        username,
+        hasHash: !!storedHash,
+        hashPrefix: storedHash ? storedHash.slice(0, 7) : 'missing',
+        passwordLength: password.length
+      });
       return res.status(401).json({ error: 'Invalid credentials' });
     }
     const token = jwt.sign(
