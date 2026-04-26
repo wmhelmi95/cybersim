@@ -899,6 +899,13 @@ body.theme-light{--bg:#eef5fb!important;--surface:#ffffff!important;--card:#ffff
 body.theme-light::before{opacity:.16!important;}
 body.theme-light #screen-login > div > div:nth-child(2),body.theme-light .card,body.theme-light .panel,body.theme-light .dash-card,body.theme-light .stat-card{box-shadow:0 18px 45px rgba(32,72,110,.12)!important;}
 
+
+/* Report tab visibility fix */
+.report-section-hidden{display:none!important;}
+.report-tabs-v2 button{cursor:pointer;}
+.report-tabs-v2 button.active{color:var(--accent);border-bottom:2px solid var(--accent);}
+@media (max-width: 900px){.report-grid-v2{grid-template-columns:1fr!important;}}
+
 </style>
 </head>
 <body>
@@ -1535,21 +1542,21 @@ body.theme-light #screen-login > div > div:nth-child(2),body.theme-light .card,b
     </div>
 
     <div class="report-tabs-v2">
-      <button class="active" onclick="document.getElementById('report-exec').scrollIntoView({behavior:'smooth'})">Executive Summary</button>
-      <button onclick="document.getElementById('report-performance').scrollIntoView({behavior:'smooth'})">Performance Analysis</button>
-      <button onclick="document.getElementById('report-timeline').scrollIntoView({behavior:'smooth'})">Timeline & Events</button>
-      <button onclick="document.getElementById('report-decisions').scrollIntoView({behavior:'smooth'})">Decision Review</button>
-      <button onclick="document.getElementById('report-mitre').scrollIntoView({behavior:'smooth'})">MITRE ATT&CK</button>
-      <button onclick="document.getElementById('report-recommendations').scrollIntoView({behavior:'smooth'})">Recommendations</button>
+      <button class="active" data-report-tab-btn="exec" onclick="switchReportTab('exec')">Executive Summary</button>
+      <button data-report-tab-btn="performance" onclick="switchReportTab('performance')">Performance Analysis</button>
+      <button data-report-tab-btn="timeline" onclick="switchReportTab('timeline')">Timeline & Events</button>
+      <button data-report-tab-btn="decisions" onclick="switchReportTab('decisions')">Decision Review</button>
+      <button data-report-tab-btn="mitre" onclick="switchReportTab('mitre')">MITRE ATT&CK</button>
+      <button data-report-tab-btn="recommendations" onclick="switchReportTab('recommendations')">Recommendations</button>
     </div>
 
     <div id="report-exec" class="report-grid-v2">
       <div class="report-main-v2">
-        <div id="rpt-client-header" class="report-client-header-v2"></div>
+        <div id="rpt-client-header" class="report-client-header-v2" data-report-tab="exec"></div>
 
-        <div class="report-kpi-grid" id="rpt-metrics"></div>
+        <div class="report-kpi-grid" id="rpt-metrics" data-report-tab="exec"></div>
 
-        <div class="report-card report-card-large" id="report-performance">
+        <div class="report-card report-card-large" id="report-performance" data-report-tab="performance">
           <div class="report-card-head"><h3>Readiness Score Over Time</h3><span>Simulation trend</span></div>
           <div class="readiness-trend-viz">
             <svg viewBox="0 0 600 190" preserveAspectRatio="none">
@@ -1561,7 +1568,7 @@ body.theme-light #screen-login > div > div:nth-child(2),body.theme-light .card,b
           </div>
         </div>
 
-        <div class="report-two-col">
+        <div class="report-two-col" data-report-tab="performance">
           <div class="report-card">
             <div class="report-card-head"><h3>Performance by Function</h3><span>Skill domains</span></div>
             <div id="rpt-skill-rows" class="report-skill-bars"></div>
@@ -1579,12 +1586,12 @@ body.theme-light #screen-login > div > div:nth-child(2),body.theme-light .card,b
           </div>
         </div>
 
-        <div class="report-card">
+        <div class="report-card" data-report-tab="exec">
           <div class="report-card-head"><h3>Key Insights</h3><span>Observed issues</span></div>
           <div id="rpt-findings" class="report-insight-row"></div>
         </div>
 
-        <div class="report-card" id="report-performance-detail">
+        <div class="report-card" id="report-performance-detail" data-report-tab="performance">
           <div class="report-card-head"><h3>Individual Performance</h3><span>Participant-level rating</span></div>
           <div class="results-table-wrap">
             <table class="results-table report-table-v2">
@@ -1594,7 +1601,7 @@ body.theme-light #screen-login > div > div:nth-child(2),body.theme-light .card,b
           </div>
         </div>
 
-        <div class="report-card">
+        <div class="report-card" data-report-tab="performance">
           <div class="report-card-head"><h3>Team Performance</h3><span>Department-level rating</span></div>
           <div class="results-table-wrap">
             <table class="results-table report-table-v2">
@@ -1604,29 +1611,29 @@ body.theme-light #screen-login > div > div:nth-child(2),body.theme-light .card,b
           </div>
         </div>
 
-        <div class="report-card" id="report-timeline">
+        <div class="report-card" id="report-timeline" data-report-tab="timeline">
           <div class="report-card-head"><h3>Timeline & Events</h3><span>Chronological replay</span></div>
           <div id="exercise-timeline" class="report-timeline-v2"></div>
         </div>
 
-        <div class="report-card" id="report-decisions">
+        <div class="report-card" id="report-decisions" data-report-tab="decisions">
           <div class="report-card-head"><h3>Decision Heatmap</h3><span>Strong / partial / weak distribution</span></div>
           <div id="decision-heatmap"></div>
         </div>
 
-        <div class="report-card">
+        <div class="report-card" data-report-tab="decisions">
           <div class="report-card-head"><h3>Decision Replay</h3><span>Answers, expected actions, and AI feedback</span></div>
           <div id="decision-replay"></div>
         </div>
 
-        <div class="report-card" id="report-mitre">
+        <div class="report-card" id="report-mitre" data-report-tab="mitre">
           <div class="report-card-head"><h3>MITRE ATT&CK / Framework Alignment</h3><span>Mapped techniques and standards</span></div>
           <div class="fw-tags" id="rpt-fw"></div>
         </div>
       </div>
 
       <aside class="report-side-v2">
-        <div class="report-card ai-summary-card">
+        <div class="report-card ai-summary-card" data-report-tab="exec">
           <div class="report-card-head"><h3>Executive Summary</h3><button class="btn btn-ghost btn-sm" onclick="exportPDF()">Download PDF</button></div>
           <div id="rpt-conclusion-title" class="ai-report-title-v2">
             <div class="ai-icon">🤖</div>
@@ -1636,17 +1643,17 @@ body.theme-light #screen-login > div > div:nth-child(2),body.theme-light .card,b
           <div id="rpt-conclusion" class="ai-report-body-v2"></div>
         </div>
 
-        <div class="report-card readiness-card">
+        <div class="report-card readiness-card" data-report-tab="exec">
           <div class="report-card-head"><h3>Overall Readiness</h3><span>Current posture</span></div>
           <div class="readiness-score-side"><div class="mini-ring"><span id="rpt-side-score">0%</span></div><div><strong id="rpt-side-label">Moderate</strong><p>Overall readiness based on scenario outcome and decision quality.</p></div></div>
         </div>
 
-        <div class="report-card two-list-card">
+        <div class="report-card two-list-card" data-report-tab="exec">
           <div class="side-list success"><h4>Top Strengths</h4><ul id="rpt-strengths"><li>Strong containment decisions</li><li>Good incident awareness</li><li>Evidence preserved</li></ul></div>
           <div class="side-list danger"><h4>Top Areas for Improvement</h4><ul id="rpt-improvements"><li>Escalation timing</li><li>Legal notification workflow</li><li>Cross-team coordination</li></ul></div>
         </div>
 
-        <div class="report-card" id="report-recommendations">
+        <div class="report-card" id="report-recommendations" data-report-tab="recommendations">
           <div class="report-card-head"><h3>Next Steps</h3><span>Priority actions</span></div>
           <ol class="next-steps-v2">
             <li>Review weak decisions and update escalation procedure.</li>
@@ -3718,6 +3725,15 @@ function scoreOfResult(r){
   if(typeof r.score === 'number' && !Number.isNaN(r.score)) return r.score;
   return r.correct ? 100 : 0;
 }
+
+function switchReportTab(tab){
+  const titles={exec:'Executive Summary',performance:'Performance Analysis',timeline:'Timeline & Events',decisions:'Decision Review',mitre:'MITRE ATT&CK',recommendations:'Recommendations'};
+  document.querySelectorAll('[data-report-tab-btn]').forEach(btn=>btn.classList.toggle('active',btn.dataset.reportTabBtn===tab));
+  document.querySelectorAll('[data-report-tab]').forEach(section=>section.classList.toggle('report-section-hidden',section.dataset.reportTab!==tab));
+  const h=document.querySelector('.report-title-row h1'); if(h) h.textContent=titles[tab]||'Report';
+  const shell=document.querySelector('.report-shell'); if(shell) shell.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
 function renderExerciseTimeline(results){
   const el=document.getElementById('exercise-timeline');
   if(!el) return;
@@ -3846,6 +3862,7 @@ function showReport(){
   renderExerciseTimeline(simState.results);
   renderDecisionHeatmap(simState.results);
   renderDecisionReplay(simState.results);
+  switchReportTab('exec');
   renderAdvisoryAssessment(simState.results);
   document.getElementById('rpt-fw').innerHTML=FW.map(f=>`<span class="fw-tag">${f}</span>`).join('');
   showScreen('report');
