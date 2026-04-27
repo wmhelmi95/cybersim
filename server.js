@@ -1601,6 +1601,7 @@ function publicSessionView(session, revealResults){
     question: a.question,
     participantName: a.participantName,
     team: a.team,
+    roleLevel: a.roleLevel,
     optionIndex: a.optionIndex,
     mcqAnswer: a.mcqAnswer,
     freeText: a.freeText,
@@ -1611,6 +1612,7 @@ function publicSessionView(session, revealResults){
   return {
     id: session.id,
     title: session.title,
+    level: session.level || 'management',
     scenario: session.scenario,
     currentStep: session.currentStep || 0,
     status: session.status || 'waiting',
@@ -1636,11 +1638,20 @@ function broadcastLive(sessionId){
     try { res.write(payload); } catch(e) { set.delete(res); }
   }
 }
-function getDecision(session){
+function normaliseRoleLevel(level){
+  level = String(level || '').toLowerCase();
+  if(level.includes('work') || level.includes('tech')) return 'working';
+  return 'management';
+}
+function getDecisionForLevel(session, roleLevel){
   const scenario = session.scenario || {};
-  const level = session.level || 'management';
-  const decs = scenario.decisions?.[level] || scenario.decisions?.management || [];
+  const level = normaliseRoleLevel(roleLevel || session.level || 'management');
+  const fallback = level === 'management' ? 'working' : 'management';
+  const decs = scenario.decisions?.[level] || scenario.decisions?.[fallback] || [];
   return decs[session.currentStep || 0] || null;
+}
+function getDecision(session){
+  return getDecisionForLevel(session, session.level === 'mixed' ? 'management' : session.level);
 }
 function applyLiveEffect(session, option){
   if(!session.stateEnabled || !session.state || !option) return;
@@ -1706,7 +1717,7 @@ function buildLiveSummary(session){
   const byStep=groupLive(participantAnswers.map(a=>({...a,stepKey:String(a.step??0)})),'stepKey');
   const decisionHeatmap=Object.entries(byStep).map(([step,rows])=>{ const scores=rows.map(r=>Number(r.score ?? r.aiScore ?? (r.correct?100:0))); return {step:Number(step),avgScore:avgLiveScore(rows),strong:scores.filter(s=>s>=80).length,partial:scores.filter(s=>s>=50&&s<80).length,weak:scores.filter(s=>s<50).length,submissions:rows.length}; }).sort((a,b)=>a.step-b.step);
   const timeline=participantAnswers.slice().sort((a,b)=>String(a.submittedAt||'').localeCompare(String(b.submittedAt||''))).map(a=>{ const ft=formatLocalReportTime(a.submittedAt); return {at:a.submittedAt,localTime:ft.localTime,time24:ft.time24,label:`D${Number(a.step||0)+1}`,text:`${a.participantName||'Participant'} (${a.team||'Unassigned'}) submitted`,score:Number(a.score ?? a.aiScore ?? (a.correct?100:0)),branch:a.branch||'',responseTimeSec:a.responseTimeSec||0}; });
-  const replay=participantAnswers.slice().sort((a,b)=>String(a.submittedAt||'').localeCompare(String(b.submittedAt||''))).map(a=>{ const ft=formatLocalReportTime(a.submittedAt); return {participantName:a.participantName,team:a.team,step:a.step,question:a.question,mcqAnswer:a.mcqAnswer,freeText:a.freeText,expectedActions:a.expectedActions,aiFeedback:a.aiFeedback,score:Number(a.score ?? a.aiScore ?? (a.correct?100:0)),branch:a.branch,submittedAt:a.submittedAt,localTime:ft.localTime,time24:ft.time24,responseTimeSec:a.responseTimeSec||0}; });
+  const replay=participantAnswers.slice().sort((a,b)=>String(a.submittedAt||'').localeCompare(String(b.submittedAt||''))).map(a=>{ const ft=formatLocalReportTime(a.submittedAt); return {participantName:a.participantName,team:a.team,roleLevel:a.roleLevel,step:a.step,question:a.question,mcqAnswer:a.mcqAnswer,freeText:a.freeText,expectedActions:a.expectedActions,aiFeedback:a.aiFeedback,score:Number(a.score ?? a.aiScore ?? (a.correct?100:0)),branch:a.branch,submittedAt:a.submittedAt,localTime:ft.localTime,time24:ft.time24,responseTimeSec:a.responseTimeSec||0}; });
   const weakIssues=participantAnswers.filter(a=>Number(a.score ?? a.aiScore ?? 0)<50).slice(0,10).map(a=>({participantName:a.participantName,team:a.team,step:a.step,issue:a.aiFeedback||'Weak response',score:Number(a.score ?? a.aiScore ?? 0)}));
   const nums=(arr)=>{arr=arr.map(Number).filter(Number.isFinite);return arr.length?Math.round(arr.reduce((a,b)=>a+b,0)/arr.length):0;};
   const advisoryRows=participantAnswers.filter(a=>a.playbookAlignmentScore!==null||a.bestPracticeScore!==undefined||a.playbookGaps?.length||a.consultantInsight);
@@ -1715,8 +1726,18 @@ function buildLiveSummary(session){
   const advisory={playbookAlignmentScore:nums(advisoryRows.map(a=>a.playbookAlignmentScore).filter(v=>v!==null&&v!==undefined)),bestPracticeScore:nums(advisoryRows.map(a=>a.bestPracticeScore ?? a.aiScore)),playbookQuality:Object.entries(qCounts).sort((a,b)=>b[1]-a[1])[0]?.[0]||'unknown',playbookGaps:Object.entries(playbookGaps).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([gap,count])=>({gap,count})),consultantInsights:advisoryRows.map(a=>a.consultantInsight).filter(Boolean).slice(0,8)};
   const participantCount = participants.filter(p=>p.role==='participant').length;
   const scenario = session.scenario || {};
-  const decs = scenario.decisions?.[session.level || 'management'] || scenario.decisions?.management || [];
-  const expectedDecisionPoints = Math.max(1, (decs.length || 0) * Math.max(1, participantCount || 1));
+  let expectedDecisionPoints;
+  if(session.level === 'mixed'){
+    const participantRows = participants.filter(p=>p.role==='participant');
+    expectedDecisionPoints = participantRows.reduce((sum,p)=>{
+      const lvl = normaliseRoleLevel(p.roleLevel || 'management');
+      const decs = scenario.decisions?.[lvl] || scenario.decisions?.management || [];
+      return sum + Math.max(1, decs.length || 0);
+    },0) || 1;
+  } else {
+    const decs = scenario.decisions?.[session.level || 'management'] || scenario.decisions?.management || [];
+    expectedDecisionPoints = Math.max(1, (decs.length || 0) * Math.max(1, participantCount || 1));
+  }
   const uniqueKeys = new Set();
   const uniqueAnswers = [];
   participantAnswers.forEach(a => { const k = (a.participantId || a.participantName || 'anon') + '::' + Number(a.step || 0); if(!uniqueKeys.has(k)){ uniqueKeys.add(k); uniqueAnswers.push(a); } });
@@ -1749,7 +1770,8 @@ function buildLiveSummary(session){
 
 app.post('/api/live-sessions', requireAuth, (req, res) => {
   try {
-    const { scenario, title, level='management', stateEnabled=false } = req.body;
+    let { scenario, title, level='mixed', stateEnabled=false } = req.body;
+    level = ['management','working','mixed'].includes(String(level).toLowerCase()) ? String(level).toLowerCase() : 'mixed';
     if(!scenario || !scenario.title) return res.status(400).json({ error:'Scenario payload required' });
     const db = readDB();
     const sessions = ensureLiveStore(db);
@@ -1815,7 +1837,9 @@ app.post('/api/live-sessions/:id/control', requireAuth, (req, res) => {
     const sessions = ensureLiveStore(db);
     const session = sessions[id];
     if(!session) return res.status(404).json({ error:'Session not found' });
-    const decs = session.scenario?.decisions?.[session.level || 'management'] || session.scenario?.decisions?.management || [];
+    const mgmtDecs = session.scenario?.decisions?.management || [];
+    const workDecs = session.scenario?.decisions?.working || [];
+    const decs = session.level === 'mixed' ? (mgmtDecs.length >= workDecs.length ? mgmtDecs : workDecs) : (session.scenario?.decisions?.[session.level || 'management'] || mgmtDecs || []);
     if(action === 'start') session.status = 'live';
     if(action === 'pause') session.status = 'paused';
     if(action === 'end') { session.status = 'ended'; session.summary = buildLiveSummary(session); }
@@ -1868,6 +1892,7 @@ app.post('/api/live-sessions/:id/join', (req, res) => {
     const sessions = ensureLiveStore(db);
     const session = sessions[id];
     if(!session) return res.status(404).json({ error:'Session not found' });
+    const roleLevel = session.level && session.level !== 'mixed' ? normaliseRoleLevel(session.level) : normaliseRoleLevel(req.body.roleLevel || 'management');
 
     session.participants = session.participants || [];
     let participant = requestedId ? session.participants.find(p => p.id === requestedId) : null;
@@ -1881,9 +1906,10 @@ app.post('/api/live-sessions/:id/join', (req, res) => {
       participant.name = name || participant.name;
       participant.team = team || participant.team || 'Unassigned';
       participant.role = role || participant.role;
+      participant.roleLevel = roleLevel || participant.roleLevel || 'management';
       participant.lastSeenAt = new Date().toISOString();
     } else {
-      participant = { id: makeSessionId(), name, team, role, joinedAt: new Date().toISOString(), lastSeenAt: new Date().toISOString() };
+      participant = { id: makeSessionId(), name, team, role, roleLevel, joinedAt: new Date().toISOString(), lastSeenAt: new Date().toISOString() };
       session.participants.push(participant);
     }
 
@@ -1905,11 +1931,13 @@ app.post('/api/live-sessions/:id/answers', async (req, res) => {
     const session = sessions[id];
     if(!session) return res.status(404).json({ error:'Session not found' });
     if(session.status === 'ended') return res.status(403).json({ error:'Session has ended' });
-    const d = getDecision(session);
-    if(!d) return res.status(400).json({ error:'No active decision' });
     const participantId = sanitiseString(req.body.participantId || '', 40);
+    const participant = (session.participants || []).find(p => p.id === participantId);
+    const roleLevel = session.level === 'mixed' ? normaliseRoleLevel(req.body.roleLevel || participant?.roleLevel || 'management') : normaliseRoleLevel(session.level);
+    const d = getDecisionForLevel(session, roleLevel);
+    if(!d) return res.status(400).json({ error:'No active decision for selected role level' });
     session.answers = session.answers || [];
-    const existingAnswer = participantId ? session.answers.find(a => a.participantId === participantId && Number(a.step) === Number(session.currentStep || 0)) : null;
+    const existingAnswer = participantId ? session.answers.find(a => a.participantId === participantId && Number(a.step) === Number(session.currentStep || 0) && String(a.roleLevel||roleLevel)===String(roleLevel)) : null;
     if(existingAnswer && req.body.allowResubmit !== true){
       return res.status(409).json({ error:'Answer already submitted for this step', answer: session.status === 'ended' ? existingAnswer : { id: existingAnswer.id, participantId: existingAnswer.participantId, step: existingAnswer.step, submittedAt: existingAnswer.submittedAt }, session: publicSessionView(session) });
     }
@@ -1959,7 +1987,8 @@ Participant response: ${freeText}`;
       step: session.currentStep || 0,
       question: sanitiseString(d.question || '', 500),
       participantName: sanitiseString(req.body.participantName || 'Participant', 80),
-      team: sanitiseString(req.body.team || 'Unassigned', 80),
+      team: sanitiseString(req.body.team || participant?.team || 'Unassigned', 80),
+      roleLevel,
       optionIndex: Number.isInteger(optionIndex) ? optionIndex : null,
       mcqAnswer: sanitiseString(chosen?.text || '', 1000),
       freeText,
