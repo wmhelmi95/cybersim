@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NexaCyberSim</title>
+<title>Nexa-CyberSim — Enterprise Crisis Simulation Platform</title>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -1258,6 +1258,57 @@ body.theme-light #screen-login > div > div:nth-child(2),body.theme-light .card,b
 .ent-readiness-bar span{height:100%;display:block;border-radius:999px;background:linear-gradient(90deg,var(--cyan),var(--blue));}
 
 </style>
+
+<style id="premium-hybrid-report-css">
+.report-screen-v2{background:radial-gradient(circle at 15% 0%,rgba(0,229,255,.08),transparent 28%),radial-gradient(circle at 85% 20%,rgba(41,121,255,.07),transparent 30%),#020814!important;}
+.report-shell{max-width:1540px!important;padding:22px 30px 60px!important;}
+.report-topbar-v2{align-items:center!important;margin-bottom:18px!important;}
+.report-title-row h1{font-size:30px!important;letter-spacing:-.7px!important;}
+.report-status-pill{background:rgba(0,230,118,.12)!important;color:var(--green)!important;border:1px solid rgba(0,230,118,.25)!important;}
+.report-grid-v2{grid-template-columns:minmax(0,1.35fr) 520px!important;gap:22px!important;}
+.report-card{border-radius:16px!important;border:1px solid rgba(84,145,220,.22)!important;background:linear-gradient(180deg,rgba(12,24,44,.94),rgba(7,14,28,.98))!important;box-shadow:0 10px 34px rgba(0,0,0,.22)!important;}
+.report-card-head h3{font-size:17px!important;}
+.report-card-head span{font-family:var(--mono);font-size:10px;color:#4480c8!important;letter-spacing:.8px;}
+.report-kpi-grid{grid-template-columns:repeat(4,1fr)!important;gap:14px!important;margin:16px 0!important;}
+.report-kpi-grid .rm{border-radius:14px!important;background:linear-gradient(180deg,rgba(20,38,65,.9),rgba(9,18,34,.95))!important;border:1px solid rgba(84,145,220,.2)!important;text-align:left!important;padding:18px!important;}
+.report-kpi-grid .rm-val{font-size:30px!important;color:#eaf5ff!important;}
+.report-kpi-grid .rm-lbl{font-family:var(--mono);letter-spacing:.9px!important;color:#74a6df!important;text-transform:uppercase;}
+.exec-story-grid{display:grid!important;grid-template-columns:1fr 1fr!important;gap:18px!important;margin:18px 0!important;}
+.exec-story-card{padding:24px!important;border-radius:16px!important;background:linear-gradient(135deg,rgba(0,229,255,.08),rgba(0,230,118,.035))!important;}
+.exec-story-card h2{font-size:25px!important;}
+.exec-mini-list{display:grid!important;grid-template-columns:repeat(3,1fr)!important;gap:12px!important;}
+.exec-mini-item{min-height:108px!important;background:rgba(255,255,255,.035)!important;}
+.readiness-trend-viz{padding:26px 28px!important;min-height:350px!important;}
+#rpt-trend-chart{max-height:250px!important;}
+.trend-score-badge{right:28px!important;top:28px!important;min-width:150px!important;background:rgba(12,34,67,.9)!important;}
+.trend-intro{max-width:650px!important;}
+.business-impact-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+.business-impact-card{border-radius:14px;padding:18px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.035);min-height:150px;}
+.business-impact-card h4{font-family:var(--head);font-size:14px;color:var(--white);margin:0 0 8px;display:flex;gap:8px;align-items:center;}
+.business-impact-card strong{display:block;font-size:13px;margin-bottom:8px;}
+.business-impact-card p{font-size:12px;line-height:1.65;color:var(--text);margin:0;}
+.business-impact-card.high{border-color:rgba(255,45,85,.35);background:linear-gradient(180deg,rgba(255,45,85,.08),rgba(255,255,255,.02));}
+.business-impact-card.med{border-color:rgba(255,179,0,.35);background:linear-gradient(180deg,rgba(255,179,0,.08),rgba(255,255,255,.02));}
+.business-impact-card.rep{border-color:rgba(213,0,249,.35);background:linear-gradient(180deg,rgba(213,0,249,.08),rgba(255,255,255,.02));}
+.premium-summary-table td,.premium-summary-table th{font-size:12px!important;}
+.premium-result-pill{font-family:var(--mono);font-size:10px;border-radius:999px;padding:4px 8px;font-weight:800;white-space:nowrap;}
+.premium-benchmark-row{padding:11px 0;border-bottom:1px solid var(--border);}
+.premium-benchmark-row:last-child{border-bottom:0;}
+.premium-benchmark-top{display:flex;justify-content:space-between;gap:10px;font-size:12px;color:var(--white);margin-bottom:6px;}
+.premium-benchmark-bar{height:7px;border-radius:999px;background:rgba(255,255,255,.1);overflow:hidden;}
+.premium-benchmark-bar span{display:block;height:100%;border-radius:999px;}
+.premium-benchmark-row small{display:block;margin-top:5px;color:var(--muted);font-size:10px;}
+.premium-benchmark-note{margin-top:14px;border:1px solid rgba(0,229,255,.24);background:rgba(0,229,255,.06);border-radius:12px;padding:12px;font-size:12px;line-height:1.55;color:var(--text);}
+.premium-participant-table{width:100%;border-collapse:collapse;font-size:12px;}
+.premium-participant-table th{font-family:var(--mono);font-size:9px;color:#8cbef3;background:rgba(255,255,255,.04);padding:8px;text-align:left;}
+.premium-participant-table td{padding:8px;border-bottom:1px solid var(--border);}
+.premium-risk-item{display:grid;grid-template-columns:42px 1fr;gap:12px;align-items:center;border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:10px;background:rgba(255,255,255,.03);}
+.premium-risk-num{font-family:var(--head);font-size:24px;font-weight:850;color:var(--white);text-align:center;}
+.premium-risk-item p{margin:0;font-size:12px;line-height:1.5;color:var(--text);}
+.ai-summary-card{max-height:none!important;}
+.ai-report-body-v2{font-size:12px!important;line-height:1.65!important;}
+@media(max-width:1150px){.report-grid-v2{grid-template-columns:1fr!important}.exec-story-grid,.exec-mini-list,.business-impact-grid{grid-template-columns:1fr!important}}
+</style>
 </head>
 <body>
 
@@ -1944,6 +1995,21 @@ body.theme-light #screen-login > div > div:nth-child(2),body.theme-light .card,b
           </div>
         </div>
 
+        <div class="report-card premium-business-impact-card">
+          <div class="report-card-head"><h3>Business Impact</h3><span>Executive risk lens</span></div>
+          <div class="business-impact-grid" id="business-impact-grid"></div>
+        </div>
+
+        <div class="report-card premium-decision-summary-card">
+          <div class="report-card-head"><h3>Decision Summary (Aggregated)</h3><span>Evidence without noise</span></div>
+          <div class="results-table-wrap">
+            <table class="results-table report-table-v2 premium-summary-table">
+              <thead><tr><th>#</th><th>Decision Point</th><th>% Correct</th><th>Result</th><th>Risk if Not Addressed</th></tr></thead>
+              <tbody id="premium-decision-summary"></tbody>
+            </table>
+          </div>
+        </div>
+
         <div class="report-card">
           <div class="report-card-head"><h3>Key Insights</h3><span>Observed issues</span></div>
           <div id="rpt-findings" class="report-insight-row"></div>
@@ -1991,6 +2057,21 @@ body.theme-light #screen-login > div > div:nth-child(2),body.theme-light .card,b
       </div>
 
       <aside class="report-side-v2">
+        <div class="report-card premium-benchmark-card">
+          <div class="report-card-head"><h3>Performance vs Benchmark</h3><span>How you compare</span></div>
+          <div id="premium-benchmark"></div>
+        </div>
+
+        <div class="report-card premium-participants-card">
+          <div class="report-card-head"><h3>Participants Overview</h3><span>Role-level view</span></div>
+          <div id="premium-participants"></div>
+        </div>
+
+        <div class="report-card premium-risk-card">
+          <div class="report-card-head"><h3>Top Risk Contributors</h3><span>Decision patterns</span></div>
+          <div id="premium-risk-contributors"></div>
+        </div>
+
         <div class="report-card ai-summary-card">
           <div class="report-card-head"><h3>Management Executive Summary</h3><button class="btn btn-ghost btn-sm" onclick="exportPDF()">Download PDF</button></div>
           <div id="rpt-conclusion-title" class="ai-report-title-v2">
@@ -4385,6 +4466,7 @@ function showReport(){
   decs.forEach(d=>{if(d.skillTested) skillCounts[d.skillTested]=(skillCounts[d.skillTested]||0)+1;});
   const skillReadiness = calculateSkillReadinessFromResults(simState.results, s.skills);
   simState.normalisedSkillScores = skillReadiness;
+  renderPremiumHybridReport(simState.results, pct, s.skills, skillReadiness);
   document.getElementById('rpt-skill-rows').innerHTML=s.skills.map(k=>{
     const p=skillReadiness[k] || 0;
     return `<div class="sr-row"><div class="sr-icon">${SKILLS[k].icon}</div><div class="sr-info"><div class="sr-name">${SKILLS[k].label}</div><div class="sr-bar"><div class="sr-fill" style="width:${p}%;background:${SKILLS[k].color}"></div></div></div><div class="sr-pct" style="color:${SKILLS[k].color}">${p}%</div></div>`;
@@ -4555,7 +4637,58 @@ function exportPDF(){
   const sectionMap=Object.fromEntries(sections.map(x=>[x.title,x.body]));
   const sectionHtml=preferred.filter(t=>sectionMap[t]).map((title,idx)=>`<section class="section"><div class="section-kicker">SECTION ${String(idx+1).padStart(2,'0')}</div><h2>${esc(title)}</h2><div class="section-body">${bodyToHtml(sectionMap[title], title)}</div></section>`).join('') || `<section class="section"><h2>Management Executive Summary</h2>${bodyToHtml(rawConclusion)}</section>`;
 
-  const html=`<!doctype html><html><head><meta charset="utf-8"><title>NexaCyberSim Executive Report</title><style>@page{size:A4;margin:15mm 14mm}*{box-sizing:border-box}body{font-family:Arial,Helvetica,sans-serif;color:#172033;margin:0;background:#fff;font-size:11.5px;line-height:1.55;-webkit-print-color-adjust:exact;print-color-adjust:exact}.cover{background:linear-gradient(135deg,#071527,#0f3557);color:#fff;padding:32px 34px 26px;border-radius:0 0 18px 18px}.brand{font-size:12px;letter-spacing:2.4px;text-transform:uppercase;color:#8fe8ff;font-weight:800}.title{font-size:31px;font-weight:800;margin:23px 0 8px}.sub{color:#d9eaf7;font-size:12.5px}.grade-row{margin-top:24px;display:flex;align-items:center;gap:18px}.badge{width:82px;height:82px;border-radius:18px;background:${gradeColor};display:flex;align-items:center;justify-content:center;color:#fff;font-size:44px;font-weight:800}.grade-text strong{display:block;font-size:19px}.grade-text span{color:#d9eaf7}.content{padding:24px 0}.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:0 0 18px}.metric{border:1px solid #d8e2ea;border-radius:13px;padding:12px;background:#f8fbfd}.mv{font-size:23px;font-weight:800;color:#0f3557}.ml{font-size:9.5px;color:#667085;text-transform:uppercase;letter-spacing:.7px}.section{border:1px solid #d8e2ea;border-radius:14px;padding:16px 18px;margin:14px 0;background:#fff;page-break-inside:avoid;box-shadow:0 1px 0 rgba(15,53,87,.05)}.section-kicker{font-size:9.5px;color:#64748b;letter-spacing:1.5px;font-weight:800}.section h2{font-size:16px;color:#0f3557;margin:2px 0 9px;border-bottom:2px solid #e2e8f0;padding-bottom:7px}.section p{margin:6px 0}.subhead{font-size:12.5px;color:#0f3557;margin:12px 0 4px;text-transform:uppercase;letter-spacing:.5px}.section ul,.premium-list{margin:8px 0 0 18px;padding:0}.section li,.premium-list li{margin:5px 0;padding-left:2px}.rec-card{border-radius:12px;padding:10px 12px;margin:8px 0;border-left:5px solid #0f3557;background:#f8fbfd}.rec-card .rec-label{font-size:9px;font-weight:800;letter-spacing:1.2px;margin-bottom:3px}.rec-card.fail{border-left-color:#B91C1C;background:#fff5f5}.rec-card.warn{border-left-color:#B45309;background:#fffbeb}.rec-card.pass{border-left-color:#0F766E;background:#f0fdfa}.rec-card.fail .rec-label{color:#B91C1C}.rec-card.warn .rec-label{color:#B45309}.rec-card.pass .rec-label{color:#0F766E}.skill-card{display:flex;justify-content:space-between;gap:14px;align-items:center;border:1px solid #e2e8f0;border-left:5px solid #0f3557;border-radius:10px;padding:9px 11px;margin:7px 0;background:#f8fbfd}.skill-card p{margin:2px 0 0;color:#475569}.score{min-width:72px;text-align:center;font-size:18px;font-weight:800}.score span{display:block;font-size:9px;letter-spacing:.8px}.pass{color:#0F766E}.warn{color:#B45309}.fail{color:#B91C1C}.na{color:#64748b}.bar{height:8px;background:#edf2f7;border-radius:99px;overflow:hidden}.bar span{display:block;height:100%;border-radius:99px}.bar span.pass{background:#0F766E}.bar span.warn{background:#B45309}.bar span.fail{background:#B91C1C}.pill{display:inline-block;border-radius:999px;padding:3px 8px;font-size:9px;font-weight:800;color:#fff}.pill.pass{background:#0F766E;color:#fff}.pill.warn{background:#B45309;color:#fff}.pill.fail{background:#B91C1C;color:#fff}.pill.na{background:#64748b;color:#fff}table{width:100%;border-collapse:collapse;margin-top:9px}th{background:#0f3557;color:#fff;text-align:left;padding:8px;font-size:10px;text-transform:uppercase}td{border-bottom:1px solid #e5edf3;padding:8px;vertical-align:top}.num{font-family:Consolas,monospace;text-align:right;white-space:nowrap;font-weight:800}small{color:#667085}.chip{display:inline-block;border:1px solid #d8e2ea;background:#f8fbfd;border-radius:20px;padding:4px 9px;margin:2px;font-size:10px;color:#344054}.footer{margin-top:20px;border-top:1px solid #d8e2ea;padding-top:10px;color:#667085;font-size:10px;text-align:center}@media print{.cover{border-radius:0}.section{break-inside:avoid}}</style></head><body><section class="cover"><div class="brand">NexaCyberSim Confidential Report</div><div class="title">Cyber Crisis Simulation Report</div><div class="sub">${client?esc(client.name)+' · ':''}${esc(s.title)} · ${esc(String(simState.level||'').toUpperCase())} Level<br>${date}</div><div class="grade-row"><div class="badge">${grade}</div><div class="grade-text"><strong>${pct}% Overall Readiness — ${gradeLabel}</strong><span>Team readiness view · ${correct}/${decs.length} decisions passed · ${execMetrics.participantCount||1} participant(s) · ${execMetrics.submissions} submissions</span></div></div></section><main class="content"><div class="metrics"><div class="metric"><div class="mv">${pct}%</div><div class="ml">Team Readiness</div></div><div class="metric"><div class="mv">${grade}</div><div class="ml">Grade</div></div><div class="metric"><div class="mv">${correct}/${decs.length}</div><div class="ml">Decisions Passed</div></div><div class="metric"><div class="mv">${execMetrics.participantCount||1}</div><div class="ml">Participants</div></div></div>${sectionHtml}<section class="section"><div class="section-kicker">APPENDIX A</div><h2>Skill Readiness Matrix</h2><table><thead><tr><th>Capability</th><th>Readiness</th><th class="num">Score</th><th>Status</th></tr></thead><tbody>${skillRows}</tbody></table></section><section class="section"><div class="section-kicker">APPENDIX B</div><h2>Decision Breakdown</h2><table><thead><tr><th class="num">#</th><th>Decision / Response</th><th class="num">Score</th><th>Assessment</th><th>Finding</th></tr></thead><tbody>${decisionRows}</tbody></table></section><section class="section"><div class="section-kicker">APPENDIX C</div><h2>Framework Alignment</h2><div>${(FW||[]).map(f=>`<span class="chip">${esc(f)}</span>`).join('')}</div></section><div class="footer">Generated by NexaCyberSim · Internal training report only · Not a penetration test or formal audit.</div></main><script>window.onload=()=>setTimeout(()=>window.print(),300)<\/script></body></html>`;
+  const html=`<!doctype html><html><head><meta charset="utf-8"><title>NexaCyberSim Executive Report</title><style>@page{size:A4;margin:15mm 14mm}*{box-sizing:border-box}body{font-family:Arial,Helvetica,sans-serif;color:#172033;margin:0;background:#fff;font-size:11.5px;line-height:1.55;-webkit-print-color-adjust:exact;print-color-adjust:exact}.cover{background:linear-gradient(135deg,#071527,#0f3557);color:#fff;padding:32px 34px 26px;border-radius:0 0 18px 18px}.brand{font-size:12px;letter-spacing:2.4px;text-transform:uppercase;color:#8fe8ff;font-weight:800}.title{font-size:31px;font-weight:800;margin:23px 0 8px}.sub{color:#d9eaf7;font-size:12.5px}.grade-row{margin-top:24px;display:flex;align-items:center;gap:18px}.badge{width:82px;height:82px;border-radius:18px;background:${gradeColor};display:flex;align-items:center;justify-content:center;color:#fff;font-size:44px;font-weight:800}.grade-text strong{display:block;font-size:19px}.grade-text span{color:#d9eaf7}.content{padding:24px 0}.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:0 0 18px}.metric{border:1px solid #d8e2ea;border-radius:13px;padding:12px;background:#f8fbfd}.mv{font-size:23px;font-weight:800;color:#0f3557}.ml{font-size:9.5px;color:#667085;text-transform:uppercase;letter-spacing:.7px}.section{border:1px solid #d8e2ea;border-radius:14px;padding:16px 18px;margin:14px 0;background:#fff;page-break-inside:avoid;box-shadow:0 1px 0 rgba(15,53,87,.05)}.section-kicker{font-size:9.5px;color:#64748b;letter-spacing:1.5px;font-weight:800}.section h2{font-size:16px;color:#0f3557;margin:2px 0 9px;border-bottom:2px solid #e2e8f0;padding-bottom:7px}.section p{margin:6px 0}.subhead{font-size:12.5px;color:#0f3557;margin:12px 0 4px;text-transform:uppercase;letter-spacing:.5px}.section ul,.premium-list{margin:8px 0 0 18px;padding:0}.section li,.premium-list li{margin:5px 0;padding-left:2px}.rec-card{border-radius:12px;padding:10px 12px;margin:8px 0;border-left:5px solid #0f3557;background:#f8fbfd}.rec-card .rec-label{font-size:9px;font-weight:800;letter-spacing:1.2px;margin-bottom:3px}.rec-card.fail{border-left-color:#B91C1C;background:#fff5f5}.rec-card.warn{border-left-color:#B45309;background:#fffbeb}.rec-card.pass{border-left-color:#0F766E;background:#f0fdfa}.rec-card.fail .rec-label{color:#B91C1C}.rec-card.warn .rec-label{color:#B45309}.rec-card.pass .rec-label{color:#0F766E}.skill-card{display:flex;justify-content:space-between;gap:14px;align-items:center;border:1px solid #e2e8f0;border-left:5px solid #0f3557;border-radius:10px;padding:9px 11px;margin:7px 0;background:#f8fbfd}.skill-card p{margin:2px 0 0;color:#475569}.score{min-width:72px;text-align:center;font-size:18px;font-weight:800}.score span{display:block;font-size:9px;letter-spacing:.8px}.pass{color:#0F766E}.warn{color:#B45309}.fail{color:#B91C1C}.na{color:#64748b}.bar{height:8px;background:#edf2f7;border-radius:99px;overflow:hidden}.bar span{display:block;height:100%;border-radius:99px}.bar span.pass{background:#0F766E}.bar span.warn{background:#B45309}.bar span.fail{background:#B91C1C}.pill{display:inline-block;border-radius:999px;padding:3px 8px;font-size:9px;font-weight:800;color:#fff}.pill.pass{background:#0F766E;color:#fff}.pill.warn{background:#B45309;color:#fff}.pill.fail{background:#B91C1C;color:#fff}.pill.na{background:#64748b;color:#fff}table{width:100%;border-collapse:collapse;margin-top:9px}th{background:#0f3557;color:#fff;text-align:left;padding:8px;font-size:10px;text-transform:uppercase}td{border-bottom:1px solid #e5edf3;padding:8px;vertical-align:top}.num{font-family:Consolas,monospace;text-align:right;white-space:nowrap;font-weight:800}small{color:#667085}.chip{display:inline-block;border:1px solid #d8e2ea;background:#f8fbfd;border-radius:20px;padding:4px 9px;margin:2px;font-size:10px;color:#344054}.footer{margin-top:20px;border-top:1px solid #d8e2ea;padding-top:10px;color:#667085;font-size:10px;text-align:center}@media print{.cover{border-radius:0}.section{break-inside:avoid}}</style>
+<style id="premium-hybrid-report-css">
+.report-screen-v2{background:radial-gradient(circle at 15% 0%,rgba(0,229,255,.08),transparent 28%),radial-gradient(circle at 85% 20%,rgba(41,121,255,.07),transparent 30%),#020814!important;}
+.report-shell{max-width:1540px!important;padding:22px 30px 60px!important;}
+.report-topbar-v2{align-items:center!important;margin-bottom:18px!important;}
+.report-title-row h1{font-size:30px!important;letter-spacing:-.7px!important;}
+.report-status-pill{background:rgba(0,230,118,.12)!important;color:var(--green)!important;border:1px solid rgba(0,230,118,.25)!important;}
+.report-grid-v2{grid-template-columns:minmax(0,1.35fr) 520px!important;gap:22px!important;}
+.report-card{border-radius:16px!important;border:1px solid rgba(84,145,220,.22)!important;background:linear-gradient(180deg,rgba(12,24,44,.94),rgba(7,14,28,.98))!important;box-shadow:0 10px 34px rgba(0,0,0,.22)!important;}
+.report-card-head h3{font-size:17px!important;}
+.report-card-head span{font-family:var(--mono);font-size:10px;color:#4480c8!important;letter-spacing:.8px;}
+.report-kpi-grid{grid-template-columns:repeat(4,1fr)!important;gap:14px!important;margin:16px 0!important;}
+.report-kpi-grid .rm{border-radius:14px!important;background:linear-gradient(180deg,rgba(20,38,65,.9),rgba(9,18,34,.95))!important;border:1px solid rgba(84,145,220,.2)!important;text-align:left!important;padding:18px!important;}
+.report-kpi-grid .rm-val{font-size:30px!important;color:#eaf5ff!important;}
+.report-kpi-grid .rm-lbl{font-family:var(--mono);letter-spacing:.9px!important;color:#74a6df!important;text-transform:uppercase;}
+.exec-story-grid{display:grid!important;grid-template-columns:1fr 1fr!important;gap:18px!important;margin:18px 0!important;}
+.exec-story-card{padding:24px!important;border-radius:16px!important;background:linear-gradient(135deg,rgba(0,229,255,.08),rgba(0,230,118,.035))!important;}
+.exec-story-card h2{font-size:25px!important;}
+.exec-mini-list{display:grid!important;grid-template-columns:repeat(3,1fr)!important;gap:12px!important;}
+.exec-mini-item{min-height:108px!important;background:rgba(255,255,255,.035)!important;}
+.readiness-trend-viz{padding:26px 28px!important;min-height:350px!important;}
+#rpt-trend-chart{max-height:250px!important;}
+.trend-score-badge{right:28px!important;top:28px!important;min-width:150px!important;background:rgba(12,34,67,.9)!important;}
+.trend-intro{max-width:650px!important;}
+.business-impact-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+.business-impact-card{border-radius:14px;padding:18px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.035);min-height:150px;}
+.business-impact-card h4{font-family:var(--head);font-size:14px;color:var(--white);margin:0 0 8px;display:flex;gap:8px;align-items:center;}
+.business-impact-card strong{display:block;font-size:13px;margin-bottom:8px;}
+.business-impact-card p{font-size:12px;line-height:1.65;color:var(--text);margin:0;}
+.business-impact-card.high{border-color:rgba(255,45,85,.35);background:linear-gradient(180deg,rgba(255,45,85,.08),rgba(255,255,255,.02));}
+.business-impact-card.med{border-color:rgba(255,179,0,.35);background:linear-gradient(180deg,rgba(255,179,0,.08),rgba(255,255,255,.02));}
+.business-impact-card.rep{border-color:rgba(213,0,249,.35);background:linear-gradient(180deg,rgba(213,0,249,.08),rgba(255,255,255,.02));}
+.premium-summary-table td,.premium-summary-table th{font-size:12px!important;}
+.premium-result-pill{font-family:var(--mono);font-size:10px;border-radius:999px;padding:4px 8px;font-weight:800;white-space:nowrap;}
+.premium-benchmark-row{padding:11px 0;border-bottom:1px solid var(--border);}
+.premium-benchmark-row:last-child{border-bottom:0;}
+.premium-benchmark-top{display:flex;justify-content:space-between;gap:10px;font-size:12px;color:var(--white);margin-bottom:6px;}
+.premium-benchmark-bar{height:7px;border-radius:999px;background:rgba(255,255,255,.1);overflow:hidden;}
+.premium-benchmark-bar span{display:block;height:100%;border-radius:999px;}
+.premium-benchmark-row small{display:block;margin-top:5px;color:var(--muted);font-size:10px;}
+.premium-benchmark-note{margin-top:14px;border:1px solid rgba(0,229,255,.24);background:rgba(0,229,255,.06);border-radius:12px;padding:12px;font-size:12px;line-height:1.55;color:var(--text);}
+.premium-participant-table{width:100%;border-collapse:collapse;font-size:12px;}
+.premium-participant-table th{font-family:var(--mono);font-size:9px;color:#8cbef3;background:rgba(255,255,255,.04);padding:8px;text-align:left;}
+.premium-participant-table td{padding:8px;border-bottom:1px solid var(--border);}
+.premium-risk-item{display:grid;grid-template-columns:42px 1fr;gap:12px;align-items:center;border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:10px;background:rgba(255,255,255,.03);}
+.premium-risk-num{font-family:var(--head);font-size:24px;font-weight:850;color:var(--white);text-align:center;}
+.premium-risk-item p{margin:0;font-size:12px;line-height:1.5;color:var(--text);}
+.ai-summary-card{max-height:none!important;}
+.ai-report-body-v2{font-size:12px!important;line-height:1.65!important;}
+@media(max-width:1150px){.report-grid-v2{grid-template-columns:1fr!important}.exec-story-grid,.exec-mini-list,.business-impact-grid{grid-template-columns:1fr!important}}
+</style>
+</head><body><section class="cover"><div class="brand">NexaCyberSim Confidential Report</div><div class="title">Cyber Crisis Simulation Report</div><div class="sub">${client?esc(client.name)+' · ':''}${esc(s.title)} · ${esc(String(simState.level||'').toUpperCase())} Level<br>${date}</div><div class="grade-row"><div class="badge">${grade}</div><div class="grade-text"><strong>${pct}% Overall Readiness — ${gradeLabel}</strong><span>Team readiness view · ${correct}/${decs.length} decisions passed · ${execMetrics.participantCount||1} participant(s) · ${execMetrics.submissions} submissions</span></div></div></section><main class="content"><div class="metrics"><div class="metric"><div class="mv">${pct}%</div><div class="ml">Team Readiness</div></div><div class="metric"><div class="mv">${grade}</div><div class="ml">Grade</div></div><div class="metric"><div class="mv">${correct}/${decs.length}</div><div class="ml">Decisions Passed</div></div><div class="metric"><div class="mv">${execMetrics.participantCount||1}</div><div class="ml">Participants</div></div></div>${sectionHtml}<section class="section"><div class="section-kicker">APPENDIX A</div><h2>Skill Readiness Matrix</h2><table><thead><tr><th>Capability</th><th>Readiness</th><th class="num">Score</th><th>Status</th></tr></thead><tbody>${skillRows}</tbody></table></section><section class="section"><div class="section-kicker">APPENDIX B</div><h2>Decision Breakdown</h2><table><thead><tr><th class="num">#</th><th>Decision / Response</th><th class="num">Score</th><th>Assessment</th><th>Finding</th></tr></thead><tbody>${decisionRows}</tbody></table></section><section class="section"><div class="section-kicker">APPENDIX C</div><h2>Framework Alignment</h2><div>${(FW||[]).map(f=>`<span class="chip">${esc(f)}</span>`).join('')}</div></section><div class="footer">Generated by NexaCyberSim · Internal training report only · Not a penetration test or formal audit.</div></main><script>window.onload=()=>setTimeout(()=>window.print(),300)<\/script></body></html>`;
   const w=window.open('', '_blank');
   if(!w){ alert('Popup blocked. Please allow popups to export PDF.'); return; }
   w.document.write(html); w.document.close();
@@ -4615,6 +4748,64 @@ async function exportWord(){
   }
 }
 
+
+
+
+// ── PREMIUM HYBRID REPORT EXTENSIONS ──
+function premiumBand(score){return score>=80?{label:'Strong',color:'var(--green)',cls:'pass'}:score>=60?{label:'Good',color:'var(--blue)',cls:'pass'}:score>=40?{label:'Needs Improvement',color:'var(--amber)',cls:'warn'}:{label:'Critical',color:'var(--red)',cls:'fail'};}
+function premiumGroupBy(arr,fn){return (arr||[]).reduce((m,x,i)=>{const k=fn(x,i)||'Unassigned';(m[k]||(m[k]=[])).push(x);return m;},{});}
+function premiumAvg(rows){const vals=(rows||[]).map(r=>scoreOfResult(r)).filter(v=>Number.isFinite(v));return vals.length?Math.round(vals.reduce((a,b)=>a+b,0)/vals.length):0;}
+function premiumDecisionQuestion(r,i){return r.question||r.decisionTitle||`Decision ${Number(r.decisionIndex??r.step??i)+1}`;}
+function renderPremiumHybridReport(results,pct,skills,skillReadiness){
+  results=results||[]; skills=skills||[]; skillReadiness=skillReadiness||{};
+  const weak=results.filter(r=>scoreOfResult(r)<50).length;
+  const partial=results.filter(r=>scoreOfResult(r)>=50&&scoreOfResult(r)<80).length;
+  const comm=skillReadiness.communication ?? null;
+  const compliance=skillReadiness.compliance ?? null;
+  const decision=skillReadiness.decision ?? null;
+  const impact=document.getElementById('business-impact-grid');
+  if(impact){
+    const regRisk=(compliance!==null && compliance<70)||weak>0;
+    const opRisk=pct<80||partial>0;
+    const repRisk=(comm!==null && comm<80)||weak>0;
+    impact.innerHTML=`
+      <div class="business-impact-card ${regRisk?'high':'med'}"><h4>⚖️ Regulatory Risk</h4><strong>${regRisk?'High':'Moderate'}</strong><p>${regRisk?'Delayed, inaccurate, or incomplete escalation may affect breach notification duties and evidence handling.':'No major regulatory failure was observed, but notification workflow should still be validated.'}</p></div>
+      <div class="business-impact-card med"><h4>⚙️ Operational Impact</h4><strong>${opRisk?'Medium':'Low'}</strong><p>${opRisk?'Decision variance may delay containment or recovery coordination during a real incident.':'Decision flow suggests low operational disruption from leadership actions.'}</p></div>
+      <div class="business-impact-card rep"><h4>👥 Reputational Impact</h4><strong>${repRisk?'High':'Moderate'}</strong><p>${repRisk?'Inconsistent stakeholder messaging can damage trust with customers, regulators, and the board.':'Communication posture appears controlled but should be rehearsed regularly.'}</p></div>`;
+  }
+  const summary=document.getElementById('premium-decision-summary');
+  if(summary){
+    const by=premiumGroupBy(results,(r,i)=>String(Number(r.decisionIndex??r.step??i)+1));
+    summary.innerHTML=Object.entries(by).sort((a,b)=>Number(a[0])-Number(b[0])).map(([n,rows])=>{
+      const correct=rows.filter(r=>scoreOfResult(r)>=80).length; const total=rows.length||1; const cp=Math.round(correct/total*100); const band=premiumBand(cp);
+      const q=premiumDecisionQuestion(rows[0],Number(n)-1);
+      const risk=cp>=80?'Low residual risk if process is repeatable.':cp>=50?'Partial adoption may create delays or inconsistent execution.':'High risk of delayed response, misleading escalation, or incomplete containment.';
+      return `<tr><td>${n}</td><td>${escapeHTML(q)}</td><td><div class="mini-bar-wrap"><div class="mini-bar"><div class="mini-fill" style="width:${Math.max(4,cp)}%;background:${band.color}"></div></div><span class="mini-val" style="color:${band.color}">${cp}%</span></div></td><td><span class="premium-result-pill" style="border:1px solid ${band.color};color:${band.color};background:${band.color}18">${band.label}</span></td><td>${escapeHTML(risk)}</td></tr>`;
+    }).join('')||'<tr><td colspan="5">No decision evidence available.</td></tr>';
+  }
+  const bench=document.getElementById('premium-benchmark');
+  if(bench){
+    const industry={overall:72,communication:78,decision:70,leadership:68,compliance:65,technical:75,coordination:69};
+    const rows=[['Overall Readiness',pct,industry.overall,'var(--green)']].concat(skills.slice(0,5).map(k=>[SKILLS[k]?.label||k,skillReadiness[k]??0,industry[k]||70,SKILLS[k]?.color||'var(--blue)']));
+    const below=rows.filter(r=>r[1]<r[2]).length;
+    bench.innerHTML=rows.map(([label,val,avg,color])=>`<div class="premium-benchmark-row"><div class="premium-benchmark-top"><span>${escapeHTML(label)}</span><strong>${val}%</strong></div><div class="premium-benchmark-bar"><span style="width:${Math.max(4,val)}%;background:${color}"></span></div><small>Reference benchmark: ${avg}%</small></div>`).join('')+`<div class="premium-benchmark-note">${below?`Below reference benchmark in ${below} area(s). Focus on the prioritised recommendations.`:'Above or aligned with reference benchmark across key areas.'}</div>`;
+  }
+  const part=document.getElementById('premium-participants');
+  if(part){
+    const people=Object.entries(premiumGroupBy(results,r=>r.participantName||r.name||'Admin Run'));
+    part.innerHTML=`<table class="premium-participant-table"><thead><tr><th>Participant</th><th>Role/Team</th><th>Score</th><th>Status</th></tr></thead><tbody>${people.map(([name,rows])=>{const a=premiumAvg(rows), b=premiumBand(a); return `<tr><td>${escapeHTML(name)}</td><td>${escapeHTML(rows[0]?.team||rows[0]?.role||'Unassigned')}</td><td>${a}%</td><td><span style="color:${b.color}">●</span></td></tr>`;}).join('')||'<tr><td colspan="4">No participants available.</td></tr>'}</tbody></table>`;
+  }
+  const risk=document.getElementById('premium-risk-contributors');
+  if(risk){
+    const wrong=results.filter(r=>scoreOfResult(r)<50).length;
+    const mid=results.filter(r=>scoreOfResult(r)>=50&&scoreOfResult(r)<80).length;
+    const slow=results.filter(r=>Number(r.responseTimeSec||r.timeTakenSec||0)>60).length;
+    risk.innerHTML=`
+      <div class="premium-risk-item"><div class="premium-risk-num">${wrong}</div><p>submission(s) were weak or materially incorrect and may require facilitator review.</p></div>
+      <div class="premium-risk-item"><div class="premium-risk-num">${mid}</div><p>submission(s) were partially correct but missed important escalation, validation, or communication details.</p></div>
+      <div class="premium-risk-item"><div class="premium-risk-num">${slow}</div><p>submission(s) exceeded the expected decision-time threshold.</p></div>`;
+  }
+}
 
 // ══════════════════════════════════════════════════════════
 // BUILDER
