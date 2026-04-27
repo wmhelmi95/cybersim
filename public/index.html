@@ -1906,6 +1906,8 @@ body.theme-light #screen-login > div > div:nth-child(2),body.theme-light .card,b
       <div class="report-main-v2">
         <div id="rpt-client-header" class="report-client-header-v2"></div>
 
+        <div id="consultant-executive-story"></div>
+
         <div class="report-kpi-grid" id="rpt-metrics"></div>
 
         <div class="report-card report-card-large" id="report-performance">
@@ -1969,7 +1971,7 @@ body.theme-light #screen-login > div > div:nth-child(2),body.theme-light .card,b
 
         <div class="report-card" id="report-timeline">
           <div class="report-card-head"><h3>Timeline & Events</h3><span id="timeline-timezone-label">All times shown in local time</span></div>
-          <div id="exercise-timeline" class="report-timeline-v2"></div><div class="timeline-note" id="timeline-note"></div>
+          <div class="evidence-layout"><div><div class="exec-story-pill">AGGREGATED EVIDENCE · EXECUTIVE VIEW</div><div id="aggregate-evidence" class="aggregate-evidence-list"></div></div><div><div class="exec-story-pill">PARTICIPANT DRILL-DOWN · FACILITATOR VIEW</div><div id="participant-drill-list" class="participant-drill-list"></div><div id="participant-history-panel" class="participant-history-panel"><span style="color:var(--muted);font-size:12px;">Select a participant to view history.</span></div></div></div><div class="timeline-note" id="timeline-note"></div>
         </div>
 
         <div class="report-card" id="report-decisions">
@@ -6027,6 +6029,166 @@ function buildManagementThemes(results, good){
           improvements.innerHTML=(items.length?items:['No major weakness identified from available data.']).map(x=>`<li>${escapeHTML(String(x)).slice(0,120)}</li>`).join('');
         }
       }catch(e){ console.warn('Report UI enhancement skipped:', e); }
+    };
+  }
+})();
+</script>
+
+<style>
+/* Consultant-grade executive report restructure + participant drill-down */
+.exec-story-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:14px;margin-bottom:14px;}
+.exec-story-card{background:linear-gradient(180deg,rgba(0,229,255,.055),rgba(255,255,255,.018));border:1px solid rgba(0,229,255,.16);border-radius:14px;padding:18px;}
+.exec-story-card h2{font-family:var(--head);font-size:22px;line-height:1.2;color:var(--white);margin:0 0 10px;letter-spacing:-.4px;}
+.exec-story-card p{margin:0;color:var(--text);font-size:13px;line-height:1.75;}
+.exec-story-pill{display:inline-flex;align-items:center;gap:7px;font-family:var(--mono);font-size:10px;color:var(--cyan);background:rgba(0,229,255,.08);border:1px solid rgba(0,229,255,.2);border-radius:999px;padding:5px 9px;margin-bottom:10px;}
+.exec-mini-list{display:flex;flex-direction:column;gap:8px;}
+.exec-mini-item{background:rgba(255,255,255,.025);border:1px solid var(--border);border-radius:11px;padding:12px;}
+.exec-mini-item strong{display:block;color:var(--white);font-family:var(--head);font-size:12px;margin-bottom:4px;}
+.exec-mini-item span{display:block;color:var(--text);font-size:12px;line-height:1.55;}
+.evidence-layout{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(300px,.8fr);gap:14px;align-items:start;}
+.aggregate-evidence-list,.participant-drill-list{display:flex;flex-direction:column;gap:10px;}
+.aggregate-evidence-card{background:rgba(255,255,255,.022);border:1px solid var(--border);border-radius:12px;padding:14px;}
+.aggregate-evidence-top{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;margin-bottom:10px;}
+.aggregate-evidence-title{font-family:var(--head);font-size:13px;color:var(--white);font-weight:800;line-height:1.35;}
+.aggregate-evidence-meta{font-family:var(--mono);font-size:10px;color:var(--muted);white-space:nowrap;}
+.aggregate-stack{display:flex;height:8px;border-radius:999px;overflow:hidden;background:rgba(255,255,255,.08);margin-bottom:8px;}
+.aggregate-stack span{display:block;height:100%;}
+.aggregate-evidence-stats{font-family:var(--mono);font-size:10px;color:var(--muted);display:flex;gap:10px;flex-wrap:wrap;}
+.participant-drill-card{width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;background:rgba(255,255,255,.025);border:1px solid var(--border);border-radius:12px;padding:12px;cursor:pointer;color:var(--text);text-align:left;transition:all .18s ease;}
+.participant-drill-card:hover,.participant-drill-card.active{border-color:var(--cyan);background:rgba(0,229,255,.055);transform:translateY(-1px);}
+.participant-drill-name{font-family:var(--head);font-size:13px;font-weight:800;color:var(--white);}
+.participant-drill-role{font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:3px;}
+.participant-drill-score{font-family:var(--head);font-size:18px;font-weight:850;}
+.participant-history-panel{margin-top:14px;background:rgba(0,229,255,.025);border:1px solid rgba(0,229,255,.13);border-radius:12px;padding:14px;min-height:80px;}
+.participant-history-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px;}
+.participant-history-head h4{font-family:var(--head);font-size:14px;color:var(--white);margin:0;}
+.participant-history-head span{font-family:var(--mono);font-size:10px;color:var(--muted);}
+.participant-history-item{display:grid;grid-template-columns:60px 30px 1fr;gap:10px;align-items:start;border-top:1px solid var(--border);padding:10px 0;}
+.participant-history-item:first-of-type{border-top:0;}
+.participant-history-time{font-family:var(--mono);font-size:10px;color:var(--cyan);line-height:1.35;}
+.participant-history-status{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:13px;}
+.participant-history-copy strong{display:block;color:var(--white);font-size:12px;margin-bottom:4px;}
+.participant-history-copy p{margin:0;color:var(--text);font-size:12px;line-height:1.55;}
+.participant-history-copy small{display:block;margin-top:5px;font-family:var(--mono);font-size:10px;color:var(--muted);}
+.report-table-v2 tr.drill-row{cursor:pointer;}
+.report-table-v2 tr.drill-row:hover td{background:rgba(0,229,255,.035)!important;}
+@media(max-width:980px){.exec-story-grid,.evidence-layout{grid-template-columns:1fr;}}
+</style>
+<script>
+(function(){
+  function $id(id){return document.getElementById(id);}
+  function esc(v){return (window.escapeHTML?escapeHTML(String(v??'')):String(v??'').replace(/[&<>\"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[m])));}
+  function sScore(r){ if(typeof window.scoreOfResult==='function') return scoreOfResult(r); if(typeof r.aiScore==='number') return r.aiScore; if(typeof r.score==='number') return r.score; return r.correct?100:0; }
+  function avg(rows){ const a=(rows||[]).map(sScore).filter(Number.isFinite); return a.length?Math.round(a.reduce((x,y)=>x+y,0)/a.length):0; }
+  function group(rows,keyFn){ return (rows||[]).reduce((m,r,i)=>{ const k=keyFn(r,i)||'Unassigned'; (m[k]||(m[k]=[])).push(r); return m; },{}); }
+  function band(p){return p>=80?['Strong','var(--green)','✓']:p>=50?['Partial','var(--amber)','!']:['Weak','var(--red)','×'];}
+  function timeFmt(v){ return (typeof window.formatReportLocalTime==='function') ? formatReportLocalTime(v) : {main:'—',alt:'',full:''}; }
+  function questionOf(r,i){return r.question || r.decisionTitle || ('Decision '+(Number(r.decisionIndex??r.step??i)+1));}
+  function roleOf(r){return r.role || r.level || r.participantRole || (window.simState && simState.level) || 'participant';}
+
+  window.renderExecutiveStory = function(results, pct){
+    const host=$id('consultant-executive-story');
+    if(!host) return;
+    results=results||[];
+    const weak=results.filter(r=>sScore(r)<50).length;
+    const partial=results.filter(r=>sScore(r)>=50&&sScore(r)<80).length;
+    const strong=results.filter(r=>sScore(r)>=80).length;
+    const people=Object.keys(group(results,r=>r.participantName||r.name||'Participant')).length || 1;
+    const finalLabel=pct>=80?'Strong':pct>=60?'Moderate':pct>=40?'Developing':'Critical';
+    const headline=pct>=80
+      ? 'Strong readiness observed, with evidence of effective decision-making across the exercise.'
+      : pct>=60
+        ? 'Moderate readiness observed, with effective response capability but clear improvement areas.'
+        : 'Readiness requires improvement, with decision gaps that could increase business and regulatory exposure.';
+    const keyFinding = weak>0 ? weak+' weak decision submission(s) created potential response risk.' : 'No weak decision submissions were recorded in the captured evidence.';
+    host.innerHTML=`<div class="exec-story-grid">
+      <div class="exec-story-card">
+        <div class="exec-story-pill">EXECUTIVE HEADLINE · ${esc(finalLabel.toUpperCase())} READINESS</div>
+        <h2>${esc(finalLabel)} (${pct}%) — ${esc(headline)}</h2>
+        <p>This report prioritises consultant interpretation before raw data. The exercise evidence is summarised at team level first, with participant history available through drill-down for facilitator review.</p>
+      </div>
+      <div class="exec-mini-list">
+        <div class="exec-mini-item"><strong>Key finding</strong><span>${esc(keyFinding)} Strong: ${strong}, Partial: ${partial}, Weak: ${weak}.</span></div>
+        <div class="exec-mini-item"><strong>Business impact lens</strong><span>${weak>0?'Weak decisions may delay containment, escalation, or breach-notification workflow.':'Captured decisions indicate low immediate business impact from decision quality.'}</span></div>
+        <div class="exec-mini-item"><strong>Evidence coverage</strong><span>${people} participant(s) assessed. Use the participant drill-down section for individual decision history.</span></div>
+      </div>
+    </div>`;
+  };
+
+  window.renderAggregateEvidence = function(results){
+    const host=$id('aggregate-evidence');
+    if(!host) return;
+    results=results||[];
+    if(!results.length){host.innerHTML='<div style="color:var(--muted);font-size:12px;">No evidence captured.</div>';return;}
+    const by=group(results,(r,i)=>String(Number(r.decisionIndex??r.step??i)+1));
+    host.innerHTML=Object.entries(by).sort((a,b)=>Number(a[0])-Number(b[0])).map(([n,rows])=>{
+      const scores=rows.map(sScore); const total=rows.length||1;
+      const strong=scores.filter(x=>x>=80).length, partial=scores.filter(x=>x>=50&&x<80).length, weak=scores.filter(x=>x<50).length;
+      const pStrong=Math.round(strong/total*100), pPartial=Math.round(partial/total*100), pWeak=Math.max(0,100-pStrong-pPartial);
+      const avgScore=avg(rows); const [label,color]=band(avgScore);
+      const q=questionOf(rows[0],Number(n)-1);
+      const branches=Object.entries(group(rows,r=>r.branch||'n/a')).sort((a,b)=>b[1].length-a[1].length).slice(0,2).map(([k,v])=>`${k.toUpperCase()} ${v.length}`).join(' · ');
+      return `<div class="aggregate-evidence-card">
+        <div class="aggregate-evidence-top"><div><div class="aggregate-evidence-title">Decision ${n}: ${esc(q)}</div><div class="aggregate-evidence-stats" style="margin-top:4px;">${esc(branches||'No branch data')}</div></div><div class="aggregate-evidence-meta" style="color:${color}">${avgScore}% · ${label}</div></div>
+        <div class="aggregate-stack"><span style="width:${pStrong}%;background:var(--green)"></span><span style="width:${pPartial}%;background:var(--amber)"></span><span style="width:${pWeak}%;background:var(--red)"></span></div>
+        <div class="aggregate-evidence-stats"><span>Strong ${strong}/${total}</span><span>Partial ${partial}/${total}</span><span>Weak ${weak}/${total}</span></div>
+      </div>`;
+    }).join('');
+  };
+
+  window.renderParticipantDrilldown = function(results){
+    const list=$id('participant-drill-list'), panel=$id('participant-history-panel');
+    if(!list||!panel) return;
+    results=results||[];
+    const people=group(results,r=>r.participantName||r.name||'Participant');
+    const entries=Object.entries(people).sort((a,b)=>avg(b[1])-avg(a[1]));
+    if(!entries.length){list.innerHTML='<div style="color:var(--muted);font-size:12px;">No participant data captured.</div>'; panel.innerHTML='<span style="color:var(--muted);font-size:12px;">Select a participant to view history.</span>'; return;}
+    list.innerHTML=entries.map(([name,rows],idx)=>{ const p=avg(rows); const [label,color]=band(p); return `<button class="participant-drill-card ${idx===0?'active':''}" data-participant="${esc(name)}" onclick="showParticipantHistory('${encodeURIComponent(name)}')"><div><div class="participant-drill-name">${esc(name)}</div><div class="participant-drill-role">${esc(rows[0]?.team||'Unassigned')} · ${esc(roleOf(rows[0]))}</div></div><div class="participant-drill-score" style="color:${color}">${p}%</div></button>`; }).join('');
+    window.__participantEvidenceMap=people;
+    window.showParticipantHistory(encodeURIComponent(entries[0][0]));
+  };
+
+  window.showParticipantHistory = function(encodedName){
+    const name=decodeURIComponent(encodedName||'');
+    const panel=$id('participant-history-panel'); if(!panel) return;
+    document.querySelectorAll('.participant-drill-card').forEach(b=>b.classList.toggle('active', b.dataset.participant===name));
+    const rows=((window.__participantEvidenceMap||{})[name]||[]).slice().sort((a,b)=>(Number(a.decisionIndex??a.step??0)-Number(b.decisionIndex??b.step??0)) || String(a.submittedAt||'').localeCompare(String(b.submittedAt||'')) );
+    if(!rows.length){panel.innerHTML='<span style="color:var(--muted);font-size:12px;">No history available.</span>';return;}
+    const p=avg(rows); const [label,color]=band(p);
+    panel.innerHTML=`<div class="participant-history-head"><div><h4>${esc(name)}</h4><span>${esc(rows[0]?.team||'Unassigned')} · ${rows.length} submission(s)</span></div><div style="font-family:var(--head);font-size:22px;font-weight:850;color:${color}">${p}%</div></div>`+
+      rows.map((r,i)=>{ const score=sScore(r); const [lbl,col,ic]=band(score); const t=timeFmt(r.submittedAt||r.createdAt||r.at); const dNo=Number(r.decisionIndex??r.step??i)+1; const taken=Number(r.responseTimeSec||r.timeTakenSec||0); return `<div class="participant-history-item"><div class="participant-history-time">D${dNo}<br>${esc(t.main)}<br>${esc(t.alt)}</div><div class="participant-history-status" style="background:${col}22;color:${col};border:1px solid ${col}55">${ic}</div><div class="participant-history-copy"><strong>${esc(questionOf(r,i))}</strong><p>${esc(r.aiFeedback||r.feedback||r.freeTextAnswer||'Decision submitted.')}</p><small>Score: ${score}% · ${lbl} · Branch: ${esc((r.branch||'n/a').toUpperCase())} · Time taken: ${taken}s</small></div></div>`; }).join('');
+  };
+
+  const oldParticipantTeam=window.renderParticipantTeamReport;
+  window.renderParticipantTeamReport=function(results){
+    if(typeof oldParticipantTeam==='function') oldParticipantTeam(results);
+    const tbody=$id('individual-breakdown');
+    if(tbody){
+      const people=group(results||[],r=>r.participantName||r.name||'Participant');
+      tbody.innerHTML=Object.entries(people).map(([name,rows])=>`<tr class="drill-row" onclick="document.getElementById('report-timeline').scrollIntoView({behavior:'smooth'});setTimeout(()=>showParticipantHistory('${encodeURIComponent(name)}'),250)"><td>${esc(name)}</td><td>${esc(rows[0]?.team||'Unassigned')}</td><td>${avg(rows)}%</td><td>${esc(typeof strongestSkill==='function'?strongestSkill(rows):'—')}</td><td>${esc(typeof weakestSkill==='function'?weakestSkill(rows):'—')}</td></tr>`).join('') || '<tr><td colspan="5" style="color:var(--muted);">No participant data captured.</td></tr>';
+    }
+    renderParticipantDrilldown(results||[]);
+  };
+
+  window.renderExerciseTimeline=function(results){
+    const note=$id('timeline-note'); if(note && typeof localTimezoneLabel==='function') note.textContent=localTimezoneLabel();
+    renderAggregateEvidence(results||[]);
+    renderParticipantDrilldown(results||[]);
+  };
+
+  const prevShow=window.showReport;
+  if(typeof prevShow==='function'){
+    window.showReport=function(){
+      prevShow.apply(this,arguments);
+      try{
+        const s=window.simState?.scenario||{};
+        const decs=(s.decisions&&s.decisions[window.simState.level])||[];
+        const metrics=(typeof calculateExecutiveMetrics==='function')?calculateExecutiveMetrics(window.simState.results||[],decs.length):null;
+        const pct=metrics?metrics.pct:avg(window.simState.results||[]);
+        renderExecutiveStory(window.simState.results||[],pct);
+        renderAggregateEvidence(window.simState.results||[]);
+        renderParticipantDrilldown(window.simState.results||[]);
+      }catch(e){console.warn('Consultant report restructure skipped',e);}
     };
   }
 })();
