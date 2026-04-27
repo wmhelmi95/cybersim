@@ -620,12 +620,12 @@ IMPORTANT FREE-TEXT AND PARTICIPANT ANALYSIS RULES:
 - Mention recurring weaknesses by participant and team when the data contains participantName or team.
 - Identify who needs improvement and in which skill domain when enough data is available.
 
-Write the full executive debrief using ONLY these HTML tags: <strong>, <br>, <ul>, <li>. No markdown. No other tags. Never output empty <li> items. Never output standalone bullet symbols. Every bullet must contain a complete sentence.
+Write the full executive debrief using ONLY these HTML tags: <strong>, <br>, <ul>, <li>. No markdown. No other tags. Never output empty <li> items. Never output standalone bullet symbols. Every bullet must contain a complete sentence. The report must be insight-first: headline and risk implication first, then evidence and recommendations. Use aggregate evidence for executives; avoid dumping every participant action.
 
 Use EXACTLY these 11 section headings — each must be wrapped in <strong>Title</strong><br> on its own line:
 
 <strong>Executive Summary</strong><br>
-[3 sentences: what was tested, overall result, key finding]
+[4 short sentences using this order: (1) what was tested, (2) overall readiness and grade, (3) strongest evidence, (4) most important business/risk implication. Write like a senior security consultant addressing executives. Do not start with raw score only.]
 
 <strong>Cyber Resilience Posture Assessment</strong><br>
 [3-4 sentences on practical resilience posture]
@@ -640,10 +640,10 @@ Use EXACTLY these 11 section headings — each must be wrapped in <strong>Title<
 [List correct decisions with <ul><li> items. Be specific.]
 
 <strong>Team & Individual Insights</strong><br>
-[Summarise strongest team, weakest team, top participant patterns, and who needs improvement. If only one admin run exists, state that participant-level breakdown is limited.]
+[Summarise participant patterns using aggregate language first. Mention named participants only when the data contains participantName and the pattern is supported. Do not list every submission; state that full participant history should be reviewed through the platform drill-down.]
 
 <strong>Timeline, Replay & Heatmap Insights</strong><br>
-[Identify the most failed decision, repeated weak branches, and whether response quality improved or degraded over time.]
+[Provide evidence in aggregated form: decision-level weak/partial/strong distribution, most failed decision, repeated weak branches, and whether response quality improved or degraded over time. Avoid noisy per-user timelines in the executive summary.]
 
 <strong>MITRE ATT&CK / Threat Behaviour Mapping</strong><br>
 [Map observed failures to likely ATT&CK tactics/techniques when enough context exists. If no explicit MITRE data exists, infer cautiously and state it is inferred.]
