@@ -188,6 +188,7 @@ input[type=file]{display:none;}
 .dec-team-tag-del:hover{color:var(--red);}
 .dec-team-add{font-family:var(--mono);font-size:10px;padding:4px 10px;border-radius:5px;border:1px dashed rgba(0,229,255,0.25);background:transparent;color:var(--muted);cursor:pointer;transition:all 0.2s;}
 .dec-team-add:hover{border-color:var(--cyan);color:var(--cyan);}
+.role-hint{font-size:10px;color:var(--muted);margin-top:4px;line-height:1.4}.role-badge{display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:9px;padding:3px 7px;border-radius:999px;background:rgba(0,229,255,.07);border:1px solid rgba(0,229,255,.18);color:var(--cyan);text-transform:uppercase;letter-spacing:.5px;}
 .correct-toggle{width:28px;height:28px;flex-shrink:0;border-radius:6px;border:1px solid var(--border2);background:transparent;cursor:pointer;font-size:13px;transition:all 0.2s;display:inline-flex;align-items:center;justify-content:center;}
 .correct-toggle.on{background:rgba(0,230,118,0.12);border-color:var(--green);color:var(--green);}
 .add-opt-btn,.add-dec-btn{font-family:var(--mono);font-size:10px;padding:6px 12px;border-radius:6px;border:1px dashed var(--border2);background:transparent;color:var(--muted);cursor:pointer;transition:all 0.2s;}
@@ -1491,7 +1492,7 @@ body.theme-light #screen-login > div > div:nth-child(2),body.theme-light .card,b
         </div>
         <div class="form-group">
           <label class="lbl">Level</label>
-          <select id="live-level-select"><option value="management">Management</option><option value="working">Working Level</option></select>
+          <select id="live-level-select"><option value="mixed" selected>Mixed Roles — participant chooses</option><option value="management">Management only</option><option value="working">Working level only</option></select><div class="role-hint">Mixed mode uses the same scenario timeline but shows management or working-level questions based on each participant role.</div>
         </div>
         <div class="form-group full">
           <label class="lbl">Client Playbook For Advisory Grading</label>
@@ -1527,6 +1528,7 @@ body.theme-light #screen-login > div > div:nth-child(2),body.theme-light .card,b
         <div class="dec-q" id="public-session-id">—</div>
         <div class="form-group"><label class="lbl">Name</label><input id="public-name" type="text" placeholder="Your name"></div>
         <div class="form-group"><label class="lbl">Team / Department</label><input id="public-team" type="text" placeholder="SOC / Legal / PR / Team A"></div>
+        <div class="form-group" id="public-role-level-wrap"><label class="lbl">Exercise Role Level</label><select id="public-role-level"><option value="management">Management / Executive</option><option value="working">Working / Technical</option></select><div class="role-hint">Management receives strategic/compliance decisions. Working level receives technical response decisions.</div></div>
         <button class="btn btn-primary" style="width:100%" onclick="joinLivePublic()">Join</button>
       </div>
       <div class="dec-area" id="public-answer-box" style="display:none;">
@@ -1732,7 +1734,7 @@ body.theme-light #screen-login > div > div:nth-child(2),body.theme-light .card,b
     <!-- Section 5: Decisions -->
     <div class="b-section">
       <div class="b-section-title"><span class="num">5</span> Decisions</div>
-      <div style="font-size:12px;color:var(--muted);margin-bottom:12px;">Each decision has its own time limit. When time runs out, the simulation auto-advances. You can always change the default.</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:12px;">Each decision can target both levels or only one role layer. Use one shared scenario timeline with different management and working-level decision paths.</div>
       <div id="b-decisions"></div>
       <button class="add-dec-btn" onclick="addDecBlock()">+ Add Decision</button>
     </div>
@@ -4713,6 +4715,7 @@ function editScenario(id){
       <div class="grid-3">
         <div class="form-group"><label class="lbl">Alert Type</label><select>${alertTypeHtml}</select></div>
         <div class="form-group"><label class="lbl">Skill Tested</label><select>${skillsHtml}</select></div>
+        <div class="form-group"><label class="lbl">Role Layer</label><select class="role-layer-select"><option value="both" ${(!d.roleLayer||d.roleLayer==='both')?'selected':''}>Both levels</option><option value="management" ${d.roleLayer==='management'?'selected':''}>Management only</option><option value="working" ${d.roleLayer==='working'?'selected':''}>Working level only</option></select></div>
         <div class="form-group">
           <label class="lbl">Time Limit (seconds) <span class="time-hint">editable</span></label>
           <input type="number" value="${timeLimitVal}" min="15" max="300" step="5" placeholder="60">
@@ -4833,6 +4836,10 @@ function addDecBlock(preTeams){
       <div class="form-group">
         <label class="lbl">Skill Tested</label>
         <select><option value="technical">🛡️ Technical</option><option value="communication">📢 Communication</option><option value="decision">🧠 Decision Making</option><option value="leadership">👑 Leadership</option><option value="compliance">⚖️ Compliance</option><option value="coordination">🤝 Coordination</option></select>
+      </div>
+      <div class="form-group">
+        <label class="lbl">Role Layer</label>
+        <select class="role-layer-select"><option value="both" selected>Both levels</option><option value="management">Management only</option><option value="working">Working level only</option></select>
       </div>
       <div class="form-group">
         <label class="lbl">Time Limit (seconds) <span class="time-hint">editable</span></label>
@@ -5011,9 +5018,9 @@ function saveScenario(){
     const tas=block.querySelectorAll('textarea');
     const ins=block.querySelectorAll('input[type=text],input[type=number]');
     const sels=block.querySelectorAll('select');
-    // sels[0]=alertType, sels[1]=skill — note level select removed, we default to 'both'
     const alertTypeVal=sels[0]?.value||'wa';
     const skillVal=sels[1]?.value||'decision';
+    const roleLayerVal=block.querySelector('.role-layer-select')?.value || 'both';
     // Time limit is the number input (ins has text inputs first, number input is at some index)
     const numInput=block.querySelector('input[type=number]');
     const timeLimitVal=numInput?Math.max(15,parseInt(numInput.value)||DEFAULT_DEC_TIME):DEFAULT_DEC_TIME;
@@ -5048,9 +5055,12 @@ function saveScenario(){
       goodFeedback:tas[tas.length-2]?.value||'Validated.',
       badFeedback:tas[tas.length-1]?.value||'Incorrect.'
     };
-    mgmt.push({...dObj});work.push({...dObj});
+    if(roleLayerVal==='both' || roleLayerVal==='management') mgmt.push({...dObj, roleLayer:'management'});
+    if(roleLayerVal==='both' || roleLayerVal==='working') work.push({...dObj, roleLayer:'working'});
   });
-  if(!mgmt.length){alert('Add at least one decision.');return;}
+  if(!mgmt.length && !work.length){alert('Add at least one decision.');return;}
+  if(!mgmt.length) mgmt.push(...work.map(d=>({...d,roleLayer:'management'})));
+  if(!work.length) work.push(...mgmt.map(d=>({...d,roleLayer:'working'})));
   const icon=document.getElementById('b-icon').value.trim()||'🔒';
   const scenarioData={
     id:editingScenarioId||('s'+Date.now()),
@@ -5245,7 +5255,7 @@ document.addEventListener('DOMContentLoaded', function(){
 // ══════════════════════════════════════════════════════════
 // LIVE EXERCISE MODE — admin + public participant/observer
 // ══════════════════════════════════════════════════════════
-let livePublic = { sessionId:null, role:'participant', name:'', team:'Unassigned', participantId:null, session:null, selectedOption:null, decisionStartedAt:Date.now(), stream:null, joined:false, endNotifiedSessionId:null };
+let livePublic = { sessionId:null, role:'participant', roleLevel:'management', name:'', team:'Unassigned', participantId:null, session:null, selectedOption:null, decisionStartedAt:Date.now(), stream:null, joined:false, endNotifiedSessionId:null };
 function liveLink(sessionId, role){
   const base = location.origin + location.pathname;
   return `${base}?session=${encodeURIComponent(sessionId)}&role=${encodeURIComponent(role)}`;
@@ -5411,9 +5421,20 @@ async function deleteLiveSession(id, btn){
   finally{ if(btn){btn.disabled=false;btn.textContent=oldText;} }
 }
 
+function normaliseRoleLevel(level){
+  level=String(level||'').toLowerCase();
+  if(level.includes('work')||level.includes('tech')) return 'working';
+  return 'management';
+}
+function getActiveRoleLevel(sess){
+  if(!sess) return 'management';
+  if(sess.level && sess.level !== 'mixed') return normaliseRoleLevel(sess.level);
+  return normaliseRoleLevel(livePublic.roleLevel || sess.participantRoleLevel || 'management');
+}
 function getDecisionFromLive(sess){
-  const level=sess.scenario?.decisions?.management ? 'management' : Object.keys(sess.scenario?.decisions||{})[0];
-  const decs=sess.scenario?.decisions?.[level]||[];
+  const level=getActiveRoleLevel(sess);
+  const fallback=level==='management'?'working':'management';
+  const decs=sess.scenario?.decisions?.[level] || sess.scenario?.decisions?.[fallback] || [];
   return decs[sess.currentStep||0]||null;
 }
 function getLiveMyAnswer(sess){
@@ -5424,12 +5445,13 @@ function persistLivePublic(){
   if(!livePublic.sessionId) return;
   localStorage.setItem('nexa_live_session_id', livePublic.sessionId);
   localStorage.setItem('nexa_live_role', livePublic.role || 'participant');
+  localStorage.setItem('nexa_live_role_level', livePublic.roleLevel || 'management');
   localStorage.setItem('nexa_live_participant_id', livePublic.participantId || '');
   localStorage.setItem('nexa_live_name', livePublic.name || '');
   localStorage.setItem('nexa_live_team', livePublic.team || 'Unassigned');
 }
 function clearLivePublicStorage(){
-  ['nexa_live_session_id','nexa_live_role','nexa_live_participant_id','nexa_live_name','nexa_live_team'].forEach(k=>localStorage.removeItem(k));
+  ['nexa_live_session_id','nexa_live_role','nexa_live_role_level','nexa_live_participant_id','nexa_live_name','nexa_live_team'].forEach(k=>localStorage.removeItem(k));
 }
 
 function showLiveEndedPopup(sess){
@@ -5461,7 +5483,14 @@ function renderLivePublicSession(sess){
   livePublic.session=sess;
   if(sess.status==='ended') showLiveEndedPopup(sess);
   document.getElementById('public-live-title').textContent=sess.title||'Live Exercise';
-  document.getElementById('public-live-status').textContent=(sess.status||'waiting').toUpperCase()+` · STEP ${(sess.currentStep||0)+1}`+(sess.locked?' · LOCKED':'');
+  const activeLevel=getActiveRoleLevel(sess);
+  document.getElementById('public-live-status').textContent=(sess.status||'waiting').toUpperCase()+` · ${activeLevel.toUpperCase()} · STEP ${(sess.currentStep||0)+1}`+(sess.locked?' · LOCKED':'');
+  const roleWrap=document.getElementById('public-role-level-wrap');
+  const roleSelect=document.getElementById('public-role-level');
+  if(roleWrap && roleSelect){
+    if(sess.level && sess.level !== 'mixed'){ livePublic.roleLevel=normaliseRoleLevel(sess.level); roleSelect.value=livePublic.roleLevel; roleWrap.style.display='none'; }
+    else { roleWrap.style.display = livePublic.joined ? 'none' : 'block'; roleSelect.value=livePublic.roleLevel||'management'; }
+  }
   const d=getDecisionFromLive(sess);
   document.getElementById('public-question').textContent=d?.question||'Waiting for facilitator…';
   document.getElementById('public-live-feed').innerHTML=d?`<div class="feed-block ${d.alertType||'in'}"><div class="feed-label"><span style="color:var(--cyan)">${escapeHTML(d.alertLabel||'LIVE EVENT')}</span><span style="font-family:var(--mono);font-size:9px;color:var(--muted)">LIVE</span></div><div class="feed-text">${d.alertText||''}</div></div>${buildEvidenceHTML(d.evidence)}${d.hasEmail?`<div class="fake-email"><div class="email-bar"><span>⚠ Intercepted Email — Evidence</span></div><div class="email-fields"><div class="ef"><span class="ef-k">From:</span><span style="color:var(--red)">${escapeHTML(d.emailFrom||'')}</span></div><div class="ef"><span class="ef-k">To:</span><span>${escapeHTML(d.emailTo||'')}</span></div><div class="ef-subj">${escapeHTML(d.emailSubject||'')}</div></div><div class="email-body">${escapeHTML(d.emailBody||'').replace(/\n/g,'<br>')}</div></div>`:''}`:'<div class="feed-block in"><div class="feed-label"><span style="color:var(--cyan)">WAITING</span></div><div class="feed-text">The facilitator has not started the exercise yet.</div></div>';
@@ -5502,7 +5531,10 @@ function selectLivePublicOption(i,btn){
 async function joinLivePublic(){
   livePublic.name=document.getElementById('public-name').value.trim()||'Participant';
   livePublic.team=document.getElementById('public-team')?.value.trim()||livePublic.team||'Unassigned';
-  const res=await fetch(`/api/live-sessions/${livePublic.sessionId}/join`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:livePublic.name,team:livePublic.team,role:livePublic.role,participantId:livePublic.participantId})});
+  const roleSel=document.getElementById('public-role-level');
+  if(roleSel) livePublic.roleLevel=normaliseRoleLevel(roleSel.value);
+  if(livePublic.session?.level && livePublic.session.level !== 'mixed') livePublic.roleLevel=normaliseRoleLevel(livePublic.session.level);
+  const res=await fetch(`/api/live-sessions/${livePublic.sessionId}/join`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:livePublic.name,team:livePublic.team,role:livePublic.role,roleLevel:livePublic.roleLevel,participantId:livePublic.participantId})});
   if(!res.ok){
     let err='Could not join session.';
     try{const j=await res.json(); if(j.error) err=j.error;}catch(e){}
@@ -5512,6 +5544,7 @@ async function joinLivePublic(){
   livePublic.participantId=data.participant.id;
   livePublic.name=data.participant.name || livePublic.name;
   livePublic.team=data.participant.team || livePublic.team;
+  livePublic.roleLevel=normaliseRoleLevel(data.participant.roleLevel || livePublic.roleLevel);
   livePublic.joined=true;
   persistLivePublic();
   document.getElementById('public-join-box').style.display='none';
@@ -5522,7 +5555,7 @@ async function joinLivePublic(){
 async function submitLiveAnswer(){
   const msg=document.getElementById('public-submit-msg');
   msg.textContent='Submitting…';
-  const res=await fetch(`/api/live-sessions/${livePublic.sessionId}/answers`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({participantId:livePublic.participantId,participantName:livePublic.name,team:livePublic.team,department:livePublic.team,optionIndex:livePublic.selectedOption,freeText:document.getElementById('public-free-text').value,responseTimeSec:Math.round((Date.now()-(livePublic.decisionStartedAt||Date.now()))/1000)})});
+  const res=await fetch(`/api/live-sessions/${livePublic.sessionId}/answers`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({participantId:livePublic.participantId,participantName:livePublic.name,team:livePublic.team,department:livePublic.team,roleLevel:livePublic.roleLevel,optionIndex:livePublic.selectedOption,freeText:document.getElementById('public-free-text').value,responseTimeSec:Math.round((Date.now()-(livePublic.decisionStartedAt||Date.now()))/1000)})});
   if(!res.ok){
     try{const j=await res.json(); msg.textContent=j.error||'Submit failed.'; if(j.session) renderLivePublicSession(j.session);}catch(e){msg.textContent='Submit failed.';}
     return;
@@ -5562,6 +5595,7 @@ async function bootLivePublicIfNeeded(){
   const role=(qs.get('role')||localStorage.getItem('nexa_live_role')||'participant').toLowerCase();
   if(!sid) return false;
   livePublic.sessionId=sid; livePublic.role=role==='observer'?'observer':'participant';
+  livePublic.roleLevel=normaliseRoleLevel(qs.get('level')||localStorage.getItem('nexa_live_role_level')||'management');
   livePublic.participantId=localStorage.getItem('nexa_live_participant_id')||null;
   livePublic.name=localStorage.getItem('nexa_live_name')||'';
   livePublic.team=localStorage.getItem('nexa_live_team')||'Unassigned';
@@ -5576,7 +5610,7 @@ async function bootLivePublicIfNeeded(){
 
   if(livePublic.participantId && livePublic.name){
     try{
-      const res=await fetch(`/api/live-sessions/${sid}/join`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:livePublic.name,team:livePublic.team,role:livePublic.role,participantId:livePublic.participantId})});
+      const res=await fetch(`/api/live-sessions/${sid}/join`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:livePublic.name,team:livePublic.team,role:livePublic.role,roleLevel:livePublic.roleLevel,participantId:livePublic.participantId})});
       if(res.ok){
         const data=await res.json();
         livePublic.participantId=data.participant.id;
