@@ -187,6 +187,17 @@ for (const key of REQUIRED_ENV) {
 const app = express();
 
 // ─────────────────────────────────────────────
+// PERFORMANCE — optional gzip/brotli compression
+// ─────────────────────────────────────────────
+try {
+  const compression = require('compression');
+  app.use(compression());
+} catch (_) {
+  // compression package not installed; app continues normally.
+}
+
+
+// ─────────────────────────────────────────────
 // A05 — SECURITY HEADERS (Helmet)
 // ─────────────────────────────────────────────
 app.use(helmet({
@@ -218,6 +229,17 @@ app.use(express.json({ limit: '4mb' })); // A03 — cap request body size (4mb a
 const PUBLIC_DIR = path.join(__dirname, 'public');
 if (!fs.existsSync(PUBLIC_DIR)) fs.mkdirSync(PUBLIC_DIR, { recursive: true });
 app.use(express.static(PUBLIC_DIR));
+
+// ─────────────────────────────────────────────
+// PERFORMANCE — lightweight cache headers for static assets
+// ─────────────────────────────────────────────
+app.use((req, res, next) => {
+  if (/\.(?:js|css|png|jpg|jpeg|gif|svg|webp|woff2?)$/i.test(req.path)) {
+    res.setHeader('Cache-Control', 'public, max-age=86400');
+  }
+  next();
+});
+
 
 // ─────────────────────────────────────────────
 // A09 — STRUCTURED ACCESS LOGGING
@@ -681,8 +703,6 @@ Use EXACTLY these 11 section headings — each must be wrapped in <strong>Title<
     res.status(500).json({ error: clientMsg });
   }
 });
-
-
 
 // ─────────────────────────────────────────────
 // ENTERPRISE MODE — normalized scoring + unique insight helpers
@@ -1662,8 +1682,6 @@ function applyLiveEffect(session, option){
   session.state.reputation = Math.max(0, Math.min(100, Number(session.state.reputation ?? 100) + repDelta));
   session.state.lastImpact = { money: moneyDelta, reputation: repDelta };
 }
-
-
 
 function liveManagementThemes(rows, good){
   rows = Array.isArray(rows) ? rows : [];
