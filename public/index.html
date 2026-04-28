@@ -1275,6 +1275,22 @@ body.theme-light #screen-login > div > div:nth-child(2),body.theme-light .card,b
   .report-screen-v2 .report-shell{padding-top:94px!important;}
 }
 
+
+/* Premium two-tab report layout */
+.premium-report-switch{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:18px 0 22px;}
+.premium-report-switch button{position:relative;text-align:left;border:1px solid rgba(0,229,255,.14);background:linear-gradient(180deg,rgba(10,20,37,.88),rgba(5,12,24,.88));color:var(--text);border-radius:16px;padding:16px 18px 15px 54px;font-family:var(--head);font-weight:800;font-size:14px;cursor:pointer;box-shadow:0 12px 34px rgba(0,0,0,.18);transition:all .2s ease;}
+.premium-report-switch button span{position:absolute;left:16px;top:16px;width:27px;height:27px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:10px;color:var(--cyan);background:rgba(0,229,255,.08);border:1px solid rgba(0,229,255,.22);}
+.premium-report-switch button small{display:block;margin-top:4px;font-family:var(--body);font-size:11px;font-weight:500;color:var(--muted);line-height:1.4;}
+.premium-report-switch button:hover{border-color:rgba(0,229,255,.42);transform:translateY(-1px);}
+.premium-report-switch button.active{border-color:var(--cyan);background:linear-gradient(180deg,rgba(0,229,255,.12),rgba(10,20,37,.9));box-shadow:0 0 0 1px rgba(0,229,255,.1),0 18px 46px rgba(0,229,255,.07);color:var(--white);}
+.report-view-hidden{display:none!important;}
+.report-view-intro{background:linear-gradient(135deg,rgba(0,229,255,.09),rgba(41,121,255,.05));border:1px solid rgba(0,229,255,.18);border-radius:18px;padding:18px 20px;margin-bottom:16px;}
+.report-view-intro .eyebrow{font-family:var(--mono);font-size:10px;color:var(--cyan);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;}
+.report-view-intro h2{font-family:var(--head);font-size:20px;color:var(--white);margin:0 0 6px;}
+.report-view-intro p{margin:0;color:var(--text);font-size:13px;line-height:1.65;}
+.report-card{box-shadow:0 18px 50px rgba(0,0,0,.16);}
+@media(max-width:760px){.premium-report-switch{grid-template-columns:1fr}.premium-report-switch button{padding-left:50px}}
+
 </style>
 
 <style id="premium-hybrid-report-css">
@@ -1960,24 +1976,28 @@ body.theme-light #screen-login > div > div:nth-child(2),body.theme-light .card,b
       </div>
     </div>
 
-    <div class="report-tabs-v2">
-      <button class="active" onclick="document.getElementById('report-exec').scrollIntoView({behavior:'smooth'})">Management Executive Summary</button>
-      <button onclick="document.getElementById('report-performance').scrollIntoView({behavior:'smooth'})">Readiness Analysis</button>
-      <button onclick="document.getElementById('report-timeline').scrollIntoView({behavior:'smooth'})">Timeline & Events</button>
-      <button onclick="document.getElementById('report-decisions').scrollIntoView({behavior:'smooth'})">Decision Review</button>
-      <button onclick="document.getElementById('report-mitre').scrollIntoView({behavior:'smooth'})">MITRE ATT&CK</button>
-      <button onclick="document.getElementById('report-recommendations').scrollIntoView({behavior:'smooth'})">Recommendations</button>
+    <div class="premium-report-switch" role="tablist" aria-label="Report view switcher">
+      <button id="report-tab-management" class="active" role="tab" aria-selected="true" onclick="switchReportView('management')">
+        <span>01</span> Management View
+        <small>Executive narrative, business impact, and next steps</small>
+      </button>
+      <button id="report-tab-technical" role="tab" aria-selected="false" onclick="switchReportView('technical')">
+        <span>02</span> Technical Detail
+        <small>Timeline, decisions, participants, and framework mapping</small>
+      </button>
     </div>
 
     <div id="report-exec" class="report-grid-v2">
       <div class="report-main-v2">
-        <div id="rpt-client-header" class="report-client-header-v2"></div>
+        <div class="report-view-intro" data-report-view="management"><div class="eyebrow">Management View</div><h2>Executive decision report</h2><p>Designed for leadership review: outcome, business impact, high-priority risks, and clear next steps without operational noise.</p></div>
+        <div class="report-view-intro report-view-hidden" data-report-view="technical"><div class="eyebrow">Technical Detail</div><h2>Evidence and drill-down analysis</h2><p>Designed for security, IT, and facilitators: readiness trend, timeline replay, participant breakdown, decision heatmap, and MITRE/framework alignment.</p></div>
+        <div id="rpt-client-header" class="report-client-header-v2" data-report-view="management"></div>
 
-        <div id="consultant-executive-story"></div>
+        <div id="consultant-executive-story" data-report-view="management"></div>
 
-        <div class="report-kpi-grid" id="rpt-metrics"></div>
+        <div class="report-kpi-grid" id="rpt-metrics" data-report-view="management"></div>
 
-        <div class="report-card report-card-large" id="report-performance">
+        <div class="report-card report-card-large" id="report-performance" data-report-view="technical">
           <div class="report-card-head"><h3>Management Readiness Trend</h3><span>Board-level readiness over time</span></div>
           <div class="readiness-trend-viz" id="readiness-trend-viz">
             <p class="trend-intro">Tracks management decision quality over time during the exercise. Each point shows the running readiness average after a submitted decision.</p>
@@ -1993,7 +2013,7 @@ body.theme-light #screen-login > div > div:nth-child(2),body.theme-light .card,b
           </div>
         </div>
 
-        <div class="report-two-col">
+        <div class="report-two-col" data-report-view="technical">
           <div class="report-card">
             <div class="report-card-head"><h3>Readiness by Function</h3><span>Skill domains</span></div>
             <div id="rpt-skill-rows" class="report-skill-bars"></div>
@@ -2011,12 +2031,12 @@ body.theme-light #screen-login > div > div:nth-child(2),body.theme-light .card,b
           </div>
         </div>
 
-        <div class="report-card premium-business-impact-card">
+        <div class="report-card premium-business-impact-card" data-report-view="management">
           <div class="report-card-head"><h3>Business Impact</h3><span>Executive risk lens</span></div>
           <div class="business-impact-grid" id="business-impact-grid"></div>
         </div>
 
-        <div class="report-card premium-decision-summary-card">
+        <div class="report-card premium-decision-summary-card" data-report-view="management">
           <div class="report-card-head"><h3>Decision Summary (Aggregated)</h3><span>Evidence without noise</span></div>
           <div class="results-table-wrap">
             <table class="results-table report-table-v2 premium-summary-table">
@@ -2026,12 +2046,12 @@ body.theme-light #screen-login > div > div:nth-child(2),body.theme-light .card,b
           </div>
         </div>
 
-        <div class="report-card">
+        <div class="report-card" data-report-view="management">
           <div class="report-card-head"><h3>Key Insights</h3><span>Observed issues</span></div>
           <div id="rpt-findings" class="report-insight-row"></div>
         </div>
 
-        <div class="report-card" id="report-performance-detail">
+        <div class="report-card" id="report-performance-detail" data-report-view="technical">
           <div class="report-card-head"><h3>Individual Readiness</h3><span>Participant-level rating</span></div>
           <div class="results-table-wrap">
             <table class="results-table report-table-v2">
@@ -2041,7 +2061,7 @@ body.theme-light #screen-login > div > div:nth-child(2),body.theme-light .card,b
           </div>
         </div>
 
-        <div class="report-card">
+        <div class="report-card" data-report-view="technical">
           <div class="report-card-head"><h3>Team Readiness</h3><span>Department-level rating</span></div>
           <div class="results-table-wrap">
             <table class="results-table report-table-v2">
@@ -2051,44 +2071,44 @@ body.theme-light #screen-login > div > div:nth-child(2),body.theme-light .card,b
           </div>
         </div>
 
-        <div class="report-card" id="report-timeline">
+        <div class="report-card" id="report-timeline" data-report-view="technical">
           <div class="report-card-head"><h3>Timeline & Events</h3><span id="timeline-timezone-label">All times shown in local time</span></div>
           <div class="evidence-layout"><div><div class="exec-story-pill">AGGREGATED EVIDENCE · EXECUTIVE VIEW</div><div id="aggregate-evidence" class="aggregate-evidence-list"></div></div><div><div class="exec-story-pill">PARTICIPANT DRILL-DOWN · FACILITATOR VIEW</div><div id="participant-drill-list" class="participant-drill-list"></div><div id="participant-history-panel" class="participant-history-panel"><span style="color:var(--muted);font-size:12px;">Select a participant to view history.</span></div></div></div><div class="timeline-note" id="timeline-note"></div>
         </div>
 
-        <div class="report-card" id="report-decisions">
+        <div class="report-card" id="report-decisions" data-report-view="technical">
           <div class="report-card-head"><h3>Decision Heatmap</h3><span>Strong / partial / weak distribution</span></div>
           <div id="decision-heatmap"></div>
         </div>
 
-        <div class="report-card">
+        <div class="report-card" data-report-view="technical">
           <div class="report-card-head"><h3>Decision Replay</h3><span>Answers, expected actions, and AI feedback</span></div>
           <div id="decision-replay"></div>
         </div>
 
-        <div class="report-card" id="report-mitre">
+        <div class="report-card" id="report-mitre" data-report-view="technical">
           <div class="report-card-head"><h3>MITRE ATT&CK / Framework Alignment</h3><span>Mapped techniques and standards</span></div>
           <div class="fw-tags" id="rpt-fw"></div>
         </div>
       </div>
 
       <aside class="report-side-v2">
-        <div class="report-card premium-benchmark-card">
+        <div class="report-card premium-benchmark-card" data-report-view="technical">
           <div class="report-card-head"><h3>Performance vs Benchmark</h3><span>How you compare</span></div>
           <div id="premium-benchmark"></div>
         </div>
 
-        <div class="report-card premium-participants-card">
+        <div class="report-card premium-participants-card" data-report-view="technical">
           <div class="report-card-head"><h3>Participants Overview</h3><span>Role-level view</span></div>
           <div id="premium-participants"></div>
         </div>
 
-        <div class="report-card premium-risk-card">
+        <div class="report-card premium-risk-card" data-report-view="technical">
           <div class="report-card-head"><h3>Top Risk Contributors</h3><span>Decision patterns</span></div>
           <div id="premium-risk-contributors"></div>
         </div>
 
-        <div class="report-card ai-summary-card">
+        <div class="report-card ai-summary-card" data-report-view="management">
           <div class="report-card-head"><h3>Management Executive Summary</h3><button class="btn btn-ghost btn-sm" onclick="exportPDF()">Download PDF</button></div>
           <div id="rpt-conclusion-title" class="ai-report-title-v2">
             <div class="ai-icon">🤖</div>
@@ -2098,17 +2118,17 @@ body.theme-light #screen-login > div > div:nth-child(2),body.theme-light .card,b
           <div id="rpt-conclusion" class="ai-report-body-v2"></div>
         </div>
 
-        <div class="report-card readiness-card">
+        <div class="report-card readiness-card" data-report-view="management">
           <div class="report-card-head"><h3>Overall Readiness</h3><span>Current posture</span></div>
           <div class="readiness-score-side"><div class="mini-ring"><span id="rpt-side-score">0%</span></div><div><strong id="rpt-side-label">Moderate</strong><p>Overall readiness based on scenario outcome and decision quality.</p></div></div>
         </div>
 
-        <div class="report-card two-list-card">
+        <div class="report-card two-list-card" data-report-view="management">
           <div class="side-list success"><h4>Management Strengths</h4><ul id="rpt-strengths"><li>Strong containment decisions</li><li>Good incident awareness</li><li>Evidence preserved</li></ul></div>
           <div class="side-list danger"><h4>Priority Improvement Areas</h4><ul id="rpt-improvements"><li>Escalation timing</li><li>Legal notification workflow</li><li>Cross-team coordination</li></ul></div>
         </div>
 
-        <div class="report-card" id="report-recommendations">
+        <div class="report-card" id="report-recommendations" data-report-view="management">
           <div class="report-card-head"><h3>Next Steps</h3><span>Priority actions</span></div>
           <ol class="next-steps-v2">
             <li>Review weak decisions and update escalation procedure.</li>
@@ -2161,6 +2181,24 @@ body.theme-light #screen-login > div > div:nth-child(2),body.theme-light .card,b
 </div>
 
 <script>
+
+function switchReportView(view){
+  const isTech = view === 'technical';
+  document.querySelectorAll('[data-report-view]').forEach(el=>{
+    const modes=(el.getAttribute('data-report-view')||'').split(/\s+/);
+    el.classList.toggle('report-view-hidden', !modes.includes(view));
+  });
+  const managementTab=document.getElementById('report-tab-management');
+  const technicalTab=document.getElementById('report-tab-technical');
+  if(managementTab){managementTab.classList.toggle('active',!isTech);managementTab.setAttribute('aria-selected',String(!isTech));}
+  if(technicalTab){technicalTab.classList.toggle('active',isTech);technicalTab.setAttribute('aria-selected',String(isTech));}
+  const title=document.querySelector('.report-title-row h1');
+  if(title) title.textContent=isTech?'Technical Detail Report':'Management Executive Summary';
+  const shell=document.querySelector('#screen-report .report-shell');
+  if(shell) shell.scrollIntoView({behavior:'smooth',block:'start'});
+}
+document.addEventListener('DOMContentLoaded',()=>switchReportView('management'));
+
 // ══════════════════════════════════════════════════════════
 // CONSTANTS
 // ══════════════════════════════════════════════════════════
