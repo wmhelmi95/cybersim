@@ -642,8 +642,6 @@ IMPORTANT FREE-TEXT AND PARTICIPANT ANALYSIS RULES:
 - Mention recurring weaknesses by participant and team when the data contains participantName or team.
 - Identify who needs improvement and in which skill domain when enough data is available.
 
-Never mention AI, OpenAI, model-generated, AI verified, or automated generation in any client-facing text. Use the terms Consultant Assessment, Executive Assessment, Decision Quality, Assessment Feedback, Advisory Recommendations, and Simulation Findings instead.
-
 Write the full executive debrief using ONLY these HTML tags: <strong>, <br>, <ul>, <li>. No markdown. No other tags. Never output empty <li> items. Never output standalone bullet symbols. Every bullet must contain a complete sentence. The report must be insight-first and benchmark-style: headline, readiness judgement, business impact, and risk implication first, then evidence and recommendations. Use aggregate evidence for executives; avoid dumping every participant action. Use concise consultant language similar to an enterprise cyber resilience platform.
 
 Use EXACTLY these 11 section headings — each must be wrapped in <strong>Title</strong><br> on its own line:
@@ -703,67 +701,6 @@ Use EXACTLY these 11 section headings — each must be wrapped in <strong>Title<
                     : err.status === 404 ? 'OpenAI model not found — check model name'
                     : 'Failed to generate report';
     res.status(500).json({ error: clientMsg });
-  }
-});
-
-
-// ─────────────────────────────────────────────
-// STRUCTURED EXECUTIVE TEMPLATE REPORT — optional endpoint
-// Returns fixed report sections for the Summary / Simulation Details template.
-// ─────────────────────────────────────────────
-app.post('/api/generate-structured-report', requireAuth, aiLimiter, async (req, res) => {
-  try {
-    const { scenarioTitle, clientName, scorePct, decisionHistory = [], skillScores = {}, level = 'management' } = req.body;
-    const prompt = `
-You are writing a client-facing cyber crisis simulation report. Never mention AI or automated generation.
-
-Return ONLY valid JSON with this exact shape:
-{
-  "executiveAssessment": "2-3 concise sentences",
-  "keyFindings": {
-    "strength": "one sentence",
-    "gap": "one sentence",
-    "risk": "one sentence",
-    "opportunity": "one sentence"
-  },
-  "businessImpact": {
-    "regulatory": {"level": "Low|Medium|High", "summary": "one sentence"},
-    "operational": {"level": "Low|Medium|High", "summary": "one sentence"},
-    "reputational": {"level": "Low|Medium|High", "summary": "one sentence"}
-  },
-  "recommendations": [
-    {"timeframe": "Immediate", "action": "one sentence"},
-    {"timeframe": "Short Term", "action": "one sentence"},
-    {"timeframe": "Next Quarter", "action": "one sentence"}
-  ]
-}
-
-Context:
-Client: ${sanitiseString(clientName, 160)}
-Scenario: ${sanitiseString(scenarioTitle, 200)}
-Level: ${['management','working'].includes(level) ? level : 'management'}
-Score: ${sanitiseNumber(scorePct)}%
-Skill scores: ${JSON.stringify(skillScores).slice(0, 3000)}
-Decision history: ${JSON.stringify(decisionHistory).slice(0, 8000)}
-`.trim();
-
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
-      messages: [
-        { role: 'system', content: 'Return strict JSON only. No markdown.' },
-        { role: 'user', content: prompt }
-      ],
-      temperature: 0.2,
-      max_tokens: 900
-    });
-
-    const raw = completion.choices[0].message.content || '{}';
-    let parsed;
-    try { parsed = JSON.parse(raw); } catch (_) { parsed = { executiveAssessment: raw }; }
-    res.json(parsed);
-  } catch (err) {
-    console.error('Structured report error:', err.message);
-    res.status(500).json({ error: 'Failed to generate structured report' });
   }
 });
 
