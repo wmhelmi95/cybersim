@@ -541,8 +541,6 @@ body.public-live-mode #screen-live-public{display:block!important;}
 @media(max-width:1180px){.dash-kpi-grid{grid-template-columns:repeat(3,1fr)}.dash-action-band{grid-template-columns:repeat(3,1fr)}.dash-action-copy{grid-column:1/-1}.dash-bottom-grid{grid-template-columns:1fr}.dash-health-panel{order:-1}}
 @media(max-width:820px){.dash-hero{align-items:flex-start;flex-direction:column}.dash-hero-actions{justify-content:flex-start}.dash-kpi-grid,.dash-main-grid,.dash-action-band{grid-template-columns:1fr}.dash-shell{width:calc(100% - 28px)}}
 
-
-
 /* =========================================================
    GLOBAL UI SYSTEM REFRESH — applies dashboard visual language
    across all modules without changing functionality.
@@ -809,8 +807,6 @@ input[type=text],input[type=email],input[type=password],input[type=number],texta
 @media(max-width:600px){body{font-size:13px;}#screen-login{align-items:center!important;justify-content:center!important;padding-left:18px!important;padding-right:18px!important;}#screen-login>div{width:100%!important;max-width:430px!important;}#screen-login>div>div:first-child{margin-bottom:18px!important;}#screen-login>div>div:nth-child(2){padding:24px 22px!important;}#screen-login input{height:46px!important;min-height:46px!important;}#screen-login #login-btn{height:52px!important;}.page-wrap,.report-wrap,.briefing-wrap{width:calc(100% - 24px)!important;padding-top:86px!important;padding-bottom:40px!important;}.page-title{font-size:24px!important;line-height:1.15!important;}.page-sub{font-size:12px!important;}.card,.b-section,.stat-card,.client-card,.rank-card,.radar-card{padding:16px!important;border-radius:14px!important;}.stats-row{grid-template-columns:1fr!important;}.client-grid{grid-template-columns:1fr!important;}.btn{min-height:40px;}.nav-logo-wordmark span{font-size:15px!important;}.admin-badge{display:none;}.nav-right{gap:6px;}.modal{padding:20px!important;border-radius:16px!important;}.modal-footer{flex-direction:column-reverse!important;}.modal-footer .btn{width:100%;}.option-row{gap:6px;}.correct-toggle,.opt-del-btn{width:30px;height:30px;}.sim-feed,.sim-right{padding:14px!important;}.feed-block{padding:16px!important;}.feed-text{font-size:13px!important;}.opt-btn{font-size:12px!important;padding:12px!important;}.scenario-table,.results-table{min-width:580px;}}
 @media(max-height:720px) and (max-width:700px){#screen-login{align-items:flex-start!important;padding-top:24px!important;}#screen-login>div>div:first-child{margin-bottom:14px!important;}#screen-login>div>div:first-child>div:first-child{width:50px!important;height:50px!important;margin-bottom:8px!important;}#screen-login>div>div:first-child>div:nth-child(2) span{font-size:24px!important;}#screen-login>div>div:nth-child(2){padding:20px!important;}}
 @media(min-width:1200px){#screen-login>div{max-width:460px!important;}#screen-login>div>div:nth-child(2){padding:36px!important;}}
-
-
 
 /* Executive Report UI v2 */
 .report-screen-v2{background:var(--bg);}
@@ -1520,8 +1516,6 @@ body.theme-light #screen-login > div > div:nth-child(2),body.theme-light .card,b
     </div>
   </div>
 </div>
-
-
 
 <!-- LIVE EXERCISE ADMIN -->
 <div id="screen-live" class="screen">
@@ -4688,7 +4682,225 @@ function exportPDF(){
 .ai-report-body-v2{font-size:12px!important;line-height:1.65!important;}
 @media(max-width:1150px){.report-grid-v2{grid-template-columns:1fr!important}.exec-story-grid,.exec-mini-list,.business-impact-grid{grid-template-columns:1fr!important}}
 </style>
-</head><body><section class="cover"><div class="brand">NexaCyberSim Confidential Report</div><div class="title">Cyber Crisis Simulation Report</div><div class="sub">${client?esc(client.name)+' · ':''}${esc(s.title)} · ${esc(String(simState.level||'').toUpperCase())} Level<br>${date}</div><div class="grade-row"><div class="badge">${grade}</div><div class="grade-text"><strong>${pct}% Overall Readiness — ${gradeLabel}</strong><span>Team readiness view · ${correct}/${decs.length} decisions passed · ${execMetrics.participantCount||1} participant(s) · ${execMetrics.submissions} submissions</span></div></div></section><main class="content"><div class="metrics"><div class="metric"><div class="mv">${pct}%</div><div class="ml">Team Readiness</div></div><div class="metric"><div class="mv">${grade}</div><div class="ml">Grade</div></div><div class="metric"><div class="mv">${correct}/${decs.length}</div><div class="ml">Decisions Passed</div></div><div class="metric"><div class="mv">${execMetrics.participantCount||1}</div><div class="ml">Participants</div></div></div>${sectionHtml}<section class="section"><div class="section-kicker">APPENDIX A</div><h2>Skill Readiness Matrix</h2><table><thead><tr><th>Capability</th><th>Readiness</th><th class="num">Score</th><th>Status</th></tr></thead><tbody>${skillRows}</tbody></table></section><section class="section"><div class="section-kicker">APPENDIX B</div><h2>Decision Breakdown</h2><table><thead><tr><th class="num">#</th><th>Decision / Response</th><th class="num">Score</th><th>Assessment</th><th>Finding</th></tr></thead><tbody>${decisionRows}</tbody></table></section><section class="section"><div class="section-kicker">APPENDIX C</div><h2>Framework Alignment</h2><div>${(FW||[]).map(f=>`<span class="chip">${esc(f)}</span>`).join('')}</div></section><div class="footer">Generated by NexaCyberSim · Internal training report only · Not a penetration test or formal audit.</div></main><script>window.onload=()=>setTimeout(()=>window.print(),300)<\/script></body></html>`;
+</head><body><section class="cover"><div class="brand">NexaCyberSim Confidential Report</div><div class="title">Cyber Crisis Simulation Report</div><div class="sub">${client?esc(client.name)+' · ':''}${esc(s.title)} · ${esc(String(simState.level||'').toUpperCase())} Level<br>${date}</div><div class="grade-row"><div class="badge">${grade}</div><div class="grade-text"><strong>${pct}% Overall Readiness — ${gradeLabel}</strong><span>Team readiness view · ${correct}/${decs.length} decisions passed · ${execMetrics.participantCount||1} participant(s) · ${execMetrics.submissions} submissions</span></div></div></section><main class="content"><div class="metrics"><div class="metric"><div class="mv">${pct}%</div><div class="ml">Team Readiness</div></div><div class="metric"><div class="mv">${grade}</div><div class="ml">Grade</div></div><div class="metric"><div class="mv">${correct}/${decs.length}</div><div class="ml">Decisions Passed</div></div><div class="metric"><div class="mv">${execMetrics.participantCount||1}</div><div class="ml">Participants</div></div></div>${sectionHtml}<section class="section"><div class="section-kicker">APPENDIX A</div><h2>Skill Readiness Matrix</h2><table><thead><tr><th>Capability</th><th>Readiness</th><th class="num">Score</th><th>Status</th></tr></thead><tbody>${skillRows}</tbody></table></section><section class="section"><div class="section-kicker">APPENDIX B</div><h2>Decision Breakdown</h2><table><thead><tr><th class="num">#</th><th>Decision / Response</th><th class="num">Score</th><th>Assessment</th><th>Finding</th></tr></thead><tbody>${decisionRows}</tbody></table></section><section class="section"><div class="section-kicker">APPENDIX C</div><h2>Framework Alignment</h2><div>${(FW||[]).map(f=>`<span class="chip">${esc(f)}</span>`).join('')}</div></section><div class="footer">Generated by NexaCyberSim · Internal training report only · Not a penetration test or formal audit.</div></main><script>window.onload=()=>setTimeout(()=>window.print(),300)<\/script>
+<script>
+/* === NexaCyberSim Template Report v1 === */
+(function(){
+  function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+  function byId(id){return document.getElementById(id);}
+  function qsa(sel,root){return Array.from((root||document).querySelectorAll(sel));}
+  function scoreVal(r){if(typeof scoreOfResult==='function') return scoreOfResult(r); if(typeof r?.aiScore==='number') return Math.round(r.aiScore); if(typeof r?.score==='number') return Math.round(r.score); return r?.correct?100:0;}
+  function avg(rows){const vals=(rows||[]).map(scoreVal).filter(Number.isFinite);return vals.length?Math.round(vals.reduce((a,b)=>a+b,0)/vals.length):0;}
+  function band(score){return score>=80?{label:'Strong',cls:'strong',color:'var(--green)'}:score>=60?{label:'Good',cls:'good',color:'var(--blue)'}:score>=40?{label:'Needs Improvement',cls:'needs',color:'var(--amber)'}:{label:'Critical',cls:'critical',color:'var(--red)'};}
+  function getDecisionList(){const s=window.simState?.scenario; const lvl=window.simState?.level; return (s?.decisions&&s.decisions[lvl])||[];}
+  function getPct(){
+    const decs=getDecisionList(); const results=window.simState?.results||[];
+    if(typeof calculateExecutiveMetrics==='function'){try{return calculateExecutiveMetrics(results,decs.length).pct||0;}catch(e){}}
+    return avg(results);
+  }
+  function groupByDecision(results){
+    const out={};
+    (results||[]).forEach((r,i)=>{const n=Number(r.decisionIndex??r.step??i)+1;(out[n]||(out[n]=[])).push(r);});
+    return out;
+  }
+  function groupByParticipant(results){
+    const out={};
+    (results||[]).forEach((r)=>{const n=r.participantName||r.name||'Admin Run';(out[n]||(out[n]=[])).push(r);});
+    return out;
+  }
+  function skillScoreMap(results, skills){
+    const map={};
+    (skills||[]).forEach(k=>map[k]=null);
+    const rowsBySkill={};
+    (results||[]).forEach((r)=>{const k=r.skillTested||r.skill||r.domain;if(k)(rowsBySkill[k]||(rowsBySkill[k]=[])).push(r);});
+    Object.keys(rowsBySkill).forEach(k=>map[k]=avg(rowsBySkill[k]));
+    if(window.simState?.normalisedSkillScores){Object.assign(map, window.simState.normalisedSkillScores);}
+    return map;
+  }
+  function getExecutiveText(){
+    const old=byId('rpt-conclusion');
+    const text=(old?.innerText||'').trim();
+    if(text){
+      const first=text.split(/\n+/).filter(Boolean).find(x=>!/^SECTION|Executive Summary$/i.test(x.trim()));
+      if(first) return first.slice(0,420);
+    }
+    const pct=getPct(), b=band(pct), s=window.simState?.scenario;
+    return `The exercise assessed decision quality during the ${s?.title||'cyber crisis'} scenario. Overall readiness is ${b.label.toLowerCase()} at ${pct}%, with priority attention required for gaps shown in the decision and skill-domain evidence.`;
+  }
+  function buildFindings(results, skills){
+    const pct=getPct(), skillsMap=skillScoreMap(results, skills);
+    const weakSkill=Object.entries(skillsMap).filter(([_,v])=>v!==null).sort((a,b)=>a[1]-b[1])[0];
+    const strongSkill=Object.entries(skillsMap).filter(([_,v])=>v!==null).sort((a,b)=>b[1]-a[1])[0];
+    const weakDecision=Object.entries(groupByDecision(results)).map(([n,rows])=>[n,avg(rows),rows[0]]).sort((a,b)=>a[1]-b[1])[0];
+    return [
+      {icon:'🛡️',title:'Strength',copy: strongSkill ? `${(SKILLS[strongSkill[0]]?.label||strongSkill[0])} showed the strongest performance at ${strongSkill[1]}%.` : 'Participants demonstrated effective containment awareness during the exercise.'},
+      {icon:'⚠️',title:'Gap',copy: weakSkill ? `${(SKILLS[weakSkill[0]]?.label||weakSkill[0])} requires attention, currently assessed at ${weakSkill[1]}%.` : 'Some response steps require clearer ownership and escalation criteria.'},
+      {icon:'🚨',title:'Risk',copy: weakDecision ? `Decision ${weakDecision[0]} created the highest risk exposure with a ${weakDecision[1]}% quality score.` : 'Unclear escalation may increase regulatory and reputational exposure.'},
+      {icon:'💡',title:'Opportunity',copy: 'Use targeted scenario repetition to improve decision consistency and communication under pressure.'}
+    ];
+  }
+  function buildImpact(results, skills){
+    const sm=skillScoreMap(results,skills), pct=getPct();
+    const comm=sm.communication, comp=sm.compliance, weak=(results||[]).filter(r=>scoreVal(r)<50).length;
+    return [
+      {label:'Regulatory Risk',level:(comp!==null&&comp<70)||weak?'High':'Medium',icon:'⚖️'},
+      {label:'Operational Impact',level:pct<70?'High':pct<85?'Medium':'Low',icon:'⚙️'},
+      {label:'Reputational Impact',level:(comm!==null&&comm<75)||weak?'High':'Medium',icon:'👥'}
+    ];
+  }
+  function trendPoints(results){
+    let total=0; return (results||[]).map((r,i)=>{total+=scoreVal(r); return Math.round(total/(i+1));});
+  }
+  function trendSVG(results){
+    const points=trendPoints(results); if(!points.length) return '<div class="muted">No trend data available.</div>';
+    const w=560,h=230,pad=34, step=(w-pad*2)/Math.max(1,points.length-1);
+    const xy=points.map((p,i)=>[pad+i*step, pad+(100-p)*(h-pad*2)/100]);
+    let d=`M ${xy[0][0]} ${xy[0][1]}`;
+    for(let i=1;i<xy.length;i++){
+      const prev=xy[i-1], cur=xy[i], mid=(prev[0]+cur[0])/2;
+      d+=` C ${mid} ${prev[1]}, ${mid} ${cur[1]}, ${cur[0]} ${cur[1]}`;
+    }
+    const area=d+` L ${xy[xy.length-1][0]} ${h-pad} L ${xy[0][0]} ${h-pad} Z`;
+    const labels=xy.map((p,i)=>`<text x="${p[0]}" y="${h-8}" fill="#8fb4d9" font-size="11" text-anchor="middle">D${i+1}</text>`).join('');
+    const dots=xy.map((p,i)=>`<circle cx="${p[0]}" cy="${p[1]}" r="5" fill="#e8f4ff" stroke="#2979ff" stroke-width="4"/><text x="${p[0]}" y="${p[1]-12}" fill="${band(points[i]).color.replace('var(--','').replace(')','')}" font-size="11" text-anchor="middle">${points[i]}%</text>`).join('');
+    return `<svg viewBox="0 0 ${w} ${h}" role="img" aria-label="readiness trend">
+      <defs><linearGradient id="ncxGrad" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="#2979ff" stop-opacity=".45"/><stop offset="100%" stop-color="#00e5ff" stop-opacity=".08"/></linearGradient></defs>
+      ${[0,25,50,75,100].map(v=>`<line x1="${pad}" x2="${w-pad}" y1="${pad+(100-v)*(h-pad*2)/100}" y2="${pad+(100-v)*(h-pad*2)/100}" stroke="rgba(184,212,240,.12)" stroke-dasharray="5 7"/><text x="2" y="${pad+(100-v)*(h-pad*2)/100+4}" fill="#8fb4d9" font-size="11">${v}%</text>`).join('')}
+      <path d="${area}" fill="url(#ncxGrad)"/><path d="${d}" fill="none" stroke="#2979ff" stroke-width="3"/>${dots}${labels}
+    </svg>`;
+  }
+  function renderSummary(container){
+    const s=window.simState?.scenario||{}, results=window.simState?.results||[], skills=s.skills||[], pct=getPct(), b=band(pct);
+    const sm=skillScoreMap(results,skills), findings=buildFindings(results,skills), impacts=buildImpact(results,skills);
+    const byD=groupByDecision(results), totalDecisions=results.length||1;
+    const strong=results.filter(r=>scoreVal(r)>=80).length, adequate=results.filter(r=>scoreVal(r)>=50&&scoreVal(r)<80).length, weak=results.filter(r=>scoreVal(r)<50).length;
+    container.innerHTML=`
+      <div class="ncx-template-grid">
+        <div class="ncx-template-card ncx-template-hero-score">
+          <h3>Overall Readiness</h3>
+          <div class="ncx-score-ring" style="--ncx-score-deg:${pct*3.6}deg"><span>${pct}%</span></div>
+          <div class="ncx-score-label">${b.label}</div>
+          <div class="ncx-score-copy">Your organisation shows ${b.label.toLowerCase()} readiness. Focus on the identified gaps to strengthen resilience.</div>
+        </div>
+        <div class="ncx-template-card ncx-trend-wrap">
+          <h3>Readiness Trend</h3>
+          <div class="ncx-trend-chart"><div>${trendSVG(results)}</div>
+            <div class="ncx-trend-legend">
+              <div><i class="ncx-legend-dot" style="background:var(--green)"></i>80–100%<br><span class="muted">Strong</span></div>
+              <div><i class="ncx-legend-dot" style="background:var(--blue)"></i>60–79%<br><span class="muted">Good</span></div>
+              <div><i class="ncx-legend-dot" style="background:var(--amber)"></i>40–59%<br><span class="muted">Needs Improvement</span></div>
+              <div><i class="ncx-legend-dot" style="background:var(--red)"></i>0–39%<br><span class="muted">Critical</span></div>
+              <div class="ncx-current-readiness">${pct}%</div>
+            </div>
+          </div>
+        </div>
+        <div class="ncx-template-card ncx-wide"><h3>Skill Domain Snapshot</h3><div class="ncx-skill-grid">
+          ${skills.map(k=>{const val=sm[k]; const color=SKILLS[k]?.color||'var(--blue)'; return `<div class="ncx-skill-card"><div class="ncx-skill-title"><span>${SKILLS[k]?.icon||'◈'}</span>${esc(SKILLS[k]?.label||k)}</div><div class="ncx-bar"><span style="width:${val===null?0:val}%;background:${color}"></span></div><div class="ncx-skill-score">${val===null?'Not Assessed':val+'%'}</div></div>`}).join('')}
+        </div></div>
+        <div class="ncx-template-card ncx-wide"><h3>Key Findings</h3><div class="ncx-finding-grid">
+          ${findings.map(f=>`<div class="ncx-finding"><div class="icon">${f.icon}</div><strong>${esc(f.title)}</strong><p>${esc(f.copy)}</p></div>`).join('')}
+        </div></div>
+        <div class="ncx-impact-decision ncx-wide">
+          <div class="ncx-template-card"><h3>Business Impact</h3><div class="ncx-impact-list">
+            ${impacts.map(x=>`<div class="ncx-impact-item"><strong>${x.icon} ${esc(x.label)}</strong><span class="ncx-pill ${x.level.toLowerCase()}">${x.level.toUpperCase()}</span></div>`).join('')}
+          </div></div>
+          <div class="ncx-template-card"><h3>Decision Quality Summary</h3><div class="ncx-decision-rings">
+            ${[
+              ['Strong Decisions',strong,'var(--green)'],['Adequate Decisions',adequate,'var(--amber)'],['Weak Decisions',weak,'var(--red)']
+            ].map(x=>`<div><div class="ncx-mini-ring" style="--ring-color:${x[2]};--ring-deg:${(x[1]/totalDecisions)*360}deg"><span>${x[1]}</span></div><strong>${x[0]}</strong><div class="muted">${Math.round(x[1]/totalDecisions*100)}%</div></div>`).join('')}
+          </div><div class="muted" style="text-align:center;margin-top:16px;">Total Decisions Evaluated: ${totalDecisions}</div></div>
+        </div>
+        <div class="ncx-template-card ncx-wide"><h3>Executive Overview</h3><p style="color:var(--text);line-height:1.65;margin:0;">${esc(getExecutiveText())}</p></div>
+        <div class="ncx-template-card ncx-wide"><h3>Recommendations</h3><div class="ncx-reco-list">
+          <div class="ncx-reco"><strong>Immediate</strong><p>Review the weakest decision point and clarify escalation ownership.</p></div>
+          <div class="ncx-reco"><strong>Short Term</strong><p>Run focused scenario training for the lowest-scoring skill domain.</p></div>
+          <div class="ncx-reco"><strong>Next Quarter</strong><p>Repeat the exercise with role-based participation and compare improvement.</p></div>
+        </div></div>
+      </div>`;
+  }
+  function renderDetails(container){
+    const s=window.simState?.scenario||{}, results=window.simState?.results||[], byD=groupByDecision(results), participants=groupByParticipant(results);
+    const decisionOptions=Object.entries(byD).map(([n,rows])=>`<option value="${n}">Decision ${n}: ${esc((rows[0]?.question||'Decision').slice(0,70))}</option>`).join('');
+    const participantNames=Object.keys(participants);
+    container.innerHTML=`
+      <div class="ncx-details-grid">
+        <div class="ncx-template-card"><h3>Simulation Timeline</h3><div class="ncx-timeline-flow">
+          ${Object.entries(byD).map(([n,rows])=>{const a=avg(rows), bb=band(a); return `<div class="ncx-step"><div class="bubble" style="background:${bb.color}">D${n}</div><strong>${esc((rows[0]?.question||'Decision').slice(0,32))}</strong><div class="pct" style="color:${bb.color}">${a}%</div><div class="muted">${bb.label}</div><p>${esc((rows[0]?.aiFeedback||rows[0]?.feedback||'Decision evidence recorded.').slice(0,95))}</p></div>`}).join('')}
+        </div></div>
+        <div class="ncx-template-card"><h3>Participant Drill-down</h3><select class="ncx-select" id="ncxParticipantSelect">${participantNames.map(n=>`<option>${esc(n)}</option>`).join('')}</select><div id="ncxParticipantHistory"></div></div>
+      </div>
+      <div class="ncx-details-lower" style="margin-top:16px;">
+        <div class="ncx-template-card"><h3>Decision Breakdown</h3><select class="ncx-select" id="ncxDecisionSelect">${decisionOptions}</select><div id="ncxDecisionBreakdown"></div></div>
+        <div class="ncx-template-card"><h3>Participant Performance</h3><div id="ncxParticipantList"></div></div>
+        <div class="ncx-template-card"><h3>Framework Mapping</h3><div class="fw-tags">${(window.FW||['NIST CSF','ISO 27001','MITRE ATT&CK','GDPR']).map(f=>`<span class="fw-tag">${esc(f)}</span>`).join('')}</div></div>
+      </div>
+      <div class="ncx-template-card" style="margin-top:16px;"><h3>Decision Quality Log</h3><table class="ncx-log-table"><thead><tr><th>#</th><th>Decision</th><th>Participant</th><th>Quality</th><th>Assessment</th></tr></thead><tbody>
+      ${results.map((r,i)=>{const sv=scoreVal(r), bb=band(sv); return `<tr><td>${i+1}</td><td>${esc((r.question||'Decision').slice(0,80))}</td><td>${esc(r.participantName||r.name||'Admin Run')}</td><td><span class="ncx-pill ${bb.cls}">${sv}%</span></td><td>${esc((r.aiFeedback||r.feedback||'Evidence recorded.').slice(0,120))}</td></tr>`}).join('')}
+      </tbody></table></div>`;
+    function renderParticipant(name){
+      const rows=participants[name]||[];
+      const hist=byId('ncxParticipantHistory');
+      if(hist) hist.innerHTML=rows.map((r,i)=>{const sv=scoreVal(r), bb=band(sv); return `<div class="ncx-drill-card"><strong>Decision ${Number(r.decisionIndex??i)+1}: ${esc((r.question||'Decision').slice(0,60))}</strong><span class="ncx-pill ${bb.cls}" style="float:right">${sv}%</span><p>${esc(r.freeTextAnswer||r.mcqAnswer||r.aiFeedback||r.feedback||'Decision evidence recorded.')}</p></div>`}).join('')||'<div class="muted">No participant history available.</div>';
+      qsa('.ncx-participant-row').forEach(row=>row.classList.toggle('active',row.dataset.name===name));
+    }
+    function renderDecision(n){
+      const rows=byD[n]||[]; const el=byId('ncxDecisionBreakdown'); if(!el) return;
+      const good=rows.filter(r=>scoreVal(r)>=70), bad=rows.filter(r=>scoreVal(r)<70), a=avg(rows), bb=band(a);
+      el.innerHTML=`<div style="margin-bottom:12px;"><strong style="font-size:28px;color:${bb.color}">${a}%</strong> <span class="ncx-pill ${bb.cls}">${bb.label}</span></div>
+      <div class="muted" style="margin-bottom:8px;">What went well</div><div class="ncx-action-list">${(good.length?good:rows.slice(0,1)).map(r=>`<div class="ncx-action good">✓ ${esc((r.aiFeedback||r.feedback||r.mcqAnswer||'Positive action recorded.').slice(0,120))}</div>`).join('')}</div>
+      <div class="muted" style="margin-bottom:8px;">What could be improved</div><div class="ncx-action-list">${(bad.length?bad:[]).map(r=>`<div class="ncx-action bad">× ${esc((r.aiFeedback||r.feedback||'Improve decision quality and rationale.').slice(0,120))}</div>`).join('') || '<div class="ncx-action good">No major improvement issue recorded for this decision.</div>'}</div>`;
+    }
+    const list=byId('ncxParticipantList');
+    if(list) list.innerHTML=participantNames.map(n=>`<div class="ncx-participant-row" data-name="${esc(n)}"><span>${esc(n)}</span><span style="color:${band(avg(participants[n])).color}">${avg(participants[n])}%</span></div>`).join('');
+    qsa('.ncx-participant-row').forEach(row=>row.addEventListener('click',()=>{const sel=byId('ncxParticipantSelect'); if(sel) sel.value=row.dataset.name; renderParticipant(row.dataset.name);}));
+    const ps=byId('ncxParticipantSelect'); if(ps) ps.addEventListener('change',()=>renderParticipant(ps.value));
+    const ds=byId('ncxDecisionSelect'); if(ds) ds.addEventListener('change',()=>renderDecision(ds.value));
+    renderParticipant(participantNames[0]||'Admin Run');
+    renderDecision(Object.keys(byD)[0]||'1');
+  }
+  function buildTemplate(){
+    const screen=byId('screen-report'); if(!screen || !window.simState?.scenario) return;
+    const shell=screen.querySelector('.report-shell'); if(!shell) return;
+    let wrap=byId('ncxTemplateReport');
+    if(!wrap){
+      wrap=document.createElement('div');
+      wrap.id='ncxTemplateReport';
+      wrap.className='ncx-template-report';
+      wrap.innerHTML=`<div class="ncx-template-tabs"><button type="button" class="active" data-ncx-tab="summary">Summary</button><button type="button" data-ncx-tab="details">Simulation Details</button></div><div id="ncxSummaryPanel" class="ncx-template-panel active"></div><div id="ncxDetailsPanel" class="ncx-template-panel"></div>`;
+      const oldTabs=shell.querySelector('.report-tabs-v2');
+      if(oldTabs) oldTabs.insertAdjacentElement('afterend',wrap); else shell.appendChild(wrap);
+      wrap.querySelectorAll('[data-ncx-tab]').forEach(btn=>btn.addEventListener('click',()=>{
+        wrap.querySelectorAll('[data-ncx-tab]').forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+        wrap.querySelectorAll('.ncx-template-panel').forEach(p=>p.classList.remove('active'));
+        byId(btn.dataset.ncxTab==='summary'?'ncxSummaryPanel':'ncxDetailsPanel').classList.add('active');
+      }));
+    }
+    renderSummary(byId('ncxSummaryPanel'));
+    renderDetails(byId('ncxDetailsPanel'));
+    const oldTabs=shell.querySelector('.report-tabs-v2'); if(oldTabs) oldTabs.style.display='none';
+    const oldGrid=byId('report-exec'); if(oldGrid) oldGrid.style.display='none';
+    wrap.classList.add('ready');
+  }
+  function exportTemplatePDF(){
+    buildTemplate();
+    const s=window.simState?.scenario||{}, client=window.simState?.client, pct=getPct(), b=band(pct);
+    const summary=byId('ncxSummaryPanel')?.innerHTML||'';
+    const details=byId('ncxDetailsPanel')?.innerHTML||'';
+    const w=window.open('','_blank');
+    if(!w){ alert('Please allow pop-ups to export the report.'); return; }
+    w.document.write(`<!doctype html><html><head><title>NexaCyberSim Report</title><style>
+      body{font-family:Arial,sans-serif;color:#0b1f33;margin:0;background:#fff}.page{padding:34px}.cover{background:#07111f;color:white;padding:34px;border-radius:16px;margin-bottom:20px}h1{margin:0 0 8px}.badge{display:inline-block;padding:6px 12px;border-radius:999px;background:#e8f4ff;color:#0b61ff;font-weight:bold}.grid,.ncx-template-grid,.ncx-details-grid,.ncx-details-lower,.ncx-impact-decision{display:block}.ncx-template-card{border:1px solid #d8e2ef;border-radius:12px;padding:18px;margin:14px 0;break-inside:avoid}.ncx-template-card h3{margin-top:0;color:#0b1f33}.ncx-score-ring,.ncx-mini-ring{width:auto!important;height:auto!important;background:none!important}.ncx-score-ring span{font-size:44px;font-weight:bold;color:#0b61ff}.ncx-score-ring:after,.ncx-mini-ring:after{display:none}.ncx-skill-grid,.ncx-finding-grid,.ncx-decision-rings{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.ncx-skill-card,.ncx-finding,.ncx-impact-item,.ncx-drill-card,.ncx-reco{border:1px solid #d8e2ef;border-radius:10px;padding:12px;margin:8px 0}.ncx-bar{height:7px;background:#d8e2ef;border-radius:99px}.ncx-bar span{display:block;height:100%;background:#0b61ff}.ncx-pill{font-weight:bold}.ncx-log-table{width:100%;border-collapse:collapse}.ncx-log-table th,.ncx-log-table td{border-bottom:1px solid #d8e2ef;padding:8px;text-align:left}svg{max-width:100%}.ncx-template-tabs,.ncx-trend-legend,.ncx-select{display:none}.appendix{page-break-before:always}
+    </style></head><body><div class="page"><div class="cover"><h1>NexaCyberSim Executive Report</h1><p>${esc(client?.name||'Client')} · ${esc(s.title||'Scenario')}</p><div class="badge">${pct}% ${esc(b.label)}</div></div>${summary}<div class="appendix"><h1>Simulation Details Appendix</h1>${details}</div></div></body></html>`);
+    w.document.close(); setTimeout(()=>{w.print();},400);
+  }
+  window.NCX_buildTemplateReport=buildTemplate;
+  window.exportPDF=exportTemplatePDF;
+  const timer=setInterval(()=>{const scr=byId('screen-report'); if(scr && scr.classList.contains('active')) buildTemplate();},1000);
+})();
+</script>
+
+</body></html>`;
   const w=window.open('', '_blank');
   if(!w){ alert('Popup blocked. Please allow popups to export PDF.'); return; }
   w.document.write(html); w.document.close();
@@ -4747,9 +4959,6 @@ async function exportWord(){
     btn.disabled=false;
   }
 }
-
-
-
 
 // ── PREMIUM HYBRID REPORT EXTENSIONS ──
 function premiumBand(score){return score>=80?{label:'Strong',color:'var(--green)',cls:'pass'}:score>=60?{label:'Good',color:'var(--blue)',cls:'pass'}:score>=40?{label:'Needs Improvement',color:'var(--amber)',cls:'warn'}:{label:'Critical',color:'var(--red)',cls:'fail'};}
@@ -5443,8 +5652,6 @@ document.addEventListener('DOMContentLoaded', function(){
   if(passInp  && !passInp._bound) { passInp.addEventListener('keydown', e=>{ if(e.key==='Enter') doLogin(); }); passInp._bound=true; }
 })();
 
-
-
 // ══════════════════════════════════════════════════════════
 // LIVE EXERCISE MODE — admin + public participant/observer
 // ══════════════════════════════════════════════════════════
@@ -6137,8 +6344,6 @@ addDecBlock();
   </div>
 </div>
 
-
-
 <script>
 
 function buildManagementThemes(results, good){
@@ -6265,8 +6470,36 @@ function buildManagementThemes(results, good){
 .report-table-v2 tr.drill-row:hover td{background:rgba(0,229,255,.035)!important;}
 @media(max-width:980px){.exec-story-grid,.evidence-layout{grid-template-columns:1fr;}}
 
+/* === Optimized report layout helpers === */
+:root {
+  --report-radius: 14px;
+  --report-gap: 16px;
+}
 
-/* === Readiness Trend layout fix === */
+.report-card,
+.stat-card,
+.rm {
+  contain: layout paint;
+}
+
+.report-card {
+  border-radius: var(--report-radius);
+}
+
+.results-table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.report-table-v2 {
+  table-layout: fixed;
+}
+
+.report-table-v2 th,
+.report-table-v2 td {
+  overflow-wrap: anywhere;
+}
+
 .readiness-trend-viz {
   position: relative;
   padding: 22px 28px 22px !important;
@@ -6336,6 +6569,425 @@ function buildManagementThemes(results, good){
   #rpt-trend-chart {
     padding-right: 0 !important;
   }
+}
+
+
+
+/* === NexaCyberSim Template Report v1: Summary + Simulation Details === */
+.ncx-template-report {
+  margin-top: 14px;
+  display: none;
+}
+.ncx-template-report.ready {
+  display: block;
+}
+.ncx-template-tabs {
+  display: flex;
+  gap: 10px;
+  border-bottom: 1px solid rgba(0,229,255,.14);
+  margin: 14px 0 18px;
+}
+.ncx-template-tabs button {
+  padding: 12px 28px;
+  border: 1px solid transparent;
+  border-bottom: 2px solid transparent;
+  background: rgba(10,20,37,.35);
+  color: var(--muted);
+  font-family: var(--head);
+  font-size: 13px;
+  font-weight: 700;
+  border-radius: 10px 10px 0 0;
+  cursor: pointer;
+}
+.ncx-template-tabs button.active {
+  color: var(--white);
+  border-color: rgba(0,229,255,.18);
+  border-bottom-color: var(--blue);
+  background: linear-gradient(180deg,rgba(41,121,255,.22),rgba(41,121,255,.06));
+  box-shadow: 0 12px 30px rgba(41,121,255,.12);
+}
+.ncx-template-panel {
+  display: none;
+}
+.ncx-template-panel.active {
+  display: block;
+}
+.ncx-template-grid {
+  display: grid;
+  grid-template-columns: 300px minmax(0,1fr);
+  gap: 16px;
+}
+.ncx-template-card {
+  background: rgba(10,20,37,.72);
+  border: 1px solid rgba(0,229,255,.14);
+  border-radius: 14px;
+  padding: 18px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.03);
+}
+.ncx-template-card h3 {
+  margin: 0 0 14px;
+  font-family: var(--head);
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--white);
+}
+.ncx-template-hero-score {
+  min-height: 250px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+.ncx-score-ring {
+  width: 164px;
+  height: 164px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: conic-gradient(var(--blue) var(--ncx-score-deg), rgba(41,121,255,.16) 0);
+  position: relative;
+  margin-bottom: 12px;
+}
+.ncx-score-ring::after {
+  content: "";
+  position: absolute;
+  inset: 14px;
+  border-radius: 50%;
+  background: #07111f;
+  border: 1px solid rgba(255,255,255,.04);
+}
+.ncx-score-ring span {
+  position: relative;
+  z-index: 1;
+  font-family: var(--head);
+  font-size: 44px;
+  font-weight: 800;
+  color: var(--white);
+}
+.ncx-score-label {
+  font-family: var(--head);
+  color: var(--amber);
+  font-size: 18px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+.ncx-score-copy {
+  margin: 12px auto 0;
+  max-width: 210px;
+  color: var(--text);
+  font-size: 12px;
+  line-height: 1.55;
+}
+.ncx-trend-wrap {
+  min-height: 250px;
+}
+.ncx-trend-chart {
+  display: grid;
+  grid-template-columns: minmax(0,1fr) 130px;
+  gap: 16px;
+  align-items: stretch;
+}
+.ncx-trend-legend {
+  border-left: 1px solid rgba(0,229,255,.12);
+  padding-left: 14px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 12px;
+  font-size: 11px;
+  color: var(--text);
+}
+.ncx-legend-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 8px;
+}
+.ncx-current-readiness {
+  margin-top: 10px;
+  padding: 9px 12px;
+  border-radius: 8px;
+  background: rgba(41,121,255,.22);
+  color: var(--blue);
+  text-align: center;
+  font-family: var(--head);
+  font-size: 18px;
+  font-weight: 800;
+}
+.ncx-wide {
+  grid-column: 1 / -1;
+}
+.ncx-skill-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0,1fr));
+  gap: 12px;
+}
+.ncx-skill-card {
+  background: rgba(7,14,28,.72);
+  border: 1px solid rgba(0,229,255,.10);
+  border-radius: 12px;
+  padding: 14px;
+}
+.ncx-skill-title {
+  display:flex;
+  gap:8px;
+  align-items:center;
+  font-weight:700;
+  color:var(--white);
+  font-size:12px;
+  margin-bottom:10px;
+}
+.ncx-bar {
+  height: 7px;
+  border-radius: 99px;
+  background: rgba(184,212,240,.13);
+  overflow: hidden;
+}
+.ncx-bar span {
+  display:block;
+  height:100%;
+  border-radius: inherit;
+}
+.ncx-skill-score {
+  margin-top: 6px;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 11px;
+}
+.ncx-finding-grid {
+  display:grid;
+  grid-template-columns: repeat(4,minmax(0,1fr));
+  gap: 12px;
+}
+.ncx-finding {
+  background: rgba(7,14,28,.72);
+  border: 1px solid rgba(0,229,255,.10);
+  border-radius: 12px;
+  padding: 16px;
+  min-height: 130px;
+}
+.ncx-finding .icon {
+  font-size: 24px;
+  margin-bottom: 10px;
+}
+.ncx-finding strong {
+  color: var(--white);
+  display:block;
+  margin-bottom: 8px;
+}
+.ncx-finding p {
+  margin:0;
+  color:var(--text);
+  font-size:12px;
+  line-height:1.55;
+}
+.ncx-impact-decision {
+  display:grid;
+  grid-template-columns: .75fr 1.25fr;
+  gap: 16px;
+}
+.ncx-impact-list {
+  display:grid;
+  gap:10px;
+}
+.ncx-impact-item {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  background: rgba(7,14,28,.72);
+  border:1px solid rgba(0,229,255,.10);
+  border-radius:10px;
+  padding:13px;
+}
+.ncx-impact-item strong {
+  color:var(--white);
+}
+.ncx-pill {
+  padding: 4px 10px;
+  border-radius: 7px;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 800;
+}
+.ncx-pill.high,.ncx-pill.critical { background: rgba(255,45,85,.16); color: var(--red); }
+.ncx-pill.medium,.ncx-pill.needs { background: rgba(255,179,0,.16); color: var(--amber); }
+.ncx-pill.low,.ncx-pill.good,.ncx-pill.strong { background: rgba(0,230,118,.14); color: var(--green); }
+.ncx-decision-rings {
+  display:grid;
+  grid-template-columns: repeat(3,1fr);
+  gap:16px;
+  text-align:center;
+}
+.ncx-mini-ring {
+  width: 118px;
+  height: 118px;
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  margin:0 auto 10px;
+  background: conic-gradient(var(--ring-color) var(--ring-deg), rgba(184,212,240,.12) 0);
+  position:relative;
+}
+.ncx-mini-ring::after {
+  content:"";
+  position:absolute;
+  inset:13px;
+  border-radius:50%;
+  background:#07111f;
+}
+.ncx-mini-ring span {
+  position:relative;
+  z-index:1;
+  color:var(--white);
+  font-size:28px;
+  font-family:var(--head);
+  font-weight:800;
+}
+.ncx-reco-list {
+  display:grid;
+  gap:10px;
+}
+.ncx-reco {
+  border-left:3px solid var(--blue);
+  background:rgba(7,14,28,.72);
+  border-radius:10px;
+  padding:13px 14px;
+}
+.ncx-reco strong { color:var(--white); display:block; margin-bottom:4px; }
+.ncx-reco p { margin:0; color:var(--text); font-size:12px; line-height:1.5; }
+.ncx-details-grid {
+  display:grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(320px, .75fr);
+  gap: 16px;
+}
+.ncx-timeline-flow {
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  position:relative;
+  padding:30px 20px;
+}
+.ncx-timeline-flow::before {
+  content:"";
+  position:absolute;
+  left:50px;
+  right:50px;
+  top:58px;
+  height:3px;
+  background:linear-gradient(90deg,var(--green),var(--amber),var(--blue));
+  opacity:.8;
+}
+.ncx-step {
+  position:relative;
+  z-index:1;
+  text-align:center;
+  flex:1;
+}
+.ncx-step .bubble {
+  width:46px;
+  height:46px;
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  margin:0 auto 12px;
+  color:#001;
+  font-family:var(--head);
+  font-weight:800;
+}
+.ncx-step strong {
+  color:var(--white);
+  display:block;
+  margin-bottom:8px;
+}
+.ncx-step .pct {
+  font-family:var(--head);
+  font-weight:800;
+  font-size:18px;
+}
+.ncx-step p {
+  margin:6px auto 0;
+  max-width:180px;
+  color:var(--text);
+  font-size:12px;
+  line-height:1.5;
+}
+.ncx-details-lower {
+  display:grid;
+  grid-template-columns: minmax(0, .9fr) minmax(0, .8fr) minmax(0, .9fr);
+  gap:16px;
+}
+.ncx-select {
+  width:100%;
+  margin-bottom:12px;
+  background:#070e1c;
+  border:1px solid rgba(0,229,255,.2);
+  color:var(--white);
+  border-radius:8px;
+  padding:10px;
+}
+.ncx-action-list {
+  display:grid;
+  gap:8px;
+  margin:10px 0 16px;
+}
+.ncx-action {
+  font-size:12px;
+  color:var(--text);
+  padding:8px;
+  border-radius:8px;
+  background:rgba(7,14,28,.7);
+}
+.ncx-action.good { border-left:3px solid var(--green); }
+.ncx-action.bad { border-left:3px solid var(--red); }
+.ncx-participant-row {
+  display:grid;
+  grid-template-columns: 1fr 54px;
+  gap:8px;
+  align-items:center;
+  border-bottom:1px solid rgba(0,229,255,.08);
+  padding:8px 2px;
+  cursor:pointer;
+}
+.ncx-participant-row.active {
+  background:rgba(41,121,255,.13);
+  border-radius:8px;
+  padding-left:8px;
+}
+.ncx-participant-row span:first-child { color:var(--text); }
+.ncx-participant-row span:last-child { text-align:right; font-family:var(--mono); font-weight:800; }
+.ncx-drill-card {
+  background:rgba(7,14,28,.72);
+  border:1px solid rgba(0,229,255,.10);
+  border-radius:10px;
+  padding:12px;
+  margin-bottom:10px;
+}
+.ncx-drill-card strong { color:var(--white); }
+.ncx-drill-card p { color:var(--text); font-size:12px; line-height:1.5; margin:6px 0 0; }
+.ncx-log-table {
+  width:100%;
+  border-collapse:collapse;
+  font-size:12px;
+}
+.ncx-log-table th,.ncx-log-table td {
+  padding:9px;
+  border-bottom:1px solid rgba(0,229,255,.08);
+  text-align:left;
+  color:var(--text);
+}
+.ncx-log-table th {
+  color:var(--muted);
+  font-family:var(--mono);
+  font-size:10px;
+  text-transform:uppercase;
+}
+.ncx-template-report .muted { color:var(--muted); }
+@media (max-width:1100px){
+  .ncx-template-grid,.ncx-details-grid,.ncx-details-lower,.ncx-impact-decision { grid-template-columns:1fr; }
+  .ncx-skill-grid,.ncx-finding-grid { grid-template-columns: repeat(2,1fr); }
 }
 
 </style>
@@ -6456,6 +7108,224 @@ function buildManagementThemes(results, good){
       }catch(e){console.warn('Consultant report restructure skipped',e);}
     };
   }
+})();
+</script>
+
+
+<script>
+/* === NexaCyberSim Template Report v1 === */
+(function(){
+  function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+  function byId(id){return document.getElementById(id);}
+  function qsa(sel,root){return Array.from((root||document).querySelectorAll(sel));}
+  function scoreVal(r){if(typeof scoreOfResult==='function') return scoreOfResult(r); if(typeof r?.aiScore==='number') return Math.round(r.aiScore); if(typeof r?.score==='number') return Math.round(r.score); return r?.correct?100:0;}
+  function avg(rows){const vals=(rows||[]).map(scoreVal).filter(Number.isFinite);return vals.length?Math.round(vals.reduce((a,b)=>a+b,0)/vals.length):0;}
+  function band(score){return score>=80?{label:'Strong',cls:'strong',color:'var(--green)'}:score>=60?{label:'Good',cls:'good',color:'var(--blue)'}:score>=40?{label:'Needs Improvement',cls:'needs',color:'var(--amber)'}:{label:'Critical',cls:'critical',color:'var(--red)'};}
+  function getDecisionList(){const s=window.simState?.scenario; const lvl=window.simState?.level; return (s?.decisions&&s.decisions[lvl])||[];}
+  function getPct(){
+    const decs=getDecisionList(); const results=window.simState?.results||[];
+    if(typeof calculateExecutiveMetrics==='function'){try{return calculateExecutiveMetrics(results,decs.length).pct||0;}catch(e){}}
+    return avg(results);
+  }
+  function groupByDecision(results){
+    const out={};
+    (results||[]).forEach((r,i)=>{const n=Number(r.decisionIndex??r.step??i)+1;(out[n]||(out[n]=[])).push(r);});
+    return out;
+  }
+  function groupByParticipant(results){
+    const out={};
+    (results||[]).forEach((r)=>{const n=r.participantName||r.name||'Admin Run';(out[n]||(out[n]=[])).push(r);});
+    return out;
+  }
+  function skillScoreMap(results, skills){
+    const map={};
+    (skills||[]).forEach(k=>map[k]=null);
+    const rowsBySkill={};
+    (results||[]).forEach((r)=>{const k=r.skillTested||r.skill||r.domain;if(k)(rowsBySkill[k]||(rowsBySkill[k]=[])).push(r);});
+    Object.keys(rowsBySkill).forEach(k=>map[k]=avg(rowsBySkill[k]));
+    if(window.simState?.normalisedSkillScores){Object.assign(map, window.simState.normalisedSkillScores);}
+    return map;
+  }
+  function getExecutiveText(){
+    const old=byId('rpt-conclusion');
+    const text=(old?.innerText||'').trim();
+    if(text){
+      const first=text.split(/\n+/).filter(Boolean).find(x=>!/^SECTION|Executive Summary$/i.test(x.trim()));
+      if(first) return first.slice(0,420);
+    }
+    const pct=getPct(), b=band(pct), s=window.simState?.scenario;
+    return `The exercise assessed decision quality during the ${s?.title||'cyber crisis'} scenario. Overall readiness is ${b.label.toLowerCase()} at ${pct}%, with priority attention required for gaps shown in the decision and skill-domain evidence.`;
+  }
+  function buildFindings(results, skills){
+    const pct=getPct(), skillsMap=skillScoreMap(results, skills);
+    const weakSkill=Object.entries(skillsMap).filter(([_,v])=>v!==null).sort((a,b)=>a[1]-b[1])[0];
+    const strongSkill=Object.entries(skillsMap).filter(([_,v])=>v!==null).sort((a,b)=>b[1]-a[1])[0];
+    const weakDecision=Object.entries(groupByDecision(results)).map(([n,rows])=>[n,avg(rows),rows[0]]).sort((a,b)=>a[1]-b[1])[0];
+    return [
+      {icon:'🛡️',title:'Strength',copy: strongSkill ? `${(SKILLS[strongSkill[0]]?.label||strongSkill[0])} showed the strongest performance at ${strongSkill[1]}%.` : 'Participants demonstrated effective containment awareness during the exercise.'},
+      {icon:'⚠️',title:'Gap',copy: weakSkill ? `${(SKILLS[weakSkill[0]]?.label||weakSkill[0])} requires attention, currently assessed at ${weakSkill[1]}%.` : 'Some response steps require clearer ownership and escalation criteria.'},
+      {icon:'🚨',title:'Risk',copy: weakDecision ? `Decision ${weakDecision[0]} created the highest risk exposure with a ${weakDecision[1]}% quality score.` : 'Unclear escalation may increase regulatory and reputational exposure.'},
+      {icon:'💡',title:'Opportunity',copy: 'Use targeted scenario repetition to improve decision consistency and communication under pressure.'}
+    ];
+  }
+  function buildImpact(results, skills){
+    const sm=skillScoreMap(results,skills), pct=getPct();
+    const comm=sm.communication, comp=sm.compliance, weak=(results||[]).filter(r=>scoreVal(r)<50).length;
+    return [
+      {label:'Regulatory Risk',level:(comp!==null&&comp<70)||weak?'High':'Medium',icon:'⚖️'},
+      {label:'Operational Impact',level:pct<70?'High':pct<85?'Medium':'Low',icon:'⚙️'},
+      {label:'Reputational Impact',level:(comm!==null&&comm<75)||weak?'High':'Medium',icon:'👥'}
+    ];
+  }
+  function trendPoints(results){
+    let total=0; return (results||[]).map((r,i)=>{total+=scoreVal(r); return Math.round(total/(i+1));});
+  }
+  function trendSVG(results){
+    const points=trendPoints(results); if(!points.length) return '<div class="muted">No trend data available.</div>';
+    const w=560,h=230,pad=34, step=(w-pad*2)/Math.max(1,points.length-1);
+    const xy=points.map((p,i)=>[pad+i*step, pad+(100-p)*(h-pad*2)/100]);
+    let d=`M ${xy[0][0]} ${xy[0][1]}`;
+    for(let i=1;i<xy.length;i++){
+      const prev=xy[i-1], cur=xy[i], mid=(prev[0]+cur[0])/2;
+      d+=` C ${mid} ${prev[1]}, ${mid} ${cur[1]}, ${cur[0]} ${cur[1]}`;
+    }
+    const area=d+` L ${xy[xy.length-1][0]} ${h-pad} L ${xy[0][0]} ${h-pad} Z`;
+    const labels=xy.map((p,i)=>`<text x="${p[0]}" y="${h-8}" fill="#8fb4d9" font-size="11" text-anchor="middle">D${i+1}</text>`).join('');
+    const dots=xy.map((p,i)=>`<circle cx="${p[0]}" cy="${p[1]}" r="5" fill="#e8f4ff" stroke="#2979ff" stroke-width="4"/><text x="${p[0]}" y="${p[1]-12}" fill="${band(points[i]).color.replace('var(--','').replace(')','')}" font-size="11" text-anchor="middle">${points[i]}%</text>`).join('');
+    return `<svg viewBox="0 0 ${w} ${h}" role="img" aria-label="readiness trend">
+      <defs><linearGradient id="ncxGrad" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="#2979ff" stop-opacity=".45"/><stop offset="100%" stop-color="#00e5ff" stop-opacity=".08"/></linearGradient></defs>
+      ${[0,25,50,75,100].map(v=>`<line x1="${pad}" x2="${w-pad}" y1="${pad+(100-v)*(h-pad*2)/100}" y2="${pad+(100-v)*(h-pad*2)/100}" stroke="rgba(184,212,240,.12)" stroke-dasharray="5 7"/><text x="2" y="${pad+(100-v)*(h-pad*2)/100+4}" fill="#8fb4d9" font-size="11">${v}%</text>`).join('')}
+      <path d="${area}" fill="url(#ncxGrad)"/><path d="${d}" fill="none" stroke="#2979ff" stroke-width="3"/>${dots}${labels}
+    </svg>`;
+  }
+  function renderSummary(container){
+    const s=window.simState?.scenario||{}, results=window.simState?.results||[], skills=s.skills||[], pct=getPct(), b=band(pct);
+    const sm=skillScoreMap(results,skills), findings=buildFindings(results,skills), impacts=buildImpact(results,skills);
+    const byD=groupByDecision(results), totalDecisions=results.length||1;
+    const strong=results.filter(r=>scoreVal(r)>=80).length, adequate=results.filter(r=>scoreVal(r)>=50&&scoreVal(r)<80).length, weak=results.filter(r=>scoreVal(r)<50).length;
+    container.innerHTML=`
+      <div class="ncx-template-grid">
+        <div class="ncx-template-card ncx-template-hero-score">
+          <h3>Overall Readiness</h3>
+          <div class="ncx-score-ring" style="--ncx-score-deg:${pct*3.6}deg"><span>${pct}%</span></div>
+          <div class="ncx-score-label">${b.label}</div>
+          <div class="ncx-score-copy">Your organisation shows ${b.label.toLowerCase()} readiness. Focus on the identified gaps to strengthen resilience.</div>
+        </div>
+        <div class="ncx-template-card ncx-trend-wrap">
+          <h3>Readiness Trend</h3>
+          <div class="ncx-trend-chart"><div>${trendSVG(results)}</div>
+            <div class="ncx-trend-legend">
+              <div><i class="ncx-legend-dot" style="background:var(--green)"></i>80–100%<br><span class="muted">Strong</span></div>
+              <div><i class="ncx-legend-dot" style="background:var(--blue)"></i>60–79%<br><span class="muted">Good</span></div>
+              <div><i class="ncx-legend-dot" style="background:var(--amber)"></i>40–59%<br><span class="muted">Needs Improvement</span></div>
+              <div><i class="ncx-legend-dot" style="background:var(--red)"></i>0–39%<br><span class="muted">Critical</span></div>
+              <div class="ncx-current-readiness">${pct}%</div>
+            </div>
+          </div>
+        </div>
+        <div class="ncx-template-card ncx-wide"><h3>Skill Domain Snapshot</h3><div class="ncx-skill-grid">
+          ${skills.map(k=>{const val=sm[k]; const color=SKILLS[k]?.color||'var(--blue)'; return `<div class="ncx-skill-card"><div class="ncx-skill-title"><span>${SKILLS[k]?.icon||'◈'}</span>${esc(SKILLS[k]?.label||k)}</div><div class="ncx-bar"><span style="width:${val===null?0:val}%;background:${color}"></span></div><div class="ncx-skill-score">${val===null?'Not Assessed':val+'%'}</div></div>`}).join('')}
+        </div></div>
+        <div class="ncx-template-card ncx-wide"><h3>Key Findings</h3><div class="ncx-finding-grid">
+          ${findings.map(f=>`<div class="ncx-finding"><div class="icon">${f.icon}</div><strong>${esc(f.title)}</strong><p>${esc(f.copy)}</p></div>`).join('')}
+        </div></div>
+        <div class="ncx-impact-decision ncx-wide">
+          <div class="ncx-template-card"><h3>Business Impact</h3><div class="ncx-impact-list">
+            ${impacts.map(x=>`<div class="ncx-impact-item"><strong>${x.icon} ${esc(x.label)}</strong><span class="ncx-pill ${x.level.toLowerCase()}">${x.level.toUpperCase()}</span></div>`).join('')}
+          </div></div>
+          <div class="ncx-template-card"><h3>Decision Quality Summary</h3><div class="ncx-decision-rings">
+            ${[
+              ['Strong Decisions',strong,'var(--green)'],['Adequate Decisions',adequate,'var(--amber)'],['Weak Decisions',weak,'var(--red)']
+            ].map(x=>`<div><div class="ncx-mini-ring" style="--ring-color:${x[2]};--ring-deg:${(x[1]/totalDecisions)*360}deg"><span>${x[1]}</span></div><strong>${x[0]}</strong><div class="muted">${Math.round(x[1]/totalDecisions*100)}%</div></div>`).join('')}
+          </div><div class="muted" style="text-align:center;margin-top:16px;">Total Decisions Evaluated: ${totalDecisions}</div></div>
+        </div>
+        <div class="ncx-template-card ncx-wide"><h3>Executive Overview</h3><p style="color:var(--text);line-height:1.65;margin:0;">${esc(getExecutiveText())}</p></div>
+        <div class="ncx-template-card ncx-wide"><h3>Recommendations</h3><div class="ncx-reco-list">
+          <div class="ncx-reco"><strong>Immediate</strong><p>Review the weakest decision point and clarify escalation ownership.</p></div>
+          <div class="ncx-reco"><strong>Short Term</strong><p>Run focused scenario training for the lowest-scoring skill domain.</p></div>
+          <div class="ncx-reco"><strong>Next Quarter</strong><p>Repeat the exercise with role-based participation and compare improvement.</p></div>
+        </div></div>
+      </div>`;
+  }
+  function renderDetails(container){
+    const s=window.simState?.scenario||{}, results=window.simState?.results||[], byD=groupByDecision(results), participants=groupByParticipant(results);
+    const decisionOptions=Object.entries(byD).map(([n,rows])=>`<option value="${n}">Decision ${n}: ${esc((rows[0]?.question||'Decision').slice(0,70))}</option>`).join('');
+    const participantNames=Object.keys(participants);
+    container.innerHTML=`
+      <div class="ncx-details-grid">
+        <div class="ncx-template-card"><h3>Simulation Timeline</h3><div class="ncx-timeline-flow">
+          ${Object.entries(byD).map(([n,rows])=>{const a=avg(rows), bb=band(a); return `<div class="ncx-step"><div class="bubble" style="background:${bb.color}">D${n}</div><strong>${esc((rows[0]?.question||'Decision').slice(0,32))}</strong><div class="pct" style="color:${bb.color}">${a}%</div><div class="muted">${bb.label}</div><p>${esc((rows[0]?.aiFeedback||rows[0]?.feedback||'Decision evidence recorded.').slice(0,95))}</p></div>`}).join('')}
+        </div></div>
+        <div class="ncx-template-card"><h3>Participant Drill-down</h3><select class="ncx-select" id="ncxParticipantSelect">${participantNames.map(n=>`<option>${esc(n)}</option>`).join('')}</select><div id="ncxParticipantHistory"></div></div>
+      </div>
+      <div class="ncx-details-lower" style="margin-top:16px;">
+        <div class="ncx-template-card"><h3>Decision Breakdown</h3><select class="ncx-select" id="ncxDecisionSelect">${decisionOptions}</select><div id="ncxDecisionBreakdown"></div></div>
+        <div class="ncx-template-card"><h3>Participant Performance</h3><div id="ncxParticipantList"></div></div>
+        <div class="ncx-template-card"><h3>Framework Mapping</h3><div class="fw-tags">${(window.FW||['NIST CSF','ISO 27001','MITRE ATT&CK','GDPR']).map(f=>`<span class="fw-tag">${esc(f)}</span>`).join('')}</div></div>
+      </div>
+      <div class="ncx-template-card" style="margin-top:16px;"><h3>Decision Quality Log</h3><table class="ncx-log-table"><thead><tr><th>#</th><th>Decision</th><th>Participant</th><th>Quality</th><th>Assessment</th></tr></thead><tbody>
+      ${results.map((r,i)=>{const sv=scoreVal(r), bb=band(sv); return `<tr><td>${i+1}</td><td>${esc((r.question||'Decision').slice(0,80))}</td><td>${esc(r.participantName||r.name||'Admin Run')}</td><td><span class="ncx-pill ${bb.cls}">${sv}%</span></td><td>${esc((r.aiFeedback||r.feedback||'Evidence recorded.').slice(0,120))}</td></tr>`}).join('')}
+      </tbody></table></div>`;
+    function renderParticipant(name){
+      const rows=participants[name]||[];
+      const hist=byId('ncxParticipantHistory');
+      if(hist) hist.innerHTML=rows.map((r,i)=>{const sv=scoreVal(r), bb=band(sv); return `<div class="ncx-drill-card"><strong>Decision ${Number(r.decisionIndex??i)+1}: ${esc((r.question||'Decision').slice(0,60))}</strong><span class="ncx-pill ${bb.cls}" style="float:right">${sv}%</span><p>${esc(r.freeTextAnswer||r.mcqAnswer||r.aiFeedback||r.feedback||'Decision evidence recorded.')}</p></div>`}).join('')||'<div class="muted">No participant history available.</div>';
+      qsa('.ncx-participant-row').forEach(row=>row.classList.toggle('active',row.dataset.name===name));
+    }
+    function renderDecision(n){
+      const rows=byD[n]||[]; const el=byId('ncxDecisionBreakdown'); if(!el) return;
+      const good=rows.filter(r=>scoreVal(r)>=70), bad=rows.filter(r=>scoreVal(r)<70), a=avg(rows), bb=band(a);
+      el.innerHTML=`<div style="margin-bottom:12px;"><strong style="font-size:28px;color:${bb.color}">${a}%</strong> <span class="ncx-pill ${bb.cls}">${bb.label}</span></div>
+      <div class="muted" style="margin-bottom:8px;">What went well</div><div class="ncx-action-list">${(good.length?good:rows.slice(0,1)).map(r=>`<div class="ncx-action good">✓ ${esc((r.aiFeedback||r.feedback||r.mcqAnswer||'Positive action recorded.').slice(0,120))}</div>`).join('')}</div>
+      <div class="muted" style="margin-bottom:8px;">What could be improved</div><div class="ncx-action-list">${(bad.length?bad:[]).map(r=>`<div class="ncx-action bad">× ${esc((r.aiFeedback||r.feedback||'Improve decision quality and rationale.').slice(0,120))}</div>`).join('') || '<div class="ncx-action good">No major improvement issue recorded for this decision.</div>'}</div>`;
+    }
+    const list=byId('ncxParticipantList');
+    if(list) list.innerHTML=participantNames.map(n=>`<div class="ncx-participant-row" data-name="${esc(n)}"><span>${esc(n)}</span><span style="color:${band(avg(participants[n])).color}">${avg(participants[n])}%</span></div>`).join('');
+    qsa('.ncx-participant-row').forEach(row=>row.addEventListener('click',()=>{const sel=byId('ncxParticipantSelect'); if(sel) sel.value=row.dataset.name; renderParticipant(row.dataset.name);}));
+    const ps=byId('ncxParticipantSelect'); if(ps) ps.addEventListener('change',()=>renderParticipant(ps.value));
+    const ds=byId('ncxDecisionSelect'); if(ds) ds.addEventListener('change',()=>renderDecision(ds.value));
+    renderParticipant(participantNames[0]||'Admin Run');
+    renderDecision(Object.keys(byD)[0]||'1');
+  }
+  function buildTemplate(){
+    const screen=byId('screen-report'); if(!screen || !window.simState?.scenario) return;
+    const shell=screen.querySelector('.report-shell'); if(!shell) return;
+    let wrap=byId('ncxTemplateReport');
+    if(!wrap){
+      wrap=document.createElement('div');
+      wrap.id='ncxTemplateReport';
+      wrap.className='ncx-template-report';
+      wrap.innerHTML=`<div class="ncx-template-tabs"><button type="button" class="active" data-ncx-tab="summary">Summary</button><button type="button" data-ncx-tab="details">Simulation Details</button></div><div id="ncxSummaryPanel" class="ncx-template-panel active"></div><div id="ncxDetailsPanel" class="ncx-template-panel"></div>`;
+      const oldTabs=shell.querySelector('.report-tabs-v2');
+      if(oldTabs) oldTabs.insertAdjacentElement('afterend',wrap); else shell.appendChild(wrap);
+      wrap.querySelectorAll('[data-ncx-tab]').forEach(btn=>btn.addEventListener('click',()=>{
+        wrap.querySelectorAll('[data-ncx-tab]').forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+        wrap.querySelectorAll('.ncx-template-panel').forEach(p=>p.classList.remove('active'));
+        byId(btn.dataset.ncxTab==='summary'?'ncxSummaryPanel':'ncxDetailsPanel').classList.add('active');
+      }));
+    }
+    renderSummary(byId('ncxSummaryPanel'));
+    renderDetails(byId('ncxDetailsPanel'));
+    const oldTabs=shell.querySelector('.report-tabs-v2'); if(oldTabs) oldTabs.style.display='none';
+    const oldGrid=byId('report-exec'); if(oldGrid) oldGrid.style.display='none';
+    wrap.classList.add('ready');
+  }
+  function exportTemplatePDF(){
+    buildTemplate();
+    const s=window.simState?.scenario||{}, client=window.simState?.client, pct=getPct(), b=band(pct);
+    const summary=byId('ncxSummaryPanel')?.innerHTML||'';
+    const details=byId('ncxDetailsPanel')?.innerHTML||'';
+    const w=window.open('','_blank');
+    if(!w){ alert('Please allow pop-ups to export the report.'); return; }
+    w.document.write(`<!doctype html><html><head><title>NexaCyberSim Report</title><style>
+      body{font-family:Arial,sans-serif;color:#0b1f33;margin:0;background:#fff}.page{padding:34px}.cover{background:#07111f;color:white;padding:34px;border-radius:16px;margin-bottom:20px}h1{margin:0 0 8px}.badge{display:inline-block;padding:6px 12px;border-radius:999px;background:#e8f4ff;color:#0b61ff;font-weight:bold}.grid,.ncx-template-grid,.ncx-details-grid,.ncx-details-lower,.ncx-impact-decision{display:block}.ncx-template-card{border:1px solid #d8e2ef;border-radius:12px;padding:18px;margin:14px 0;break-inside:avoid}.ncx-template-card h3{margin-top:0;color:#0b1f33}.ncx-score-ring,.ncx-mini-ring{width:auto!important;height:auto!important;background:none!important}.ncx-score-ring span{font-size:44px;font-weight:bold;color:#0b61ff}.ncx-score-ring:after,.ncx-mini-ring:after{display:none}.ncx-skill-grid,.ncx-finding-grid,.ncx-decision-rings{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.ncx-skill-card,.ncx-finding,.ncx-impact-item,.ncx-drill-card,.ncx-reco{border:1px solid #d8e2ef;border-radius:10px;padding:12px;margin:8px 0}.ncx-bar{height:7px;background:#d8e2ef;border-radius:99px}.ncx-bar span{display:block;height:100%;background:#0b61ff}.ncx-pill{font-weight:bold}.ncx-log-table{width:100%;border-collapse:collapse}.ncx-log-table th,.ncx-log-table td{border-bottom:1px solid #d8e2ef;padding:8px;text-align:left}svg{max-width:100%}.ncx-template-tabs,.ncx-trend-legend,.ncx-select{display:none}.appendix{page-break-before:always}
+    </style></head><body><div class="page"><div class="cover"><h1>NexaCyberSim Executive Report</h1><p>${esc(client?.name||'Client')} · ${esc(s.title||'Scenario')}</p><div class="badge">${pct}% ${esc(b.label)}</div></div>${summary}<div class="appendix"><h1>Simulation Details Appendix</h1>${details}</div></div></body></html>`);
+    w.document.close(); setTimeout(()=>{w.print();},400);
+  }
+  window.NCX_buildTemplateReport=buildTemplate;
+  window.exportPDF=exportTemplatePDF;
+  const timer=setInterval(()=>{const scr=byId('screen-report'); if(scr && scr.classList.contains('active')) buildTemplate();},1000);
 })();
 </script>
 
