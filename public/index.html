@@ -1253,6 +1253,28 @@ body.theme-light #screen-login > div > div:nth-child(2),body.theme-light .card,b
 .ent-readiness-bar{height:8px;background:var(--border);border-radius:999px;overflow:hidden;margin-top:8px;}
 .ent-readiness-bar span{height:100%;display:block;border-radius:999px;background:linear-gradient(90deg,var(--cyan),var(--blue));}
 
+
+
+/* FIX: give the executive report header breathing room below the fixed navbar */
+.report-screen-v2 .report-shell{
+  padding-top:112px!important;
+}
+.report-screen-v2 .report-topbar-v2{
+  margin-bottom:24px!important;
+}
+.report-screen-v2 .report-title-row h1{
+  line-height:1.18!important;
+}
+.report-screen-v2 .report-tabs-v2{
+  margin-top:18px!important;
+}
+@media(max-width:900px){
+  .report-screen-v2 .report-shell{padding-top:104px!important;}
+}
+@media(max-width:600px){
+  .report-screen-v2 .report-shell{padding-top:94px!important;}
+}
+
 </style>
 
 <style id="premium-hybrid-report-css">
