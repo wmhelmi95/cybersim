@@ -1307,6 +1307,166 @@ body.theme-light #screen-login > div > div:nth-child(2),body.theme-light .card,b
 .report-view-hidden{display:none!important;}
 @media(max-width:980px){.report-grid-v2{grid-template-columns:1fr}.report-side-v2{position:static}.premium-report-switch{grid-template-columns:1fr}}
 
+
+
+/* === BALANCED WIDE REPORT LAYOUT FIX ===
+   Fixes empty right-side feeling by keeping a real two-column report canvas on desktop
+   and giving the sidebar visible, useful management cards instead of dropping below. */
+#screen-report.report-screen-v2{
+  background:var(--bg)!important;
+}
+#screen-report .report-shell{
+  width:calc(100% - 56px)!important;
+  max-width:1680px!important;
+  margin-left:auto!important;
+  margin-right:auto!important;
+  padding-top:88px!important;
+  padding-bottom:88px!important;
+}
+#screen-report .report-grid-v2{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) clamp(390px,28vw,470px)!important;
+  gap:32px!important;
+  align-items:start!important;
+}
+#screen-report .report-main-v2,
+#screen-report .report-side-v2{
+  display:flex!important;
+  flex-direction:column!important;
+  gap:28px!important;
+  min-width:0!important;
+}
+#screen-report .report-side-v2{
+  position:sticky!important;
+  top:96px!important;
+  align-self:start!important;
+}
+#screen-report .report-card,
+#screen-report .report-client-header-v2{
+  padding:26px!important;
+  border-radius:20px!important;
+}
+#screen-report .report-card-head{
+  margin-bottom:20px!important;
+}
+#screen-report .report-card-head h3{
+  font-size:18px!important;
+  line-height:1.25!important;
+}
+#screen-report .report-card-head span{
+  font-size:11px!important;
+  letter-spacing:.9px!important;
+}
+#screen-report .report-view-intro{
+  padding:28px!important;
+  border-radius:20px!important;
+  margin-bottom:0!important;
+}
+#screen-report .report-view-intro h2{
+  font-size:28px!important;
+  line-height:1.18!important;
+  margin-bottom:12px!important;
+}
+#screen-report .report-view-intro p,
+#screen-report .ai-report-body-v2,
+#screen-report .business-impact-card p,
+#screen-report .readiness-score-side p,
+#screen-report .next-steps-v2,
+#screen-report .side-list ul{
+  font-size:14px!important;
+  line-height:1.8!important;
+}
+#screen-report .priority-kpi-grid{
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  gap:18px!important;
+}
+#screen-report .report-kpi-grid .rm{
+  min-height:128px!important;
+  padding:24px!important;
+}
+#screen-report .report-kpi-grid .rm-val{
+  font-size:34px!important;
+}
+#screen-report .business-impact-grid{
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  gap:22px!important;
+}
+#screen-report .business-impact-card{
+  min-height:210px!important;
+  padding:24px!important;
+  border-radius:18px!important;
+}
+#screen-report .business-impact-card h4{
+  font-size:16px!important;
+  margin-bottom:14px!important;
+}
+#screen-report .business-impact-card strong{
+  font-size:15px!important;
+  margin-bottom:12px!important;
+}
+#screen-report .premium-summary-table th,
+#screen-report .premium-summary-table td{
+  padding:18px 16px!important;
+  font-size:14px!important;
+  vertical-align:middle!important;
+}
+#screen-report .premium-decision-summary-card .results-table-wrap{
+  overflow-x:auto!important;
+}
+#screen-report .premium-decision-summary-card table{
+  min-width:980px!important;
+}
+#screen-report .readiness-score-side{
+  align-items:center!important;
+  gap:20px!important;
+}
+#screen-report .mini-ring{
+  width:124px!important;
+  height:124px!important;
+}
+#screen-report .mini-ring span{
+  font-size:28px!important;
+}
+#screen-report .readiness-score-side strong{
+  font-size:20px!important;
+}
+#screen-report .next-steps-v2 li{
+  margin-bottom:12px!important;
+  padding-left:4px!important;
+}
+#screen-report .two-list-card{
+  grid-template-columns:1fr!important;
+  gap:18px!important;
+}
+#screen-report .side-list{
+  padding:20px!important;
+  border-radius:16px!important;
+}
+#screen-report .side-list h4{
+  font-size:15px!important;
+  margin-bottom:12px!important;
+}
+#screen-report .report-mode-management .report-main-v2{
+  max-width:none!important;
+}
+#screen-report .report-mode-management .report-side-v2 .report-card[data-report-view="management"]{
+  display:block;
+}
+@media(max-width:1180px){
+  #screen-report .report-grid-v2{grid-template-columns:minmax(0,1fr) 380px!important;gap:24px!important;}
+  #screen-report .business-impact-grid{grid-template-columns:1fr!important;}
+  #screen-report .business-impact-card{min-height:auto!important;}
+}
+@media(max-width:980px){
+  #screen-report .report-shell{width:calc(100% - 28px)!important;padding-top:96px!important;}
+  #screen-report .report-grid-v2{grid-template-columns:1fr!important;}
+  #screen-report .report-side-v2{position:static!important;}
+  #screen-report .priority-kpi-grid{grid-template-columns:1fr 1fr!important;}
+}
+@media(max-width:640px){
+  #screen-report .priority-kpi-grid{grid-template-columns:1fr!important;}
+  #screen-report .report-card,#screen-report .report-client-header-v2,#screen-report .report-view-intro{padding:20px!important;border-radius:16px!important;}
+}
 </style>
 
 <style id="premium-hybrid-report-css">
@@ -2226,6 +2386,11 @@ function switchReportView(view){
   if(technicalTab){technicalTab.classList.toggle('active',isTech);technicalTab.setAttribute('aria-selected',String(isTech));}
   const title=document.querySelector('.report-title-row h1');
   if(title) title.textContent=isTech?'Technical Detail Report':'Management Executive Summary';
+  const grid=document.getElementById('report-exec');
+  if(grid){
+    grid.classList.toggle('report-mode-management', !isTech);
+    grid.classList.toggle('report-mode-technical', isTech);
+  }
   const shell=document.querySelector('#screen-report .report-shell');
   if(shell) shell.scrollIntoView({behavior:'smooth',block:'start'});
 }
