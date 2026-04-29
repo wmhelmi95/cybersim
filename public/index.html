@@ -1329,11 +1329,16 @@ body.theme-light #screen-login > div > div:nth-child(2),body.theme-light .card,b
 </style>
 
 <style id="tabletop-summary-css">
-/* Tabletop Exercise Summary dashboard (sketch-inspired executive view) */
+/* Tabletop Exercise Summary — executive dashboard with shared section style */
 .tabletop-summary-card{border:1px solid rgba(84,145,220,.25);background:linear-gradient(180deg,rgba(9,18,34,.96),rgba(5,11,22,.98));border-radius:18px;padding:22px;margin:0 0 22px;box-shadow:0 18px 60px rgba(0,0,0,.28)}
-.tbl-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:18px}.tbl-title{font-family:var(--head);font-size:24px;font-weight:850;color:var(--white);letter-spacing:-.4px}.tbl-sub{font-family:var(--mono);font-size:11px;color:#79aee8;margin-top:5px}.tbl-level-pill{font-family:var(--mono);font-size:10px;letter-spacing:.8px;text-transform:uppercase;color:var(--cyan);border:1px solid rgba(0,229,255,.28);background:rgba(0,229,255,.075);padding:7px 10px;border-radius:999px;white-space:nowrap}.tbl-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}.tbl-kpi{background:rgba(255,255,255,.025);border:1px solid rgba(84,145,220,.22);border-radius:14px;padding:18px;min-height:118px;display:flex;flex-direction:column;justify-content:space-between}.tbl-kpi-value{font-family:var(--head);font-size:34px;font-weight:850;color:var(--white);line-height:1}.tbl-kpi-label{font-family:var(--mono);font-size:11px;color:#8cbef3;letter-spacing:.5px;text-transform:uppercase}.tbl-visual-grid{display:grid;grid-template-columns:1.15fr 1.15fr .9fr;gap:14px;margin-bottom:18px}.tbl-panel{background:rgba(255,255,255,.022);border:1px solid rgba(84,145,220,.22);border-radius:14px;padding:16px;min-height:205px}.tbl-panel h3{font-family:var(--head);font-size:15px;font-weight:800;color:var(--white);margin:0 0 14px}.tbl-trend-bars{height:130px;display:flex;align-items:flex-end;gap:8px;padding:10px 2px 2px;border-bottom:1px solid rgba(255,255,255,.1)}.tbl-trend-bar{flex:1;min-width:10px;border-radius:8px 8px 0 0;background:linear-gradient(180deg,var(--cyan),rgba(0,229,255,.25));position:relative}.tbl-trend-bar span{position:absolute;top:-20px;left:50%;transform:translateX(-50%);font-family:var(--mono);font-size:9px;color:var(--muted);white-space:nowrap}.tbl-function-row{display:grid;grid-template-columns:110px 1fr 42px;gap:10px;align-items:center;margin-bottom:10px}.tbl-function-name{font-size:12px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.tbl-function-track{height:8px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden}.tbl-function-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,var(--blue),var(--cyan))}.tbl-function-val{font-family:var(--mono);font-size:11px;color:var(--white);text-align:right}.tbl-outcome{display:flex;flex-direction:column;gap:12px;height:100%;justify-content:center}.tbl-outcome-badge{font-family:var(--head);font-size:24px;font-weight:850;color:var(--white)}.tbl-outcome-copy{font-size:13px;line-height:1.65;color:var(--text)}.tbl-exec{background:rgba(255,255,255,.02);border:1px solid rgba(84,145,220,.22);border-radius:16px;padding:18px;min-height:230px}.tbl-exec-head{display:flex;align-items:center;gap:12px;margin-bottom:12px}.tbl-logo-box{width:70px;min-width:70px;height:44px;border:1px dashed rgba(0,229,255,.35);border-radius:10px;display:grid;place-items:center;color:var(--cyan);font-family:var(--mono);font-size:10px;background:rgba(0,229,255,.04)}.tbl-exec-title{font-family:var(--head);font-size:19px;font-weight:850;color:var(--white)}.tbl-exec-note{font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:3px}.tbl-exec-body{font-size:13px;line-height:1.72;color:var(--text)}.tbl-exec-body .ai-section{margin-bottom:10px}.tbl-exec-body h4{font-family:var(--head);font-size:13px;color:var(--white);margin:0 0 6px}.tbl-exec-body p{margin:0 0 8px}.tbl-exec-body ul{padding-left:18px;margin:6px 0}.tbl-exec-body li{margin:4px 0}.tbl-muted{color:var(--muted)}
-@media(max-width:1050px){.tbl-kpis{grid-template-columns:1fr 1fr}.tbl-visual-grid{grid-template-columns:1fr}.tbl-panel{min-height:auto}}
-@media(max-width:620px){.tbl-head{flex-direction:column}.tbl-kpis{grid-template-columns:1fr}.tabletop-summary-card{padding:16px}.tbl-function-row{grid-template-columns:90px 1fr 38px}.tbl-title{font-size:21px}}
+.tbl-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:18px}.tbl-title{font-family:var(--head);font-size:24px;font-weight:850;color:var(--white);letter-spacing:-.4px}.tbl-sub{font-family:var(--mono);font-size:11px;color:#79aee8;margin-top:5px}.tbl-level-pill{font-family:var(--mono);font-size:10px;letter-spacing:.8px;text-transform:uppercase;color:var(--cyan);border:1px solid rgba(0,229,255,.28);background:rgba(0,229,255,.075);padding:7px 10px;border-radius:999px;white-space:nowrap}
+.tbl-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}.tbl-kpi{background:rgba(255,255,255,.025);border:1px solid rgba(84,145,220,.22);border-radius:14px;padding:18px;min-height:118px;display:flex;flex-direction:column;justify-content:space-between}.tbl-kpi-value{font-family:var(--head);font-size:34px;font-weight:850;color:var(--white);line-height:1}.tbl-kpi-label{font-family:var(--mono);font-size:11px;color:#8cbef3;letter-spacing:.5px;text-transform:uppercase}
+.tbl-section{background:rgba(255,255,255,.018);border:1px solid rgba(84,145,220,.22);border-radius:16px;margin-bottom:16px;overflow:hidden}.tbl-section-head{display:flex;align-items:center;gap:12px;padding:16px 20px;background:linear-gradient(90deg,rgba(255,45,85,.09),rgba(41,121,255,.05),transparent);border-bottom:1px solid rgba(84,145,220,.14)}.tbl-section-head.blue{background:linear-gradient(90deg,rgba(41,121,255,.12),rgba(0,229,255,.04),transparent)}.tbl-section-head.green{background:linear-gradient(90deg,rgba(0,230,118,.1),rgba(0,229,255,.035),transparent)}.tbl-section-icon{width:32px;height:32px;border-radius:8px;display:grid;place-items:center;border:1px solid rgba(255,45,85,.3);background:rgba(255,45,85,.08);font-size:15px}.tbl-section-kicker{font-family:var(--mono);font-size:10px;letter-spacing:2.6px;color:#ff4d6d;text-transform:uppercase;line-height:1}.tbl-section-title{font-family:var(--head);font-size:16px;font-weight:850;color:var(--white);margin-top:4px}.tbl-section-meta{margin-left:auto;font-family:var(--mono);font-size:11px;letter-spacing:2px;color:#58a7ff;text-transform:uppercase}.tbl-section-body{padding:22px 24px}.tbl-muted{color:var(--muted)}
+.tbl-trend-layout{display:grid;grid-template-columns:minmax(0,2fr) 260px;gap:26px;align-items:center}.tbl-trend-copy{font-size:14px;line-height:1.65;color:var(--text);max-width:620px;margin:0 0 8px}.tbl-trend-chart{height:270px;position:relative}.tbl-trend-chart svg{width:100%;height:100%;display:block;overflow:visible}.tbl-axis-label{font-family:var(--mono);font-size:11px;fill:#b8d4f0}.tbl-grid-line{stroke:rgba(120,170,220,.18);stroke-dasharray:4 5}.tbl-line{fill:none;stroke:#2979ff;stroke-width:4;stroke-linecap:round;stroke-linejoin:round}.tbl-area{fill:url(#tblTrendGrad)}.tbl-point{fill:#e8f4ff;stroke:#2979ff;stroke-width:4}.tbl-trend-badge{background:rgba(41,121,255,.16);border:1px solid rgba(41,121,255,.55);border-radius:14px;padding:22px 20px;text-align:center;min-height:164px;display:flex;flex-direction:column;justify-content:center}.tbl-trend-badge small{font-family:var(--mono);font-size:11px;color:#b8d4f0;letter-spacing:1.2px}.tbl-trend-badge strong{font-family:var(--head);font-size:38px;color:#fff;line-height:1.1;margin:12px 0}.tbl-trend-status{font-family:var(--mono);font-size:11px;letter-spacing:1px;border-radius:999px;padding:7px 10px;background:rgba(0,230,118,.18);color:#00e676}.tbl-trend-legend{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;border-top:1px solid rgba(84,145,220,.22);padding-top:18px;margin-top:22px}.tbl-legend-item{display:flex;gap:10px;align-items:flex-start;color:var(--text);font-size:13px;line-height:1.25}.tbl-legend-item i{width:10px;height:10px;border-radius:50%;margin-top:4px;display:block;flex-shrink:0}.tbl-legend-item strong{display:block;color:var(--white)}
+.tbl-two-col{display:grid;grid-template-columns:1.15fr .85fr;gap:16px}.tbl-function-list{display:flex;flex-direction:column;gap:0}.tbl-function-row{display:grid;grid-template-columns:34px 1fr 50px;gap:12px;align-items:center;padding:13px 0;border-bottom:1px solid rgba(84,145,220,.16)}.tbl-function-row:last-child{border-bottom:none}.tbl-function-icon{font-size:17px;width:26px;text-align:center}.tbl-function-name{font-family:var(--head);font-size:14px;font-weight:700;color:var(--white);margin-bottom:7px}.tbl-function-track{height:8px;border-radius:999px;background:rgba(255,255,255,.09);overflow:hidden}.tbl-function-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,var(--blue),var(--cyan))}.tbl-function-val{font-family:var(--mono);font-size:12px;color:var(--cyan);text-align:right;font-weight:700}.tbl-function-val.warn{color:var(--amber)}.tbl-function-val.bad{color:var(--red)}.tbl-function-val.good{color:var(--green)}
+.tbl-outcome-box{display:grid;grid-template-columns:130px 1fr;gap:22px;align-items:center;min-height:180px}.tbl-outcome-grade{width:124px;height:124px;border-radius:28px;display:grid;place-items:center;font-family:var(--head);font-size:64px;font-weight:900;background:linear-gradient(135deg,rgba(255,179,0,.12),rgba(10,20,35,.88));box-shadow:0 22px 45px rgba(0,0,0,.25)}.tbl-outcome-grade.grade-a{color:var(--green)}.tbl-outcome-grade.grade-b{color:var(--cyan)}.tbl-outcome-grade.grade-c{color:var(--amber)}.tbl-outcome-grade.grade-d{color:var(--red)}.tbl-outcome-title{font-family:var(--head);font-size:22px;line-height:1.2;font-weight:850;color:var(--white);margin-bottom:10px}.tbl-outcome-copy{font-size:14px;line-height:1.65;color:#6d8fba}.tbl-exec-body{font-size:14px;line-height:1.8;color:var(--text)}.tbl-exec-body .ai-section{margin-bottom:14px}.tbl-exec-body h4{font-family:var(--head);font-size:14px;color:var(--white);margin:0 0 8px}.tbl-exec-body p{margin:0 0 10px}.tbl-exec-body ul{padding-left:18px;margin:8px 0}.tbl-exec-body li{margin:5px 0}
+@media(max-width:1050px){.tbl-kpis{grid-template-columns:1fr 1fr}.tbl-trend-layout,.tbl-two-col{grid-template-columns:1fr}.tbl-trend-badge{max-width:320px}.tbl-trend-legend{grid-template-columns:1fr 1fr}.tbl-section-meta{display:none}}
+@media(max-width:620px){.tbl-head{flex-direction:column}.tbl-kpis{grid-template-columns:1fr}.tabletop-summary-card{padding:16px}.tbl-title{font-size:21px}.tbl-section-body{padding:16px}.tbl-trend-legend{grid-template-columns:1fr}.tbl-outcome-box{grid-template-columns:1fr}.tbl-function-row{grid-template-columns:28px 1fr 44px}}
 </style>
 
 </head>
@@ -1995,18 +2000,58 @@ body.theme-light #screen-login > div > div:nth-child(2),body.theme-light .card,b
         <div class="tbl-kpi"><div id="tbl-time-taken" class="tbl-kpi-value">0m0s</div><div class="tbl-kpi-label">Time Taken</div></div>
       </div>
 
-      <div class="tbl-visual-grid">
-        <div class="tbl-panel"><h3>Readiness Trend</h3><div id="tbl-trend-bars" class="tbl-trend-bars"></div></div>
-        <div class="tbl-panel"><h3>Readiness by Function</h3><div id="tbl-function-bars"></div></div>
-        <div class="tbl-panel"><h3>Threat Outcome</h3><div id="tbl-outcome" class="tbl-outcome"></div></div>
+      <div class="tbl-section">
+        <div class="tbl-section-head blue">
+          <div class="tbl-section-icon">📈</div>
+          <div><div class="tbl-section-kicker">SECTION 01</div><div class="tbl-section-title">Readiness Trend</div></div>
+          <div class="tbl-section-meta">Readiness over time</div>
+        </div>
+        <div class="tbl-section-body">
+          <div class="tbl-trend-layout">
+            <div>
+              <p class="tbl-trend-copy" id="tbl-trend-copy">Tracks readiness over time during the exercise. Each point shows the running readiness average after a submitted decision.</p>
+              <div id="tbl-trend-chart" class="tbl-trend-chart"></div>
+            </div>
+            <div id="tbl-trend-badge" class="tbl-trend-badge"><small>Current Readiness</small><strong>0%</strong><span class="tbl-trend-status">PENDING</span></div>
+          </div>
+          <div class="tbl-trend-legend">
+            <div class="tbl-legend-item"><i style="background:var(--red)"></i><div><strong>0–39%</strong>Critical</div></div>
+            <div class="tbl-legend-item"><i style="background:var(--amber)"></i><div><strong>40–59%</strong>Needs improvement</div></div>
+            <div class="tbl-legend-item"><i style="background:var(--blue)"></i><div><strong>60–79%</strong>Good</div></div>
+            <div class="tbl-legend-item"><i style="background:var(--green)"></i><div><strong>80–100%</strong>Strong readiness</div></div>
+          </div>
+        </div>
       </div>
 
-      <div class="tbl-exec">
-        <div class="tbl-exec-head">
-          <div class="tbl-logo-box">LOGO</div>
-          <div><div class="tbl-exec-title">Executive Summary</div><div class="tbl-exec-note">Consultant report generated from exercise evidence</div></div>
+      <div class="tbl-two-col">
+        <div class="tbl-section">
+          <div class="tbl-section-head blue">
+            <div class="tbl-section-icon">📊</div>
+            <div><div class="tbl-section-kicker">SECTION 02</div><div class="tbl-section-title">Readiness by Function</div></div>
+            <div class="tbl-section-meta">Skill domains</div>
+          </div>
+          <div class="tbl-section-body"><div id="tbl-function-bars" class="tbl-function-list"></div></div>
         </div>
-        <div id="tbl-exec-summary" class="tbl-exec-body tbl-muted">Generating executive summary...</div>
+
+        <div class="tbl-section">
+          <div class="tbl-section-head">
+            <div class="tbl-section-icon">🎯</div>
+            <div><div class="tbl-section-kicker">SECTION 03</div><div class="tbl-section-title">Threat Outcome</div></div>
+            <div class="tbl-section-meta">Containment view</div>
+          </div>
+          <div class="tbl-section-body"><div id="tbl-outcome"></div></div>
+        </div>
+      </div>
+
+      <div class="tbl-section">
+        <div class="tbl-section-head green">
+          <div class="tbl-section-icon">📋</div>
+          <div><div class="tbl-section-kicker">SECTION 04</div><div class="tbl-section-title">Executive Summary</div></div>
+          <div class="tbl-section-meta">Consultant report</div>
+        </div>
+        <div class="tbl-section-body">
+          <div id="tbl-exec-summary" class="tbl-exec-body tbl-muted">Generating executive summary...</div>
+        </div>
       </div>
     </section>
 
@@ -4547,30 +4592,77 @@ function updateTabletopExecutiveSummary(html){
 function renderTabletopSummaryDashboard(s,decs,execMetrics,pct,correct,timeTaken,skillReadiness,grade){
   const set=(id,val)=>{const el=document.getElementById(id); if(el) el.textContent=val;};
   const level=(simState.level||'management').replace(/-/g,' ');
+  const levelLabel=level.toUpperCase()+' LEVEL';
   set('tbl-scenario-title', s?.title || 'Scenario');
-  set('tbl-level-sub', level.toUpperCase()+' LEVEL');
-  set('tbl-level-pill', level.toUpperCase()+' LEVEL');
+  set('tbl-level-sub', levelLabel);
+  set('tbl-level-pill', levelLabel);
   set('tbl-readiness', `${pct}%`);
   set('tbl-decisions-passed', `${correct}/${decs.length}`);
   set('tbl-participants', execMetrics.participantCount||1);
   set('tbl-time-taken', `${Math.floor(timeTaken/60)}m${timeTaken%60}s`);
-  const trendEl=document.getElementById('tbl-trend-bars');
+
+  const readinessStatus = pct>=80?'STRONG':pct>=60?'GOOD':pct>=40?'NEEDS IMPROVEMENT':'CRITICAL';
+  const trendCopy=document.getElementById('tbl-trend-copy');
+  if(trendCopy){
+    trendCopy.textContent = level.includes('working')
+      ? 'Tracks technical execution quality over time during the exercise. Each point shows the running readiness average after a submitted decision.'
+      : 'Tracks management decision quality over time during the exercise. Each point shows the running readiness average after a submitted decision.';
+  }
+  const badge=document.getElementById('tbl-trend-badge');
+  if(badge){
+    badge.innerHTML=`<small>Current Readiness</small><strong>${pct}%</strong><span class="tbl-trend-status">${readinessStatus}</span>`;
+    const st=badge.querySelector('.tbl-trend-status');
+    if(st){
+      st.style.background=pct>=80?'rgba(0,230,118,.18)':pct>=60?'rgba(41,121,255,.22)':pct>=40?'rgba(255,179,0,.18)':'rgba(255,45,85,.18)';
+      st.style.color=pct>=80?'var(--green)':pct>=60?'#58a7ff':pct>=40?'var(--amber)':'var(--red)';
+    }
+  }
+
+  const trendEl=document.getElementById('tbl-trend-chart');
   if(trendEl){
     let running=0;
     const trend=(simState.results||[]).map((r,i)=>{ running += scoreOfResult(r); return Math.round(running/(i+1)); });
-    const vals=trend.length?trend:[pct];
-    trendEl.innerHTML=vals.map((v,i)=>`<div class="tbl-trend-bar" style="height:${Math.max(8,Math.min(100,v))}%"><span>D${i+1}</span></div>`).join('');
+    const vals=(trend.length?trend:[pct]).map(v=>Math.max(0,Math.min(100,Number(v)||0)));
+    const W=720,H=250,L=52,R=18,T=22,B=42;
+    const x=(i)=> vals.length===1 ? L+(W-L-R)/2 : L + i*((W-L-R)/(vals.length-1));
+    const y=(v)=> T + (100-v)*((H-T-B)/100);
+    const points=vals.map((v,i)=>[x(i),y(v)]);
+    const d=points.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' ');
+    const area=d+` L ${points[points.length-1][0].toFixed(1)} ${H-B} L ${points[0][0].toFixed(1)} ${H-B} Z`;
+    const grid=[0,25,50,75,100].map(v=>`<line class="tbl-grid-line" x1="${L}" y1="${y(v)}" x2="${W-R}" y2="${y(v)}"></line><text class="tbl-axis-label" x="${L-10}" y="${y(v)+4}" text-anchor="end">${v}%</text>`).join('');
+    const labels=vals.map((v,i)=>`<text class="tbl-axis-label" x="${x(i)}" y="${H-8}" text-anchor="middle">D${i+1}</text>`).join('');
+    const circles=points.map((p,i)=>`<circle class="tbl-point" cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="6"><title>D${i+1}: ${vals[i]}%</title></circle>`).join('');
+    trendEl.innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Readiness trend chart"><defs><linearGradient id="tblTrendGrad" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="#2979ff" stop-opacity=".46"/><stop offset="100%" stop-color="#00e5ff" stop-opacity=".08"/></linearGradient></defs>${grid}<path class="tbl-area" d="${area}"></path><path class="tbl-line" d="${d}"></path>${circles}${labels}</svg>`;
   }
+
   const fnEl=document.getElementById('tbl-function-bars');
   if(fnEl){
-    const keys=(s?.skills||Object.keys(skillReadiness||{})).slice(0,6);
-    fnEl.innerHTML=keys.map(k=>{const v=Math.round(skillReadiness?.[k]||0); const label=SKILLS[k]?.label||k; return `<div class="tbl-function-row"><div class="tbl-function-name">${escapeHTML(label)}</div><div class="tbl-function-track"><div class="tbl-function-fill" style="width:${Math.max(4,v)}%"></div></div><div class="tbl-function-val">${v}%</div></div>`;}).join('') || '<div class="tbl-muted">No function data available.</div>';
+    const fallbackKeys=level.includes('working')?['technical','forensics','containment','communication']:['leadership','communication','decision','compliance'];
+    const keys=(s?.skills&&s.skills.length?s.skills:Object.keys(skillReadiness||{}));
+    const selected=(keys.length?keys:fallbackKeys).slice(0,6);
+    const iconFor=(label,key)=>{
+      const t=(label||key||'').toLowerCase();
+      if(t.includes('technical')||t.includes('contain')) return '🛡️';
+      if(t.includes('commun')) return '📣';
+      if(t.includes('decision')||t.includes('lead')) return '🧠';
+      if(t.includes('compl')||t.includes('legal')) return '⚖️';
+      if(t.includes('forensic')) return '🔎';
+      return '●';
+    };
+    fnEl.innerHTML=selected.map(k=>{
+      const v=Math.round(skillReadiness?.[k]||0);
+      const label=SKILLS[k]?.label||String(k).replace(/[-_]/g,' ').replace(/\b\w/g,m=>m.toUpperCase());
+      const cls=v>=80?'good':v<40?'bad':v<60?'warn':'';
+      return `<div class="tbl-function-row"><div class="tbl-function-icon">${iconFor(label,k)}</div><div><div class="tbl-function-name">${escapeHTML(label)}</div><div class="tbl-function-track"><div class="tbl-function-fill" style="width:${Math.max(0,Math.min(100,v))}%"></div></div></div><div class="tbl-function-val ${cls}">${v}%</div></div>`;
+    }).join('') || '<div class="tbl-muted">No function data available.</div>';
   }
+
   const out=document.getElementById('tbl-outcome');
   if(out){
-    const status=pct>=80?'Contained / Strong':pct>=60?'Controlled / Monitor':pct>=40?'Partially Contained':'Escalated Risk';
-    const copy=pct>=80?'The response reduced exposure and maintained a strong control posture.':pct>=60?'The incident was handled with acceptable readiness, but improvement areas remain.':pct>=40?'Response actions were mixed and may lead to delayed containment.':'Material gaps may increase operational, regulatory, and reputational impact.';
-    out.innerHTML=`<div class="tbl-outcome-badge">${escapeHTML(status)}</div><div class="tbl-outcome-copy">${escapeHTML(copy)}</div><div class="tbl-muted">Grade: ${escapeHTML(grade||'—')}</div>`;
+    const letter=grade||getGrade(pct)||'—';
+    const headline=pct>=80?'Strong Response — Contained':pct>=60?'Adequate Response — Room to Improve':pct>=40?'Partial Response — Improvement Required':'Critical Exposure — Immediate Action Required';
+    const copy=pct>=80?'The response indicates strong containment capability and clear readiness evidence across the exercise.':pct>=60?'Outcome is based on decision quality, free-text assessment, and playbook alignment. The incident was controlled, but improvement areas remain.':pct>=40?'The response showed mixed control effectiveness. Delays or gaps may increase containment cost, data exposure, and operational disruption.':'Material readiness gaps may increase operational, regulatory, and reputational impact during a real incident.';
+    out.innerHTML=`<div class="tbl-outcome-box"><div class="tbl-outcome-grade grade-${String(letter).toLowerCase()}">${escapeHTML(letter)}</div><div><div class="tbl-outcome-title">${escapeHTML(headline)}</div><div class="tbl-outcome-copy">${escapeHTML(copy)}</div></div></div>`;
   }
   const exec=document.getElementById('tbl-exec-summary');
   if(exec){ exec.classList.add('tbl-muted'); exec.innerHTML='Generating executive summary...'; }
