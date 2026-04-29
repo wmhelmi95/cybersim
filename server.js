@@ -548,7 +548,42 @@ function buildSkillAnalysis(skillScores) {
     .join('\n') || 'No skill domains were individually assessed.';
 }
 
-const SYSTEM_PROMPT = `You are Dr. Marcus Reid, a Senior Cybersecurity Resilience Consultant. Write precise, professional executive debrief reports for corporate clients. Be evidence-based, direct, and grounded in real cybersecurity standards. Use ONLY plain text and basic HTML: <strong>, <br>, <ul>, <li>. No markdown. No # headers.`.trim();
+
+function buildExecutiveAssessmentSignals({ pct, decisionHistory, skillScores, safeLevel, safeTime }) {
+  const decisions = Array.isArray(decisionHistory) ? decisionHistory : [];
+  const total = Math.max(1, decisions.length);
+  const correct = decisions.filter(d => d.correct === true).length;
+  const accuracy = Math.round((correct / total) * 100);
+  const avgDecisionTime = safeTime ? Math.round(safeTime / total) : null;
+  const weakDomains = Object.entries(skillScores || {})
+    .filter(([_, v]) => v !== null && v !== undefined && !Number.isNaN(Number(v)) && Number(v) < 70)
+    .map(([k, v]) => `${k}:${Math.round(Number(v))}%`);
+
+  const leadership = Number(skillScores?.leadership);
+  const communication = Number(skillScores?.communication);
+  const compliance = Number(skillScores?.compliance);
+  const coordination = Number(skillScores?.coordination);
+  const decision = Number(skillScores?.decision);
+  const signals = [];
+
+  if (accuracy >= 90 && leadership < 50) signals.push('Correct decisions were recorded, but leadership execution is materially weak. Explain that accuracy does not equal crisis command maturity.');
+  if (avgDecisionTime !== null && avgDecisionTime > 90) signals.push('Decision delay is a priority risk. Link hesitation to containment cost, exposure and executive alignment risk.');
+  if (communication < 70) signals.push('Communication governance requires improvement. Emphasise ownership of board, customer, media and staff messaging.');
+  if (compliance < 70) signals.push('Regulatory and legal escalation requires clearer management-level triggers.');
+  if (coordination < 70) signals.push('Cross-functional coordination requires clearer command structure and hand-off discipline.');
+  if (decision >= 70 && weakDomains.length) signals.push('Separate strong decision knowledge from weaker execution domains. Do not let high answer accuracy hide weak readiness domains.');
+  if (!signals.length) signals.push('Use score evidence, timing and assessed domain results to provide a balanced executive readiness judgement.');
+
+  return [
+    `Decision accuracy: ${accuracy}%`,
+    `Overall readiness score: ${pct}%`,
+    `Average decision time: ${avgDecisionTime === null ? 'Not available' : `${avgDecisionTime}s`}`,
+    `Weak domains: ${weakDomains.length ? weakDomains.join(', ') : 'None below threshold'}`,
+    `Assessment signals: ${signals.join(' ')}`,
+  ].join('\n');
+}
+
+const SYSTEM_PROMPT = `You are a senior cybersecurity resilience advisor writing board-ready cyber crisis assessment reports for corporate clients. Your style is concise, evidence-led, commercially aware, and slightly critical when risk is present. Distinguish between technical correctness, leadership execution, communication governance, regulatory escalation and operational resilience. Use ONLY plain text and basic HTML: <strong>, <br>, <ul>, <li>. No markdown. No # headers.`.trim();
 
 // ─────────────────────────────────────────────
 // AI CONCLUSION — protected + rate limited
@@ -592,6 +627,8 @@ app.post('/api/generate-conclusion', requireAuth, aiLimiter, async (req, res) =>
                        : avgTime > 90 ? 'Over 90s avg — hesitation in a live incident would cost containment time.'
                        : 'Decision pacing within acceptable range.';
 
+    const executiveSignals = buildExecutiveAssessmentSignals({ pct, decisionHistory, skillScores, safeLevel, safeTime });
+
     const userPrompt = `
 SIMULATION RECORD
 Client: ${safeClient || 'Confidential'}
@@ -612,6 +649,9 @@ SCORING RULES:
 ${safeLevel === 'management'
   ? 'This is a MANAGEMENT LEVEL simulation. Participants are senior leaders, not technical staff. Do NOT assess or criticise Technical Response skills — management are not expected to perform hands-on technical containment. Their role is leadership, communication, compliance, decision-making, and coordination. If Technical Response shows 0%, note that this skill is NOT applicable for management participants.'
   : 'This is a WORKING LEVEL simulation. Participants are SOC analysts and IT engineers. Technical response is the primary expected skill.'}
+
+EXECUTIVE ASSESSMENT SIGNALS
+${executiveSignals}
 
 PERFORMANCE
 Score: ${safeScore}/${safeMax} (${pct}%) — Grade: ${grade.letter} ${grade.label}
@@ -642,7 +682,15 @@ IMPORTANT FREE-TEXT AND PARTICIPANT ANALYSIS RULES:
 - Mention recurring weaknesses by participant and team when the data contains participantName or team.
 - Identify who needs improvement and in which skill domain when enough data is available.
 
-Write the full executive debrief using ONLY these HTML tags: <strong>, <br>, <ul>, <li>. No markdown. No other tags. Never output empty <li> items. Never output standalone bullet symbols. Every bullet must contain a complete sentence. The report must be insight-first and benchmark-style: headline, readiness judgement, business impact, and risk implication first, then evidence and recommendations. Use aggregate evidence for executives; avoid dumping every participant action. Use concise consultant language similar to an enterprise cyber resilience platform.
+Write the full executive debrief using ONLY these HTML tags: <strong>, <br>, <ul>, <li>. No markdown. No other tags. Never output empty <li> items. Never output standalone bullet symbols. Every bullet must contain a complete sentence.
+
+EXECUTIVE WRITING RULES:
+- Lead with a judgement, not a description.
+- Explain contradictions clearly, especially when answers are correct but leadership or management domains fail.
+- Use evidence from score, timing, assessed skill domains and decision history.
+- Avoid generic phrases such as "strong responses were observed" unless tied to a specific behaviour.
+- Use action-oriented recommendations with owner-level language such as executive sponsor, incident commander, legal/compliance lead or communications owner.
+- Keep language suitable for a CISO, board or senior management audience.
 
 Use EXACTLY these 11 section headings — each must be wrapped in <strong>Title</strong><br> on its own line:
 
@@ -676,7 +724,7 @@ Use EXACTLY these 11 section headings — each must be wrapped in <strong>Title<
 <strong>Prioritised Recommendations</strong><br>
 [Exactly 3 <ul><li> items. Start each with [IMMEDIATE], [30 DAYS], or [NEXT QUARTER] followed by the recommendation.]
 
-<strong>Top Strengths</strong><br>[Exactly 3 unique bullets. Never repeat the same wording. Tie each to a specific observed behaviour.]<br><strong>Top Areas for Improvement</strong><br>[Exactly 3 unique bullets. Each must include root cause and management action.]<br><strong>Consultant's Verdict</strong><br>
+<strong>Strength</strong><br>[Exactly 3 unique bullets. Never repeat the same wording. Tie each to a specific observed behaviour.]<br><strong>Priority Improvement Areas</strong><br>[Exactly 3 unique bullets. Each must include root cause, business risk and management action.]<br><strong>Consultant's Verdict</strong><br>
 [2 sentences only: overall verdict and single most important next action.]
 `.trim();
 
