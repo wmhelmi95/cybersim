@@ -696,6 +696,31 @@ label.lbl,.dec-q-lbl,.feed-label,.st-lbl,.prog-lbl,.state-lbl,.industry-badge{
   color:var(--app-text)!important;
 }
 .results-table tr:hover td,.scenario-table tr:hover td{background:rgba(0,229,255,.025)!important;}
+
+/* Clean reusable list/table component — prevents broken row divider lines */
+.table-card{padding:0!important;overflow:hidden!important;}
+.clean-table{width:100%!important;border-collapse:separate!important;border-spacing:0!important;table-layout:fixed!important;}
+.clean-table thead th{height:50px!important;vertical-align:middle!important;}
+.clean-table tbody tr{position:relative;}
+.clean-table tbody tr::after{content:'';position:absolute;left:0;right:0;bottom:0;height:1px;background:rgba(55,105,165,.22);pointer-events:none;}
+.clean-table tbody tr:last-child::after{display:none;}
+.clean-table tbody td{border-bottom:none!important;vertical-align:middle!important;}
+.clean-table .title-col{width:36%;}
+.clean-table .severity-col{width:9%;}
+.clean-table .level-col{width:8%;}
+.clean-table .skills-col{width:18%;}
+.clean-table .decisions-col{width:8%;}
+.clean-table .duration-col{width:9%;}
+.clean-table .actions-col{width:18%;min-width:250px;}
+.clean-title{font-family:var(--head);font-size:14px;font-weight:800;color:var(--white);line-height:1.25;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.clean-subtitle{font-size:11px;color:var(--muted);line-height:1.45;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:4px;max-width:100%;}
+.action-cell{padding-left:16px!important;padding-right:16px!important;text-align:right!important;white-space:nowrap!important;}
+.table-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;min-width:0;}
+.table-actions .btn{white-space:nowrap;}
+.table-actions .btn-icon,.table-actions .btn-danger{flex:0 0 auto;}
+.clean-table .skill-chip{vertical-align:middle;}
+@media(max-width:900px){.clean-table{min-width:980px!important;}.clean-table .actions-col{min-width:260px;}}
+
 /* Builder */
 .builder-tabs{
   background:rgba(7,14,28,.42)!important;
@@ -1544,8 +1569,17 @@ body.theme-light #screen-login > div > div:nth-child(2),body.theme-light .card,b
       <button class="btn btn-primary" onclick="resetBuilder(); gotoTab('builder')">+ Create Scenario</button>
     </div>
     <div class="page-sub">Base scenarios created by Nexa-CyberSim admin — assign to any client</div>
-    <div class="card">
-      <table class="scenario-table">
+    <div class="card table-card scenario-table-wrap">
+      <table class="scenario-table clean-table scenario-library-table">
+        <colgroup>
+          <col class="title-col">
+          <col class="severity-col">
+          <col class="level-col">
+          <col class="skills-col">
+          <col class="decisions-col">
+          <col class="duration-col">
+          <col class="actions-col">
+        </colgroup>
         <thead><tr><th>Title</th><th>Severity</th><th>Level</th><th>Skills Tested</th><th>Decisions</th><th>Duration</th><th></th></tr></thead>
         <tbody id="library-body"></tbody>
       </table>
@@ -3441,7 +3475,7 @@ function renderAssignedTable(client){
       <td>${skillTags}</td>
       <td style="font-family:var(--mono);font-size:12px">${clientResults.length}</td>
       <td style="font-family:var(--mono);font-size:12px;color:var(--cyan)">${lastResult?getNormalisedResultPct(lastResult)+'%':'—'}</td>
-      <td style="display:flex;gap:6px;padding:10px;flex-wrap:wrap;"><button class="btn btn-primary btn-sm" onclick="launchBriefing('${sid}','${client.id}')">▶ Run</button><button class="btn btn-outline btn-sm" onclick="createLiveSessionFromClient('${sid}','${client.id}')">▣ Live</button><button class="btn btn-danger btn-sm" onclick="unassignScenario('${client.id}','${sid}')">✕</button></td>
+      <td class="action-cell"><div class="table-actions" style="justify-content:flex-start;flex-wrap:wrap;"><button class="btn btn-primary btn-sm" onclick="launchBriefing('${sid}','${client.id}')">▶ Run</button><button class="btn btn-outline btn-sm" onclick="createLiveSessionFromClient('${sid}','${client.id}')">▣ Live</button><button class="btn btn-danger btn-sm btn-icon" onclick="unassignScenario('${client.id}','${sid}')">✕</button></div></td>
     </tr>`;
   }).join('')||'<tr><td colspan="6" style="padding:20px;text-align:center;color:var(--muted)">No scenarios assigned. Click "+ Assign Scenario" to add.</td></tr>';
 }
@@ -3471,7 +3505,7 @@ function renderClientHistory(clientId){
       <td><span style="font-family:var(--mono);font-size:9px;padding:2px 6px;border-radius:3px;background:rgba(0,229,255,0.06);color:var(--cyan);border:1px solid rgba(0,229,255,0.15)">${r.level.toUpperCase()}</span></td>
       <td style="font-family:var(--mono);font-size:12px;color:var(--white)">${pct}%</td>
       <td><span class="grade-pill g${grade}">${grade}</span></td>
-      <td style="display:flex;gap:6px;justify-content:flex-end;"><button class="btn btn-ghost btn-sm" onclick="viewResult('${r.id}')">View</button><button class="btn btn-danger btn-sm btn-icon" style="width:26px;height:26px;font-size:12px;" onclick="deleteSimResult('${r.id}','${clientId}')">🗑</button></td>
+      <td class="action-cell"><div class="table-actions"><button class="btn btn-ghost btn-sm" onclick="viewResult('${r.id}')">View</button><button class="btn btn-danger btn-sm btn-icon" style="width:26px;height:26px;font-size:12px;" onclick="deleteSimResult('${r.id}','${clientId}')">🗑</button></div></td>
     </tr>`;
   }).join('')||'<tr><td colspan="6" style="padding:20px;text-align:center;color:var(--muted)">No simulations yet</td></tr>';
 }
@@ -3493,19 +3527,27 @@ function deleteDashResult(resultId){
 // LIBRARY
 // ══════════════════════════════════════════════════════════
 function renderLibrary(){
-  document.getElementById('library-body').innerHTML=DB.scenarios.map(s=>{
-    const skillTags=s.skills.map(k=>`<span class="skill-chip">${SKILLS[k].icon}</span>`).join('');
-    const decs=s.decisions?.management?.length||0;
-    return `<tr>
-      <td><span style="font-family:var(--head);font-size:14px;font-weight:700;color:var(--white)">${s.icon} ${s.title}</span><br><span style="font-size:11px;color:var(--muted)">${s.desc.substring(0,60)}...</span></td>
-      <td><span class="sev-badge sev-${s.severity.toLowerCase()}">${s.severity}</span></td>
-      <td style="font-size:12px">${s.level}</td>
-      <td>${skillTags}</td>
+  const body=document.getElementById('library-body');
+  body.innerHTML=(DB.scenarios||[]).map(s=>{
+    const skills=Array.isArray(s.skills)?s.skills:[];
+    const skillTags=skills.map(k=>`<span class="skill-chip" title="${SKILLS[k]?.label||k}">${SKILLS[k]?.icon||'•'}</span>`).join('');
+    const decsObj=normaliseScenarioDecisions(s);
+    const decs=Math.max(decsObj.management?.length||0,decsObj.working?.length||0);
+    const severity=String(s.severity||'medium').toLowerCase();
+    const levelLabel=String(s.level||'Both').replace(/\b\w/g,c=>c.toUpperCase());
+    return `<tr class="clean-row">
+      <td>
+        <span class="clean-title">${s.icon||''} ${escapeHTML(s.title||'Untitled Scenario')}</span>
+        <span class="clean-subtitle">${escapeHTML((s.desc||'').substring(0,90))}${(s.desc||'').length>90?'...':''}</span>
+      </td>
+      <td><span class="sev-badge sev-${severity}">${escapeHTML(String(s.severity||'Medium').toUpperCase())}</span></td>
+      <td style="font-size:12px">${escapeHTML(levelLabel)}</td>
+      <td>${skillTags||'<span style="color:var(--muted);font-size:11px;">—</span>'}</td>
       <td style="font-family:var(--mono);font-size:12px">${decs}</td>
-      <td style="font-family:var(--mono);font-size:12px">${s.duration}</td>
-      <td style="display:flex;gap:6px;align-items:center;"><button class="btn btn-outline btn-sm" onclick="launchBriefing('${s.id}',null)">Preview</button><button class="btn btn-ghost btn-sm" onclick="editScenario('${s.id}')">Edit</button><button class="btn btn-danger btn-sm" onclick="deleteScenario('${s.id}')">✕</button></td>
+      <td style="font-family:var(--mono);font-size:12px">${escapeHTML(s.duration||'—')}</td>
+      <td class="action-cell"><div class="table-actions"><button class="btn btn-outline btn-sm" onclick="launchBriefing('${s.id}',null)">Preview</button><button class="btn btn-ghost btn-sm" onclick="editScenario('${s.id}')">Edit</button><button class="btn btn-danger btn-sm btn-icon" onclick="deleteScenario('${s.id}')">✕</button></div></td>
     </tr>`;
-  }).join('');
+  }).join('') || '<tr><td colspan="7" style="padding:22px;text-align:center;color:var(--muted)">No scenarios found</td></tr>';
 }
 
 // ══════════════════════════════════════════════════════════
@@ -4196,6 +4238,9 @@ function renderConclusionHTML(raw){
     if(priority){ const label = priority[1].toUpperCase(); const cls = label === 'IMMEDIATE' ? 'immediate' : label === '30 DAYS' ? 'days' : 'quarter'; const icon = label === 'IMMEDIATE' ? '⚡' : label === '30 DAYS' ? '📅' : '📆'; return `<div class="report-rec-line"><span class="report-priority ${cls}">${icon} ${esc(label)}</span><span>${esc(priority[2])}</span></div>`; }
     const skill = line.match(/^([^:]{2,46}):\s*(\d{1,3})%\s*\[?(PASS|FAIL|BORDERLINE|DEVELOPING|PARTIAL|NOT ASSESSED|CRITICAL|GOOD|STRONG)\]?\s*[—–\-]?\s*(.*)$/i);
     if(skill){ const pct = Math.max(0, Math.min(100, Number(skill[2]))); const status = skill[3].toUpperCase(); const cls = pct >= 70 ? 'pass' : pct >= 50 ? 'warn' : 'fail'; return `<div class="report-skill-line"><div class="report-skill-main"><strong>${esc(skill[1])}</strong><small>${esc(skill[4] || status)}</small></div><div class="report-skill-score ${cls}">${pct}%<span>${esc(status)}</span></div><div class="report-skill-bar"><i class="${cls}" style="width:${Math.max(3,pct)}%"></i></div></div>`; }
+    const labeled = line.match(/^([A-Za-z][A-Za-z &/()0-9\-]{2,52}):\s*(.+)$/);
+    if(labeled){ return `<div class="report-insight-row"><div class="report-insight-label">${esc(labeled[1])}</div><div class="report-insight-copy">${esc(labeled[2])}</div></div>`; }
+    if(/^[A-Za-z][A-Za-z &/()0-9\-]{2,56}:$/.test(line)){ return `<h4 class="report-subhead">${esc(line.replace(/:$/,''))}</h4>`; }
     if(/^[•●\-*–—]\s+/.test(line)) return `<li>${esc(line.replace(/^[•●\-*–—]\s+/,''))}</li>`;
     return `<p>${esc(line)}</p>`;
   }
@@ -6548,6 +6593,11 @@ function buildManagementThemes(results, good){
 .report-ai-body{padding:18px 20px;font-size:14px;line-height:1.85;color:var(--text);}
 .report-ai-body p{margin:0 0 12px;}
 .report-ai-body p:last-child{margin-bottom:0;}
+.report-subhead{font-family:var(--mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--sec-accent);margin:18px 0 8px;padding-top:8px;border-top:1px solid rgba(255,255,255,.08);}
+.report-insight-row{display:grid;grid-template-columns:180px 1fr;gap:14px;align-items:start;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.07);}
+.report-insight-row:last-child{border-bottom:0;}
+.report-insight-label{font-family:var(--mono);font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--sec-accent);font-weight:800;}
+.report-insight-copy{color:var(--text);line-height:1.75;}
 .report-section-list{list-style:none;margin:8px 0 0;padding:0;display:flex;flex-direction:column;gap:10px;}
 .report-section-list li{position:relative;padding-left:18px;line-height:1.75;}
 .report-section-list li:before{content:'•';position:absolute;left:0;color:var(--cyan);font-weight:900;}
