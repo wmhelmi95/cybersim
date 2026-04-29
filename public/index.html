@@ -6827,3 +6827,251 @@ function buildManagementThemes(results, good){
 
 </body>
 </html>
+
+<style id="mbb-8px-typography-grid-final">
+/* MBB-style 8px grid + report spacing cleanup */
+:root{
+  --space-1:8px;
+  --space-2:16px;
+  --space-3:24px;
+  --space-4:32px;
+  --space-5:40px;
+  --space-6:48px;
+  --report-max:1488px;
+}
+
+/* 1) Remove the tab navigation strip completely */
+.report-tabs-v2{
+  display:none!important;
+  height:0!important;
+  margin:0!important;
+  padding:0!important;
+  border:0!important;
+}
+
+/* 2) Better breathing space around main page title */
+.report-screen-v2 .report-shell{
+  max-width:var(--report-max)!important;
+  padding:var(--space-5) var(--space-4) var(--space-6)!important;
+}
+.report-topbar-v2{
+  margin-bottom:var(--space-4)!important;
+  padding-bottom:var(--space-3)!important;
+  gap:var(--space-3)!important;
+}
+.report-title-row{
+  margin:var(--space-1) 0 var(--space-1)!important;
+  gap:var(--space-2)!important;
+  align-items:center!important;
+}
+.report-title-row h1,
+#rpt-main-title{
+  font-size:40px!important;
+  line-height:48px!important;
+  font-weight:900!important;
+  letter-spacing:-1.4px!important;
+  margin:0!important;
+}
+.report-meta-line{
+  margin-top:var(--space-1)!important;
+  font-size:12px!important;
+  line-height:20px!important;
+  letter-spacing:.06em!important;
+}
+.report-breadcrumb{
+  margin-bottom:var(--space-1)!important;
+  font-size:11px!important;
+  line-height:16px!important;
+}
+.report-actions-v2{
+  gap:var(--space-1)!important;
+}
+.report-actions-v2 .btn{
+  height:40px!important;
+  padding:0 var(--space-3)!important;
+  border-radius:12px!important;
+}
+
+/* 3) Keep the overview immediately below header; no awkward gap */
+#tabletop-summary{
+  margin-top:0!important;
+}
+.tabletop-summary-card{
+  margin-bottom:var(--space-3)!important;
+  border-radius:18px!important;
+}
+.tbl-head{
+  padding:var(--space-3) var(--space-4) var(--space-1)!important;
+}
+.tbl-title{
+  font-size:20px!important;
+  line-height:28px!important;
+  margin:0!important;
+}
+.tbl-sub{
+  margin-top:var(--space-1)!important;
+  font-size:12px!important;
+  line-height:20px!important;
+}
+.tbl-kpis{
+  padding:var(--space-3) var(--space-4) var(--space-4)!important;
+  gap:var(--space-2)!important;
+}
+.tbl-kpi{
+  min-height:112px!important;
+  padding:var(--space-3)!important;
+  border-radius:14px!important;
+}
+.tbl-kpi-value{
+  font-size:40px!important;
+  line-height:48px!important;
+  letter-spacing:-1px!important;
+}
+.tbl-kpi-label{
+  margin-top:var(--space-3)!important;
+  font-size:11px!important;
+  line-height:16px!important;
+  letter-spacing:.14em!important;
+}
+
+/* 4) Uniform report sections on an 8px rhythm */
+.tbl-section,
+.report-ai-section,
+.report-card{
+  margin-bottom:var(--space-3)!important;
+  border-radius:16px!important;
+}
+.tbl-section-head,
+.report-ai-section-head,
+.report-card-head{
+  min-height:72px!important;
+  padding:var(--space-2) var(--space-3)!important;
+  gap:var(--space-2)!important;
+}
+.tbl-section-icon,
+.report-ai-icon{
+  width:40px!important;
+  height:40px!important;
+  border-radius:10px!important;
+}
+.tbl-section-kicker,
+.report-ai-kicker{
+  font-size:10px!important;
+  line-height:16px!important;
+  letter-spacing:.18em!important;
+  margin:0 0 2px!important;
+}
+.tbl-section-title,
+.report-ai-title,
+.report-card-head h3{
+  font-size:18px!important;
+  line-height:24px!important;
+  font-weight:850!important;
+  letter-spacing:-.25px!important;
+}
+.tbl-section-body,
+.report-ai-body,
+.report-card>div:not(.report-card-head),
+.report-card>p,
+.report-card>ul,
+.report-card>.business-impact-grid{
+  padding:var(--space-3)!important;
+}
+
+/* 5) Remove the large label/text gap in consulting rows */
+.report-insight-row{
+  grid-template-columns:128px minmax(0,1fr)!important;
+  gap:var(--space-2)!important;
+  padding:var(--space-2) 0!important;
+  align-items:start!important;
+}
+.report-insight-label{
+  font-size:10px!important;
+  line-height:16px!important;
+  letter-spacing:.12em!important;
+}
+.report-insight-copy{
+  font-size:15px!important;
+  line-height:24px!important;
+}
+
+/* 6) Tight, readable body typography */
+.report-ai-body,
+.tbl-exec-body,
+.report-card p,
+.report-card li,
+.report-section-list li,
+.report-rec-line{
+  font-size:15px!important;
+  line-height:24px!important;
+}
+.report-ai-body p,
+.tbl-exec-body p{
+  margin:0 0 var(--space-2)!important;
+}
+.report-section-list{
+  gap:var(--space-1)!important;
+  margin:var(--space-1) 0 0!important;
+}
+.report-section-list li{
+  padding-left:var(--space-3)!important;
+  margin:0!important;
+}
+.report-subhead{
+  margin:var(--space-3) 0 var(--space-1)!important;
+  padding-top:var(--space-2)!important;
+  font-size:11px!important;
+  line-height:16px!important;
+}
+.report-rec-line{
+  gap:var(--space-2)!important;
+  margin:var(--space-1) 0!important;
+}
+.report-priority{
+  min-width:104px!important;
+  text-align:center!important;
+  padding:4px var(--space-1)!important;
+  line-height:16px!important;
+}
+
+/* 7) Chart/function cards spacing */
+.tbl-two-col{
+  gap:var(--space-3)!important;
+  padding:0 var(--space-4)!important;
+}
+.tbl-trend-layout{
+  gap:var(--space-4)!important;
+}
+.tbl-trend-badge{
+  padding:var(--space-3)!important;
+}
+.tbl-function-row{
+  padding:var(--space-2) 0!important;
+  gap:var(--space-2)!important;
+}
+.tbl-outcome-box{
+  gap:var(--space-3)!important;
+}
+.tbl-outcome-title{
+  font-size:24px!important;
+  line-height:32px!important;
+}
+.tbl-outcome-copy{
+  font-size:14px!important;
+  line-height:24px!important;
+}
+
+@media(max-width:980px){
+  .report-screen-v2 .report-shell{padding:var(--space-3) var(--space-2) var(--space-5)!important;}
+  .report-topbar-v2{margin-bottom:var(--space-3)!important;}
+  .report-title-row h1,#rpt-main-title{font-size:32px!important;line-height:40px!important;}
+  .tbl-head,.tbl-kpis{padding-left:var(--space-3)!important;padding-right:var(--space-3)!important;}
+  .tbl-two-col{padding:0 var(--space-3)!important;}
+  .report-insight-row{grid-template-columns:1fr!important;gap:var(--space-1)!important;}
+}
+@media(max-width:620px){
+  .report-title-row h1,#rpt-main-title{font-size:28px!important;line-height:36px!important;}
+  .tbl-kpi-value{font-size:32px!important;line-height:40px!important;}
+  .tbl-section-title,.report-ai-title,.report-card-head h3{font-size:16px!important;line-height:24px!important;}
+}
+</style>
