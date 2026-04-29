@@ -1327,6 +1327,15 @@ body.theme-light #screen-login > div > div:nth-child(2),body.theme-light .card,b
 .ai-report-body-v2{font-size:12px!important;line-height:1.65!important;}
 @media(max-width:1150px){.report-grid-v2{grid-template-columns:1fr!important}.exec-story-grid,.exec-mini-list,.business-impact-grid{grid-template-columns:1fr!important}}
 </style>
+
+<style id="tabletop-summary-css">
+/* Tabletop Exercise Summary dashboard (sketch-inspired executive view) */
+.tabletop-summary-card{border:1px solid rgba(84,145,220,.25);background:linear-gradient(180deg,rgba(9,18,34,.96),rgba(5,11,22,.98));border-radius:18px;padding:22px;margin:0 0 22px;box-shadow:0 18px 60px rgba(0,0,0,.28)}
+.tbl-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:18px}.tbl-title{font-family:var(--head);font-size:24px;font-weight:850;color:var(--white);letter-spacing:-.4px}.tbl-sub{font-family:var(--mono);font-size:11px;color:#79aee8;margin-top:5px}.tbl-level-pill{font-family:var(--mono);font-size:10px;letter-spacing:.8px;text-transform:uppercase;color:var(--cyan);border:1px solid rgba(0,229,255,.28);background:rgba(0,229,255,.075);padding:7px 10px;border-radius:999px;white-space:nowrap}.tbl-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}.tbl-kpi{background:rgba(255,255,255,.025);border:1px solid rgba(84,145,220,.22);border-radius:14px;padding:18px;min-height:118px;display:flex;flex-direction:column;justify-content:space-between}.tbl-kpi-value{font-family:var(--head);font-size:34px;font-weight:850;color:var(--white);line-height:1}.tbl-kpi-label{font-family:var(--mono);font-size:11px;color:#8cbef3;letter-spacing:.5px;text-transform:uppercase}.tbl-visual-grid{display:grid;grid-template-columns:1.15fr 1.15fr .9fr;gap:14px;margin-bottom:18px}.tbl-panel{background:rgba(255,255,255,.022);border:1px solid rgba(84,145,220,.22);border-radius:14px;padding:16px;min-height:205px}.tbl-panel h3{font-family:var(--head);font-size:15px;font-weight:800;color:var(--white);margin:0 0 14px}.tbl-trend-bars{height:130px;display:flex;align-items:flex-end;gap:8px;padding:10px 2px 2px;border-bottom:1px solid rgba(255,255,255,.1)}.tbl-trend-bar{flex:1;min-width:10px;border-radius:8px 8px 0 0;background:linear-gradient(180deg,var(--cyan),rgba(0,229,255,.25));position:relative}.tbl-trend-bar span{position:absolute;top:-20px;left:50%;transform:translateX(-50%);font-family:var(--mono);font-size:9px;color:var(--muted);white-space:nowrap}.tbl-function-row{display:grid;grid-template-columns:110px 1fr 42px;gap:10px;align-items:center;margin-bottom:10px}.tbl-function-name{font-size:12px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.tbl-function-track{height:8px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden}.tbl-function-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,var(--blue),var(--cyan))}.tbl-function-val{font-family:var(--mono);font-size:11px;color:var(--white);text-align:right}.tbl-outcome{display:flex;flex-direction:column;gap:12px;height:100%;justify-content:center}.tbl-outcome-badge{font-family:var(--head);font-size:24px;font-weight:850;color:var(--white)}.tbl-outcome-copy{font-size:13px;line-height:1.65;color:var(--text)}.tbl-exec{background:rgba(255,255,255,.02);border:1px solid rgba(84,145,220,.22);border-radius:16px;padding:18px;min-height:230px}.tbl-exec-head{display:flex;align-items:center;gap:12px;margin-bottom:12px}.tbl-logo-box{width:70px;min-width:70px;height:44px;border:1px dashed rgba(0,229,255,.35);border-radius:10px;display:grid;place-items:center;color:var(--cyan);font-family:var(--mono);font-size:10px;background:rgba(0,229,255,.04)}.tbl-exec-title{font-family:var(--head);font-size:19px;font-weight:850;color:var(--white)}.tbl-exec-note{font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:3px}.tbl-exec-body{font-size:13px;line-height:1.72;color:var(--text)}.tbl-exec-body .ai-section{margin-bottom:10px}.tbl-exec-body h4{font-family:var(--head);font-size:13px;color:var(--white);margin:0 0 6px}.tbl-exec-body p{margin:0 0 8px}.tbl-exec-body ul{padding-left:18px;margin:6px 0}.tbl-exec-body li{margin:4px 0}.tbl-muted{color:var(--muted)}
+@media(max-width:1050px){.tbl-kpis{grid-template-columns:1fr 1fr}.tbl-visual-grid{grid-template-columns:1fr}.tbl-panel{min-height:auto}}
+@media(max-width:620px){.tbl-head{flex-direction:column}.tbl-kpis{grid-template-columns:1fr}.tabletop-summary-card{padding:16px}.tbl-function-row{grid-template-columns:90px 1fr 38px}.tbl-title{font-size:21px}}
+</style>
+
 </head>
 <body>
 
@@ -1948,7 +1957,7 @@ body.theme-light #screen-login > div > div:nth-child(2),body.theme-light .card,b
       <div>
         <div class="report-breadcrumb">Reports / <span id="rpt-breadcrumb-title">Simulation</span></div>
         <div class="report-title-row">
-          <h1>Management Executive Summary</h1>
+          <h1 id="rpt-main-title">Tabletop Exercise Summary</h1>
           <span class="report-status-pill">Completed</span>
         </div>
         <div class="report-meta-line" id="rpt-score-line"></div>
@@ -1961,13 +1970,45 @@ body.theme-light #screen-login > div > div:nth-child(2),body.theme-light .card,b
     </div>
 
     <div class="report-tabs-v2">
-      <button class="active" onclick="document.getElementById('report-exec').scrollIntoView({behavior:'smooth'})">Management Executive Summary</button>
+      <button class="active" onclick="document.getElementById('tabletop-summary').scrollIntoView({behavior:'smooth'})">Exercise Summary</button>
       <button onclick="document.getElementById('report-performance').scrollIntoView({behavior:'smooth'})">Readiness Analysis</button>
       <button onclick="document.getElementById('report-timeline').scrollIntoView({behavior:'smooth'})">Timeline & Events</button>
       <button onclick="document.getElementById('report-decisions').scrollIntoView({behavior:'smooth'})">Decision Review</button>
       <button onclick="document.getElementById('report-mitre').scrollIntoView({behavior:'smooth'})">MITRE ATT&CK</button>
       <button onclick="document.getElementById('report-recommendations').scrollIntoView({behavior:'smooth'})">Recommendations</button>
     </div>
+
+
+    <section id="tabletop-summary" class="tabletop-summary-card">
+      <div class="tbl-head">
+        <div>
+          <div class="tbl-title">Tabletop Exercise Summary</div>
+          <div class="tbl-sub"><span id="tbl-scenario-title">Scenario</span> · <span id="tbl-level-sub">Management / Working Level</span></div>
+        </div>
+        <div id="tbl-level-pill" class="tbl-level-pill">LEVEL</div>
+      </div>
+
+      <div class="tbl-kpis">
+        <div class="tbl-kpi"><div id="tbl-readiness" class="tbl-kpi-value">0%</div><div class="tbl-kpi-label">Team Readiness</div></div>
+        <div class="tbl-kpi"><div id="tbl-decisions-passed" class="tbl-kpi-value">0/0</div><div class="tbl-kpi-label">Decisions Passed</div></div>
+        <div class="tbl-kpi"><div id="tbl-participants" class="tbl-kpi-value">1</div><div class="tbl-kpi-label">Participant</div></div>
+        <div class="tbl-kpi"><div id="tbl-time-taken" class="tbl-kpi-value">0m0s</div><div class="tbl-kpi-label">Time Taken</div></div>
+      </div>
+
+      <div class="tbl-visual-grid">
+        <div class="tbl-panel"><h3>Readiness Trend</h3><div id="tbl-trend-bars" class="tbl-trend-bars"></div></div>
+        <div class="tbl-panel"><h3>Readiness by Function</h3><div id="tbl-function-bars"></div></div>
+        <div class="tbl-panel"><h3>Threat Outcome</h3><div id="tbl-outcome" class="tbl-outcome"></div></div>
+      </div>
+
+      <div class="tbl-exec">
+        <div class="tbl-exec-head">
+          <div class="tbl-logo-box">LOGO</div>
+          <div><div class="tbl-exec-title">Executive Summary</div><div class="tbl-exec-note">Consultant report generated from exercise evidence</div></div>
+        </div>
+        <div id="tbl-exec-summary" class="tbl-exec-body tbl-muted">Generating executive summary...</div>
+      </div>
+    </section>
 
     <div id="report-exec" class="report-grid-v2">
       <div class="report-main-v2">
@@ -2770,6 +2811,48 @@ let simState = {
 let editingScenarioId = null;
 let editingClientId = null;
 
+// Dual-level scenario helpers: keep Management and Working Level separate, with safe fallback.
+function normaliseRoleLevelLocal(level){
+  level=String(level||'').toLowerCase();
+  if(level.includes('work')||level.includes('tech')) return 'working';
+  return 'management';
+}
+function normaliseScenarioDecisions(scenario){
+  if(!scenario) return {management:[],working:[]};
+  const raw=scenario.decisions;
+  let management=[], working=[];
+  if(Array.isArray(raw)){
+    const isBoth=String(scenario.level||'').toLowerCase()==='both';
+    const lvl=normaliseRoleLevelLocal(scenario.level||'management');
+    if(isBoth){ management=raw.map(d=>({...d,roleLayer:'management'})); working=raw.map(d=>({...d,roleLayer:'working',skillTested:d.skillTested==='leadership'?'technical':d.skillTested})); }
+    else if(lvl==='working') working=raw.map(d=>({...d,roleLayer:'working'}));
+    else management=raw.map(d=>({...d,roleLayer:'management'}));
+  } else if(raw && typeof raw==='object'){
+    management=Array.isArray(raw.management)?raw.management.slice():[];
+    working=Array.isArray(raw.working)?raw.working.slice():[];
+  }
+  if(!management.length && working.length) management=working.map(d=>({...d,roleLayer:'management',skillTested:d.skillTested==='technical'?'leadership':d.skillTested}));
+  if(!working.length && management.length) working=management.map(d=>({...d,roleLayer:'working',skillTested:d.skillTested==='leadership'?'technical':d.skillTested}));
+  scenario.decisions={management,working};
+  return scenario.decisions;
+}
+function getScenarioDecisions(scenario, level){
+  const decs=normaliseScenarioDecisions(scenario);
+  const lvl=normaliseRoleLevelLocal(level);
+  const fallback=lvl==='management'?'working':'management';
+  return (decs[lvl]&&decs[lvl].length)?decs[lvl]:(decs[fallback]||[]);
+}
+function getCurrentDecision(){ return getScenarioDecisions(simState.scenario, simState.level)[simState.decIdx] || null; }
+function normaliseBuilderAIDecisions(raw){
+  if(Array.isArray(raw)) return raw.map(dec=>({role:dec.roleLayer||'both',decision:dec}));
+  const out=[];
+  if(raw && typeof raw==='object'){
+    (raw.management||[]).forEach(dec=>out.push({role:'management',decision:dec}));
+    (raw.working||[]).forEach(dec=>out.push({role:'working',decision:dec}));
+  }
+  return out;
+}
+
 function resetBuilder(){
   editingScenarioId = null;
   document.getElementById('b-title').value='';
@@ -3005,7 +3088,7 @@ async function generateScenarioWithAI(){
     // Decisions — clear the default blank one and rebuild
     document.getElementById('b-decisions').innerHTML='';
     decCount=0;
-    (s.decisions||[]).forEach(dec=>{
+    normaliseBuilderAIDecisions(s.decisions).forEach(({role,decision:dec})=>{
       addDecBlock();
       const blocks=document.querySelectorAll('.decision-block');
       const block=blocks[blocks.length-1];
@@ -3014,6 +3097,8 @@ async function generateScenarioWithAI(){
       const allSels      = block.querySelectorAll('select');
       const alertTypeEl  = allSels[0];
       const skillEl      = allSels[1];
+      const roleLayerEl  = block.querySelector('.role-layer-select');
+      if(roleLayerEl) roleLayerEl.value = role || 'both';
       // Normalise any AI alertType values to the valid set
       const alertTypeMap = {wa:'wa',cr:'cr','in':'in',ph:'wa',sl:'in',em:'wa',warning:'wa',critical:'cr',info:'in'};
       const alertLabelEl = block.querySelector('input[placeholder="INCIDENT UPDATE"]');
@@ -3496,41 +3581,17 @@ function launchBriefing(scenarioId,clientId){
   const badgeMap={r:'badge-r',a:'badge-a',b:'badge-b'};
   document.getElementById('brief-timeline').innerHTML=scenario.timeline.map(t=>`<div class="tl-item"><div class="tl-time">${t.time}</div><div class="tl-content"><span class="${badgeMap[t.badge]||'badge-b'}">${t.label}</span><br>${t.text}</div></div>`).join('');
   document.getElementById('brief-back-btn').onclick=()=>{if(simState.fromClientId) openClientProfile(simState.fromClientId); else gotoTab('library');};
-  selLevel('management');
+  normaliseScenarioDecisions(scenario);
+  selLevel((scenario.decisions.management&&scenario.decisions.management.length)?'management':'working');
   showScreen('briefing');
   document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
 }
 function selLevel(lvl){
-  simState.level=lvl;
-  document.getElementById('ltab-mgmt').classList.toggle('active',lvl==='management');
-  document.getElementById('ltab-work').classList.toggle('active',lvl==='working');
-}
-
-
-// Returns the requested level's decisions, with safe fallback so simulations never break if one side is missing.
-function getScenarioDecisionsForLevel(scenario, level){
-  const lvl = (level === 'working') ? 'working' : 'management';
-  const alt = lvl === 'management' ? 'working' : 'management';
-  const decisions = scenario?.decisions;
-  if(Array.isArray(decisions)) return decisions;
-  const primary = Array.isArray(decisions?.[lvl]) ? decisions[lvl].filter(Boolean) : [];
-  if(primary.length) return primary;
-  const fallback = Array.isArray(decisions?.[alt]) ? decisions[alt].filter(Boolean) : [];
-  return fallback.map(d=>({...d, roleLayer:lvl, fallbackFrom:alt}));
-}
-function getScenarioDecisionFallbackLevel(scenario, level){
-  const lvl = (level === 'working') ? 'working' : 'management';
-  const alt = lvl === 'management' ? 'working' : 'management';
-  const decisions = scenario?.decisions;
-  if(Array.isArray(decisions)) return '';
-  const primary = Array.isArray(decisions?.[lvl]) ? decisions[lvl].filter(Boolean) : [];
-  if(primary.length) return '';
-  const fallback = Array.isArray(decisions?.[alt]) ? decisions[alt].filter(Boolean) : [];
-  return fallback.length ? alt : '';
-}
-function getCurrentDecision(){
-  const decs=getScenarioDecisionsForLevel(simState.scenario, simState.level);
-  return decs[simState.decIdx] || null;
+  const requested=normaliseRoleLevelLocal(lvl);
+  const available=getScenarioDecisions(simState.scenario, requested);
+  simState.level=available.length ? requested : (requested==='management'?'working':'management');
+  document.getElementById('ltab-mgmt').classList.toggle('active',simState.level==='management');
+  document.getElementById('ltab-work').classList.toggle('active',simState.level==='working');
 }
 
 // ══════════════════════════════════════════════════════════
@@ -3538,6 +3599,8 @@ function getCurrentDecision(){
 // ══════════════════════════════════════════════════════════
 function startSim(){
   const s=simState.scenario;
+  normaliseScenarioDecisions(s);
+  if(!getScenarioDecisions(s, simState.level).length){ alert('This scenario has no decisions for the selected participant level.'); return; }
   // If scenario has intro slides, show them first
   if(s.introSlides && s.introSlides.length > 0){
     launchIntroSlides(s);
@@ -3687,15 +3750,7 @@ function beginSimulation(){
     document.getElementById('sim-client-name').textContent=client.name;
     document.getElementById('sim-client-badge').style.display='flex';
   } else document.getElementById('sim-client-badge').style.display='none';
-  const decisions=getScenarioDecisionsForLevel(s, simState.level);
-  const fallbackLevel=getScenarioDecisionFallbackLevel(s, simState.level);
-  const lvlLbl=document.getElementById('sim-level-lbl');
-  if(fallbackLevel && lvlLbl) lvlLbl.textContent=simState.level.toUpperCase()+' LEVEL — USING '+fallbackLevel.toUpperCase()+' QUESTIONS';
-  if(!decisions.length){
-    alert('This scenario has no decision questions configured for Management or Working Level. Please edit it in the builder.');
-    showScreen('briefing');
-    return;
-  }
+  const decisions=getScenarioDecisions(s, simState.level);
   document.getElementById('prog-dots').innerHTML=decisions.map((_,i)=>`<div class="prog-dot${i===0?' cur':''}" id="pd-${i}"></div>`).join('');
   buildSkillTracker(s.skills);
   showScreen('sim');
@@ -3752,7 +3807,7 @@ function stopDecTimer(){
 function autoExpireDecision(){
   // Counts as no answer / incorrect
   const d=getCurrentDecision();
-  if(!d){ showReport(); return; }
+  if(!d) return;
   simState.results.push({participantName:'Admin Run',team:(d.decTeams&&d.decTeams[0])||'Unassigned',decisionIndex:simState.decIdx,question:d.question,skillTested:d.skillTested,skill:d.skillTested,mcqAnswer:null,freeTextAnswer:'',expectedActions:d.expectedActions||'',aiScore:0,aiFeedback:'Time expired — no decision made.',branch:'weak',correct:false,feedback:'Time expired — no decision made.'});
   document.querySelectorAll('.opt-btn').forEach(b=>{b.disabled=true;b.classList.add('dim');});
   const fb=document.getElementById('fb-box');
@@ -3797,10 +3852,9 @@ function buildEvidenceHTML(e){
 
 function loadDec(idx){
   const s=simState.scenario;
-  const decs=getScenarioDecisionsForLevel(s, simState.level);
+  const decs=getScenarioDecisions(s, simState.level);
   const d=decs[idx];
-  if(!d){ showReport(); return; }
-  const fallbackLevel=getScenarioDecisionFallbackLevel(s, simState.level);
+  if(!d){ alert('No decision available for this participant level.'); showScreen('briefing'); return; }
   const colMap={cr:'var(--red)',wa:'var(--amber)',in:'var(--blue)'};
   const col=colMap[d.alertType]||'var(--red)';
   // Render teams in their own block
@@ -3815,7 +3869,6 @@ function loadDec(idx){
   }
 
   document.getElementById('sim-feed').innerHTML=`
-    ${fallbackLevel?`<div class="feed-block wa"><div class="feed-label"><span style="color:var(--amber)">QUESTION FALLBACK</span></div><div class="feed-text">No ${escapeHTML(simState.level)} question is configured for this scenario. The simulation is using the available ${escapeHTML(fallbackLevel)} question instead.</div></div>`:''}
     <div class="feed-block ${d.alertType}">
       <div class="feed-label"><span style="color:${col}">${d.alertLabel}</span><span style="font-family:var(--mono);font-size:9px;color:var(--muted)">LIVE · ${new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})}</span></div>
       <div class="feed-text">${d.alertText}</div>
@@ -3843,7 +3896,7 @@ function loadDec(idx){
 function selectOpt(idx){
   stopDecTimer();
   const d=getCurrentDecision();
-  if(!d || !Array.isArray(d.options)){ alert('This decision is incomplete. Please edit the scenario in the builder.'); return; }
+  if(!d) return;
   const chosen=d.options[idx];
   document.querySelectorAll('.opt-btn').forEach((b,i)=>{
     b.disabled=true;
@@ -3886,7 +3939,7 @@ function selectOpt(idx){
 async function submitFreeTextAnswer(){
   stopDecTimer();
   const d=getCurrentDecision();
-  if(!d){ alert('This decision is incomplete. Please edit the scenario in the builder.'); return; }
+  if(!d) return;
   const answer=document.getElementById('freeTextAnswer')?.value.trim();
   if(!answer){alert('Type the participant/team response first.');return;}
   document.querySelectorAll('.opt-btn').forEach(b=>{b.disabled=true;b.classList.add('dim');});
@@ -4042,7 +4095,7 @@ function renderParticipantTeamReport(results){
 }
 
 function updateSkillBars(){
-  const decs=getScenarioDecisionsForLevel(simState.scenario, simState.level);
+  const decs=getScenarioDecisions(simState.scenario, simState.level);
   const counts=getAssessedSkillCounts(decs);
   Object.keys(simState.skillScores).forEach(k=>{
     const a=getSkillAssessment(k, counts, simState.skillScores);
@@ -4184,6 +4237,7 @@ async function fetchAIConclusion(scenario, simState, decisions, resultId){
   // ── If viewing a past result with saved conclusion — show immediately, no API call ──
   if(simState.savedConclusionForView){
     conclusionEl.innerHTML = renderConclusionHTML(simState.savedConclusionForView);
+    updateTabletopExecutiveSummary(conclusionEl.innerHTML);
     // Reset flags now that we're done
     simState.isViewingPastResult = false;
     simState.savedConclusionForView = null;
@@ -4276,6 +4330,7 @@ async function fetchAIConclusion(scenario, simState, decisions, resultId){
     }
 
     conclusionEl.innerHTML = renderConclusionHTML(rawConclusion);
+    updateTabletopExecutiveSummary(conclusionEl.innerHTML);
 
   } catch(err) {
     console.error('AI conclusion error:', err);
@@ -4292,6 +4347,7 @@ async function fetchAIConclusion(scenario, simState, decisions, resultId){
         <strong style="color:var(--white)">Score: ${pct}% — ${pct>=70?'Pass':'Fail'}</strong><br><br>
         ${worstSkill ? `Weakest area: <strong style="color:var(--white)">${SKILLS[worstSkill[0]]?.label||worstSkill[0]}</strong> at ${worstSkill[1]}%.` : ''}
       </div>`;
+    updateTabletopExecutiveSummary(conclusionEl.innerHTML);
   }
 }
 
@@ -4480,11 +4536,51 @@ function renderDecisionHeatmap(results){
   }).join('');
 }
 
+
+
+function updateTabletopExecutiveSummary(html){
+  const el=document.getElementById('tbl-exec-summary');
+  if(!el) return;
+  el.classList.remove('tbl-muted');
+  el.innerHTML = html || 'Executive summary unavailable.';
+}
+function renderTabletopSummaryDashboard(s,decs,execMetrics,pct,correct,timeTaken,skillReadiness,grade){
+  const set=(id,val)=>{const el=document.getElementById(id); if(el) el.textContent=val;};
+  const level=(simState.level||'management').replace(/-/g,' ');
+  set('tbl-scenario-title', s?.title || 'Scenario');
+  set('tbl-level-sub', level.toUpperCase()+' LEVEL');
+  set('tbl-level-pill', level.toUpperCase()+' LEVEL');
+  set('tbl-readiness', `${pct}%`);
+  set('tbl-decisions-passed', `${correct}/${decs.length}`);
+  set('tbl-participants', execMetrics.participantCount||1);
+  set('tbl-time-taken', `${Math.floor(timeTaken/60)}m${timeTaken%60}s`);
+  const trendEl=document.getElementById('tbl-trend-bars');
+  if(trendEl){
+    let running=0;
+    const trend=(simState.results||[]).map((r,i)=>{ running += scoreOfResult(r); return Math.round(running/(i+1)); });
+    const vals=trend.length?trend:[pct];
+    trendEl.innerHTML=vals.map((v,i)=>`<div class="tbl-trend-bar" style="height:${Math.max(8,Math.min(100,v))}%"><span>D${i+1}</span></div>`).join('');
+  }
+  const fnEl=document.getElementById('tbl-function-bars');
+  if(fnEl){
+    const keys=(s?.skills||Object.keys(skillReadiness||{})).slice(0,6);
+    fnEl.innerHTML=keys.map(k=>{const v=Math.round(skillReadiness?.[k]||0); const label=SKILLS[k]?.label||k; return `<div class="tbl-function-row"><div class="tbl-function-name">${escapeHTML(label)}</div><div class="tbl-function-track"><div class="tbl-function-fill" style="width:${Math.max(4,v)}%"></div></div><div class="tbl-function-val">${v}%</div></div>`;}).join('') || '<div class="tbl-muted">No function data available.</div>';
+  }
+  const out=document.getElementById('tbl-outcome');
+  if(out){
+    const status=pct>=80?'Contained / Strong':pct>=60?'Controlled / Monitor':pct>=40?'Partially Contained':'Escalated Risk';
+    const copy=pct>=80?'The response reduced exposure and maintained a strong control posture.':pct>=60?'The incident was handled with acceptable readiness, but improvement areas remain.':pct>=40?'Response actions were mixed and may lead to delayed containment.':'Material gaps may increase operational, regulatory, and reputational impact.';
+    out.innerHTML=`<div class="tbl-outcome-badge">${escapeHTML(status)}</div><div class="tbl-outcome-copy">${escapeHTML(copy)}</div><div class="tbl-muted">Grade: ${escapeHTML(grade||'—')}</div>`;
+  }
+  const exec=document.getElementById('tbl-exec-summary');
+  if(exec){ exec.classList.add('tbl-muted'); exec.innerHTML='Generating executive summary...'; }
+}
+
 function showReport(){
   clearInterval(simState.timerInt);
   clearInterval(simState.decTimerInt);
   const s=simState.scenario;
-  const decs=getScenarioDecisionsForLevel(s, simState.level);
+  const decs=getScenarioDecisions(s, simState.level);
   const execMetrics=calculateExecutiveMetrics(simState.results, decs.length);
   const maxScore=execMetrics.maxScore;
   const reportScore=execMetrics.score;
@@ -4511,6 +4607,7 @@ function showReport(){
   renderReadinessTrend((simState.summary&&simState.summary.readinessTrend)||simState.results, pct);
   document.getElementById('rpt-headline').textContent=pct>=90?'Excellent Response — Outstanding':pct>=70?'Strong Response — Well Done':pct>=50?'Adequate Response — Room to Improve':'Response Needs Significant Improvement';
   document.getElementById('rpt-score-line').textContent=`${s.title} · ${simState.level.toUpperCase()} LEVEL · Team readiness: ${pct}% · ${correct}/${decs.length} decisions passed · ${execMetrics.participantCount||1} participant(s) · ${execMetrics.submissions} submissions`;
+  const rptMainTitle=document.getElementById('rpt-main-title'); if(rptMainTitle) rptMainTitle.textContent='Tabletop Exercise Summary';
   const timeTaken=(s.duration==='20 min'?1200:s.duration==='30 min'?1800:900)-simState.timeLeft;
   document.getElementById('rpt-metrics').innerHTML=`
     <div class="rm"><div class="rm-val">${pct}%</div><div class="rm-lbl">Team Readiness</div></div>
@@ -4518,10 +4615,11 @@ function showReport(){
     <div class="rm"><div class="rm-val">${execMetrics.participantCount||1}</div><div class="rm-lbl">Participants</div></div>
     <div class="rm"><div class="rm-val">${Math.floor(timeTaken/60)}m${timeTaken%60}s</div><div class="rm-lbl">Time Taken</div></div>
     ${simState.stateEnabled&&simState.crisisState?`<div class="rm"><div class="rm-val">${formatMoney(simState.crisisState.money)}</div><div class="rm-lbl">Final Money</div></div><div class="rm"><div class="rm-val">${Math.round(simState.crisisState.reputation)}/100</div><div class="rm-lbl">Final Reputation</div></div>`:''}`;
-  fetchAIConclusion(s,simState,decs,simState.lastResultId||simState.viewingResultId);
   const skillCounts={};
   decs.forEach(d=>{if(d.skillTested) skillCounts[d.skillTested]=(skillCounts[d.skillTested]||0)+1;});
   const skillReadiness = calculateSkillReadinessFromResults(simState.results, s.skills);
+  renderTabletopSummaryDashboard(s,decs,execMetrics,pct,correct,timeTaken,skillReadiness,grade);
+  fetchAIConclusion(s,simState,decs,simState.lastResultId||simState.viewingResultId);
   simState.normalisedSkillScores = skillReadiness;
   renderPremiumHybridReport(simState.results, pct, s.skills, skillReadiness);
   document.getElementById('rpt-skill-rows').innerHTML=s.skills.map(k=>{
@@ -4589,7 +4687,7 @@ function exportPDF(){
   const s=simState.scenario; const client=simState.client;
   if(!s){ alert('No report available.'); return; }
 
-  const decs=getScenarioDecisionsForLevel(s, simState.level);
+  const decs=getScenarioDecisions(s, simState.level);
   const execMetrics=calculateExecutiveMetrics(simState.results||[], decs.length);
   const maxScore=execMetrics.maxScore;
   const reportScore=execMetrics.score;
@@ -4754,7 +4852,7 @@ function exportPDF(){
 async function exportWord(){
   const s=simState.scenario;
   const client=simState.client;
-  const decs=getScenarioDecisionsForLevel(s, simState.level);
+  const decs=getScenarioDecisions(s, simState.level);
   const maxScore=decs.length*100;
   const reportScore=calculateTotalScore(simState.results);
   const pct=maxScore>0?Math.round((reportScore/maxScore)*100):0;
@@ -5120,9 +5218,6 @@ function addDecBlock(preTeams){
     <div class="form-group"><label class="lbl">Feedback — Validated Answer</label><textarea placeholder="Why this is correct..."></textarea></div>
     <div class="form-group"><label class="lbl">Feedback — Risk Decision Answer</label><textarea placeholder="What the mistake is and why it matters..."></textarea></div>`;
   document.getElementById('b-decisions').appendChild(div);
-  div.querySelectorAll('input,textarea,select').forEach(el=>el.addEventListener('input',validateBuilderRoleCoverage));
-  div.querySelectorAll('select').forEach(el=>el.addEventListener('change',validateBuilderRoleCoverage));
-  validateBuilderRoleCoverage();
 }
 
 
@@ -5240,8 +5335,6 @@ function addOptRow(id){
   row.classList.add('option-impact-row');
   row.innerHTML=`<input type="text" placeholder="Option"><input class="impact-input" data-effect-money type="number" value="0" step="1000" title="Money impact" placeholder="€ impact"><input class="impact-input" data-effect-reputation type="number" value="0" step="1" title="Reputation impact" placeholder="Rep"><button class="correct-toggle" onclick="toggleCorr(this)">✓</button><button class="opt-del-btn" onclick="this.closest('.option-row').remove()" title="Remove option">✕</button>`;
   list.appendChild(row);
-  row.querySelectorAll('input,button').forEach(el=>el.addEventListener('input',validateBuilderRoleCoverage));
-  validateBuilderRoleCoverage();
 }
 function toggleCorr(btn){
   btn.closest('.decision-block').querySelectorAll('.correct-toggle').forEach(b=>b.classList.remove('on'));
@@ -5254,56 +5347,9 @@ function prevImg(input,prevId){
   reader.readAsDataURL(file);
 }
 
-
-function getBuilderRoleCoverage(){
-  const blocks=Array.from(document.querySelectorAll('.decision-block'));
-  const coverage={management:0,working:0,incomplete:0,total:blocks.length};
-  blocks.forEach(block=>{
-    const role=block.querySelector('.role-layer-select')?.value || 'both';
-    const q=block.querySelectorAll('input[type=text]')[1]?.value.trim();
-    const opts=Array.from(block.querySelectorAll('.option-row')).map(row=>row.querySelector('input[type=text]')?.value.trim()).filter(Boolean);
-    if(!q || opts.length<2) coverage.incomplete++;
-    if(role==='both' || role==='management') coverage.management++;
-    if(role==='both' || role==='working') coverage.working++;
-  });
-  return coverage;
-}
-function ensureBuilderValidationBox(){
-  let box=document.getElementById('builder-validation-box');
-  const decisions=document.getElementById('b-decisions');
-  if(!box && decisions){
-    box=document.createElement('div');
-    box.id='builder-validation-box';
-    box.style.cssText='margin:0 0 12px 0;padding:10px 12px;border-radius:8px;border:1px solid var(--border2);background:rgba(0,229,255,0.04);font-size:12px;line-height:1.6;color:var(--text);';
-    decisions.parentNode.insertBefore(box, decisions);
-  }
-  return box;
-}
-function validateBuilderRoleCoverage(){
-  const box=ensureBuilderValidationBox();
-  if(!box) return true;
-  const c=getBuilderRoleCoverage();
-  const issues=[];
-  if(c.total===0) issues.push('Add at least one decision.');
-  if(c.management===0) issues.push('No Management questions configured. Management runs will fallback to Working Level questions.');
-  if(c.working===0) issues.push('No Working Level questions configured. Working runs will fallback to Management questions.');
-  if(c.incomplete>0) issues.push(`${c.incomplete} decision block(s) need a question and at least 2 answer options.`);
-  if(!issues.length){
-    box.style.borderColor='rgba(0,230,118,0.25)';
-    box.style.background='rgba(0,230,118,0.05)';
-    box.innerHTML=`✅ Builder validation: ${c.management} Management decision(s), ${c.working} Working Level decision(s).`;
-    return true;
-  }
-  box.style.borderColor='rgba(255,179,0,0.35)';
-  box.style.background='rgba(255,179,0,0.06)';
-  box.innerHTML='⚠️ Builder validation:<br>'+issues.map(x=>'• '+escapeHtml(x)).join('<br>');
-  return false;
-}
-
 function saveScenario(){
   const title=document.getElementById('b-title').value.trim();
   if(!title){alert('Please enter a scenario title.');return;}
-  validateBuilderRoleCoverage();
   const coverPrev=document.getElementById('b-cover-prev');
   const skills=Array.from(document.querySelectorAll('#b-skills input:checked')).map(i=>i.value);
   const teams=getScenarioTeams();
@@ -5358,12 +5404,8 @@ function saveScenario(){
     if(roleLayerVal==='both' || roleLayerVal==='working') work.push({...dObj, roleLayer:'working'});
   });
   if(!mgmt.length && !work.length){alert('Add at least one decision.');return;}
-  const fallbackWarnings=[];
-  if(!mgmt.length) fallbackWarnings.push('No Management decisions were configured. Management runs will use Working Level decisions as fallback.');
-  if(!work.length) fallbackWarnings.push('No Working Level decisions were configured. Working Level runs will use Management decisions as fallback.');
-  if(fallbackWarnings.length && !confirm(fallbackWarnings.join('\n')+'\n\nSave anyway?')) return;
-  if(!mgmt.length) mgmt.push(...work.map(d=>({...d,roleLayer:'management',fallbackFrom:'working'})));
-  if(!work.length) work.push(...mgmt.map(d=>({...d,roleLayer:'working',fallbackFrom:'management'})));
+  if(!mgmt.length) mgmt.push(...work.map(d=>({...d,roleLayer:'management'})));
+  if(!work.length) work.push(...mgmt.map(d=>({...d,roleLayer:'working'})));
   const icon=document.getElementById('b-icon').value.trim()||'🔒';
   const scenarioData={
     id:editingScenarioId||('s'+Date.now()),
@@ -6294,7 +6336,7 @@ function buildManagementThemes(results, good){
       oldShowReport.apply(this, arguments);
       try{
         const s=simState.scenario || {};
-        const decs=getScenarioDecisionsForLevel(s, simState.level);
+        const decs=getScenarioDecisions(s, simState.level);
         const execMetrics=(typeof calculateExecutiveMetrics==='function') ? calculateExecutiveMetrics(simState.results||[], decs.length) : null;
         const pct=execMetrics ? execMetrics.pct : (decs.length?Math.round(calculateTotalScore(simState.results||[])/(decs.length*100)*100):0);
         const client=simState.client;
@@ -6581,7 +6623,7 @@ function buildManagementThemes(results, good){
       prevShow.apply(this,arguments);
       try{
         const s=window.simState?.scenario||{};
-        const decs=getScenarioDecisionsForLevel(s, window.simState.level);
+        const decs=(s.decisions&&s.decisions[window.simState.level])||[];
         const metrics=(typeof calculateExecutiveMetrics==='function')?calculateExecutiveMetrics(window.simState.results||[],decs.length):null;
         const pct=metrics?metrics.pct:avg(window.simState.results||[]);
         renderExecutiveStory(window.simState.results||[],pct);
