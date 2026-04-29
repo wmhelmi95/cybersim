@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Nexa-CyberSim — Enterprise Crisis Simulation Platform</title>
+<title>NexaCyberSim</title>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -1300,6 +1300,48 @@ body.theme-light #screen-login > div > div:nth-child(2),body.theme-light .card,b
   .report-screen-v2 .report-shell{padding-top:94px!important;}
 }
 
+
+/* Premium participant timeline drill-down replay */
+#decision-replay{padding:0!important;}
+.replay-empty{padding:24px;color:var(--muted);font-size:13px;}
+.replay-shell{display:flex;flex-direction:column;gap:14px;padding:20px 24px 24px;}
+.replay-participant{border:1px solid rgba(42,82,132,.85);border-radius:16px;background:linear-gradient(180deg,rgba(8,18,35,.88),rgba(5,12,24,.94));overflow:hidden;box-shadow:0 18px 46px rgba(0,0,0,.16);}
+.replay-participant-summary{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:18px;padding:16px 18px;cursor:pointer;background:linear-gradient(90deg,rgba(41,121,255,.10),rgba(0,229,255,.035),transparent);border-bottom:1px solid transparent;}
+.replay-participant[open] .replay-participant-summary{border-bottom-color:rgba(42,82,132,.65);}
+.replay-participant-summary::-webkit-details-marker{display:none;}
+.replay-person{display:flex;align-items:center;gap:12px;min-width:0;}
+.replay-chevron{font-family:var(--mono);font-size:12px;color:#8cbef3;transition:transform .18s ease;}
+.replay-participant[open] .replay-chevron{transform:rotate(180deg);}
+.replay-avatar{width:38px;height:38px;border-radius:12px;display:inline-flex;align-items:center;justify-content:center;background:rgba(0,229,255,.08);border:1px solid rgba(0,229,255,.30);color:var(--cyan);font-family:var(--head);font-weight:800;letter-spacing:.4px;flex-shrink:0;}
+.replay-person-copy{display:flex;flex-direction:column;min-width:0;}
+.replay-person-copy strong{font-family:var(--head);font-size:15px;color:var(--white);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.replay-person-copy em{font-style:normal;font-family:var(--mono);font-size:10px;color:#5f86b8;letter-spacing:.6px;text-transform:uppercase;margin-top:2px;}
+.replay-summary-metrics{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-family:var(--mono);font-size:10px;color:#8aa9cc;text-transform:uppercase;white-space:nowrap;}
+.replay-badge{padding:4px 9px;border-radius:999px;border:1px solid rgba(255,255,255,.14);font-weight:800;letter-spacing:.4px;}
+.replay-badge.strong{color:var(--green);background:rgba(0,230,118,.08);border-color:rgba(0,230,118,.28);}
+.replay-badge.ok{color:var(--amber);background:rgba(255,179,0,.08);border-color:rgba(255,179,0,.28);}
+.replay-badge.weak{color:var(--red);background:rgba(255,45,85,.08);border-color:rgba(255,45,85,.28);}
+.replay-timeline{position:relative;display:flex;flex-direction:column;gap:14px;padding:18px 18px 18px 42px;}
+.replay-timeline:before{content:'';position:absolute;left:29px;top:26px;bottom:26px;width:1px;background:linear-gradient(to bottom,rgba(0,229,255,.45),rgba(41,121,255,.18));}
+.replay-step{position:relative;display:grid;grid-template-columns:0 1fr;}
+.replay-step-marker{position:absolute;left:-28px;top:14px;width:25px;height:25px;border-radius:999px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:10px;font-weight:800;background:#071426;border:1px solid rgba(0,229,255,.32);color:var(--cyan);z-index:2;}
+.replay-step.strong .replay-step-marker{border-color:rgba(0,230,118,.36);color:var(--green);}
+.replay-step.ok .replay-step-marker{border-color:rgba(255,179,0,.36);color:var(--amber);}
+.replay-step.weak .replay-step-marker{border-color:rgba(255,45,85,.40);color:var(--red);}
+.replay-step-card{border:1px solid rgba(42,82,132,.68);border-radius:14px;background:rgba(3,7,15,.40);padding:14px 16px;}
+.replay-step-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;border-bottom:1px solid rgba(42,82,132,.45);padding-bottom:10px;margin-bottom:10px;}
+.replay-step-kicker{font-family:var(--mono);font-size:9px;letter-spacing:1.4px;text-transform:uppercase;color:#5da7ff;margin-bottom:4px;}
+.replay-step h4{font-family:var(--head);font-size:14px;line-height:1.45;color:var(--white);margin:0;font-weight:800;}
+.replay-step-score{font-family:var(--mono);font-size:14px;font-weight:900;white-space:nowrap;}
+.replay-step-score.strong{color:var(--green);}.replay-step-score.ok{color:var(--amber);}.replay-step-score.weak{color:var(--red);}
+.replay-step-meta{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;}
+.replay-step-meta span{font-family:var(--mono);font-size:9px;color:#8aa9cc;border:1px solid rgba(93,167,255,.18);background:rgba(93,167,255,.055);border-radius:999px;padding:3px 8px;text-transform:uppercase;letter-spacing:.5px;}
+.replay-field-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;}
+.replay-field{border:1px solid rgba(42,82,132,.45);border-radius:12px;background:rgba(255,255,255,.025);padding:10px 12px;}
+.replay-field.wide{grid-column:1/-1;}
+.replay-field label{display:block;font-family:var(--mono);font-size:9px;letter-spacing:1px;color:var(--cyan);text-transform:uppercase;margin-bottom:4px;}
+.replay-field p{margin:0!important;padding:0!important;color:var(--text);font-size:13px!important;line-height:1.65!important;}
+@media(max-width:800px){.replay-shell{padding:16px}.replay-participant-summary{align-items:flex-start;flex-direction:column}.replay-summary-metrics{white-space:normal}.replay-timeline{padding-left:36px}.replay-field-grid{grid-template-columns:1fr}.replay-step-head{flex-direction:column}.replay-step-marker{left:-25px}}
 </style>
 
 <style id="premium-hybrid-report-css">
@@ -4576,7 +4618,7 @@ function renderDecisionReplay(results){
   if(!el) return;
   const note=document.getElementById('timeline-note'); if(note) note.textContent=localTimezoneLabel();
   if(!results || !results.length){
-    el.innerHTML='<div style="color:var(--muted);font-size:12px;">No replay data available.</div>';
+    el.innerHTML='<div class="replay-empty">No replay data available.</div>';
     return;
   }
 
@@ -4590,48 +4632,66 @@ function renderDecisionReplay(results){
   });
 
   const groups=Object.values(byParticipant).sort((a,b)=>a.name.localeCompare(b.name));
-  el.innerHTML=`<div class="participant-replay-accordion">${groups.map((g,idx)=>{
-    const scores=g.rows.map(scoreOfResult);
+  el.innerHTML=`<div class="replay-shell">${groups.map((g,idx)=>{
+    const ordered=g.rows.sort((a,b)=>Number(a.decisionIndex ?? a.step ?? a._originalIndex)-Number(b.decisionIndex ?? b.step ?? b._originalIndex));
+    const scores=ordered.map(scoreOfResult);
     const avg=Math.round(scores.reduce((a,b)=>a+b,0)/Math.max(1,scores.length));
     const passed=scores.filter(s=>s>=80).length;
-    const needs=scores.length-passed;
+    const review=scores.length-passed;
     const status=avg>=80?'Strong':avg>=60?'Adequate':'Needs Review';
     const statusClass=avg>=80?'strong':avg>=60?'ok':'weak';
-    return `<details class="participant-replay-group" ${idx===0?'open':''}>
-      <summary>
-        <div class="participant-replay-main">
-          <div class="participant-avatar">${escapeHTML((g.name||'P').slice(0,1).toUpperCase())}</div>
-          <div>
-            <div class="participant-name">${escapeHTML(g.name)}</div>
-            <div class="participant-meta">${escapeHTML(g.team)} · ${g.rows.length} decision${g.rows.length===1?'':'s'} replayed</div>
-          </div>
+    const initials=(g.name||'P').split(/\s+/).map(x=>x[0]).join('').slice(0,2).toUpperCase();
+    return `<details class="replay-participant" ${idx===0?'open':''}>
+      <summary class="replay-participant-summary">
+        <div class="replay-person">
+          <span class="replay-chevron">▾</span>
+          <span class="replay-avatar">${escapeHTML(initials||'P')}</span>
+          <span class="replay-person-copy">
+            <strong>${escapeHTML(g.name)}</strong>
+            <em>${escapeHTML(g.team)} · ${ordered.length} decision${ordered.length===1?'':'s'} replayed</em>
+          </span>
         </div>
-        <div class="participant-replay-stats">
-          <span class="replay-pill ${statusClass}">${status}</span>
+        <div class="replay-summary-metrics">
+          <span class="replay-badge ${statusClass}">${status}</span>
           <span>${avg}% avg</span>
           <span>${passed} passed</span>
-          <span>${needs} review</span>
+          <span>${review} review</span>
         </div>
       </summary>
-      <div class="participant-replay-decisions">
-        ${g.rows.sort((a,b)=>Number(a.decisionIndex ?? a.step ?? a._originalIndex)-Number(b.decisionIndex ?? b.step ?? b._originalIndex)).map((r,i)=>{
+      <div class="replay-timeline">
+        ${ordered.map((r,i)=>{
           const score=scoreOfResult(r);
-          const icon=score>=80?'✅':score>=50?'⚠️':'❌';
+          const tone=score>=80?'strong':score>=50?'ok':'weak';
           const dNo=Number(r.decisionIndex ?? r.step ?? i)+1;
           const answer=r.mcqAnswer||r.answer||r.selectedOption||'';
-          const feedback=r.aiFeedback||r.feedback||r.consultantFeedback||'';
-          return `<div class="replay-decision-card">
-            <div class="replay-decision-top">
-              <div class="replay-decision-title"><span>${icon}</span><strong>Decision ${dNo}</strong><span>${escapeHTML(r.question||'Decision')}</span></div>
-              <div class="replay-score" style="color:${scoreColor(score)}">${score}%</div>
+          const freeText=r.freeTextAnswer||r.response||'';
+          const expected=r.expectedActions||r.expected||'';
+          const feedback=r.aiFeedback||r.feedback||r.consultantFeedback||r.participantFeedback||'';
+          const branch=(r.branch||r.result||'').toString();
+          const timeTaken=r.timeTaken||r.secondsTaken||r.duration||'';
+          return `<article class="replay-step ${tone}">
+            <div class="replay-step-marker">${dNo}</div>
+            <div class="replay-step-card">
+              <div class="replay-step-head">
+                <div>
+                  <div class="replay-step-kicker">Decision ${dNo}</div>
+                  <h4>${escapeHTML(r.question||'Decision submitted')}</h4>
+                </div>
+                <div class="replay-step-score ${tone}">${score}%</div>
+              </div>
+              <div class="replay-step-meta">
+                ${branch?`<span>Branch: ${escapeHTML(branch.toUpperCase())}</span>`:''}
+                ${timeTaken?`<span>Time: ${escapeHTML(String(timeTaken))}${String(timeTaken).match(/s|min|m/i)?'':'s'}</span>`:''}
+                <span>${score>=80?'Validated':score>=50?'Partial review':'Needs review'}</span>
+              </div>
+              <div class="replay-field-grid">
+                ${answer?`<div class="replay-field"><label>Answer</label><p>${escapeHTML(answer)}</p></div>`:''}
+                ${freeText?`<div class="replay-field"><label>Free-text response</label><p>${escapeHTML(freeText)}</p></div>`:''}
+                ${expected?`<div class="replay-field"><label>Expected action</label><p>${escapeHTML(expected)}</p></div>`:''}
+                ${feedback?`<div class="replay-field wide"><label>AI feedback</label><p>${escapeHTML(feedback)}</p></div>`:''}
+              </div>
             </div>
-            <div class="replay-decision-grid">
-              ${answer?`<div><label>Answer</label><p>${escapeHTML(answer)}</p></div>`:''}
-              ${r.freeTextAnswer?`<div><label>Free-text Response</label><p>${escapeHTML(r.freeTextAnswer)}</p></div>`:''}
-              ${r.expectedActions?`<div><label>Expected Actions</label><p>${escapeHTML(r.expectedActions)}</p></div>`:''}
-              ${feedback?`<div><label>AI Feedback</label><p>${escapeHTML(feedback)}</p></div>`:''}
-            </div>
-          </div>`;
+          </article>`;
         }).join('')}
       </div>
     </details>`;
