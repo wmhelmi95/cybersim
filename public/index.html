@@ -1253,220 +1253,6 @@ body.theme-light #screen-login > div > div:nth-child(2),body.theme-light .card,b
 .ent-readiness-bar{height:8px;background:var(--border);border-radius:999px;overflow:hidden;margin-top:8px;}
 .ent-readiness-bar span{height:100%;display:block;border-radius:999px;background:linear-gradient(90deg,var(--cyan),var(--blue));}
 
-
-
-/* FIX: give the executive report header breathing room below the fixed navbar */
-.report-screen-v2 .report-shell{
-  padding-top:112px!important;
-}
-.report-screen-v2 .report-topbar-v2{
-  margin-bottom:24px!important;
-}
-.report-screen-v2 .report-title-row h1{
-  line-height:1.18!important;
-}
-.report-screen-v2 .report-tabs-v2{
-  margin-top:18px!important;
-}
-@media(max-width:900px){
-  .report-screen-v2 .report-shell{padding-top:104px!important;}
-}
-@media(max-width:600px){
-  .report-screen-v2 .report-shell{padding-top:94px!important;}
-}
-
-
-/* Premium two-tab report layout */
-.premium-report-switch{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:18px 0 22px;}
-.premium-report-switch button{position:relative;text-align:left;border:1px solid rgba(0,229,255,.14);background:linear-gradient(180deg,rgba(10,20,37,.88),rgba(5,12,24,.88));color:var(--text);border-radius:16px;padding:16px 18px 15px 54px;font-family:var(--head);font-weight:800;font-size:14px;cursor:pointer;box-shadow:0 12px 34px rgba(0,0,0,.18);transition:all .2s ease;}
-.premium-report-switch button span{position:absolute;left:16px;top:16px;width:27px;height:27px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:10px;color:var(--cyan);background:rgba(0,229,255,.08);border:1px solid rgba(0,229,255,.22);}
-.premium-report-switch button small{display:block;margin-top:4px;font-family:var(--body);font-size:11px;font-weight:500;color:var(--muted);line-height:1.4;}
-.premium-report-switch button:hover{border-color:rgba(0,229,255,.42);transform:translateY(-1px);}
-.premium-report-switch button.active{border-color:var(--cyan);background:linear-gradient(180deg,rgba(0,229,255,.12),rgba(10,20,37,.9));box-shadow:0 0 0 1px rgba(0,229,255,.1),0 18px 46px rgba(0,229,255,.07);color:var(--white);}
-.report-view-hidden{display:none!important;}
-.report-view-intro{background:linear-gradient(135deg,rgba(0,229,255,.09),rgba(41,121,255,.05));border:1px solid rgba(0,229,255,.18);border-radius:18px;padding:18px 20px;margin-bottom:16px;}
-.report-view-intro .eyebrow{font-family:var(--mono);font-size:10px;color:var(--cyan);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;}
-.report-view-intro h2{font-family:var(--head);font-size:20px;color:var(--white);margin:0 0 6px;}
-.report-view-intro p{margin:0;color:var(--text);font-size:13px;line-height:1.65;}
-.report-card{box-shadow:0 18px 50px rgba(0,0,0,.16);}
-@media(max-width:760px){.premium-report-switch{grid-template-columns:1fr}.premium-report-switch button{padding-left:50px}}
-
-
-/* Rebalanced premium report layout: priority-first */
-.report-grid-v2{grid-template-columns:minmax(0,1.72fr) minmax(300px,0.85fr);align-items:start;}
-.report-side-v2{position:sticky;top:84px;align-self:start;}
-.priority-kpi-grid{margin-top:4px;margin-bottom:16px;}
-.priority-exec-summary{border-color:rgba(0,229,255,.22);background:linear-gradient(180deg,rgba(0,229,255,.055),rgba(10,20,37,.98));box-shadow:0 18px 45px rgba(0,0,0,.22);}
-.priority-exec-summary .report-card-head h3{font-size:17px;}
-.priority-exec-story{margin-bottom:16px;}
-.premium-business-impact-card{margin-top:4px;}
-.premium-decision-summary-card{border-color:rgba(255,179,0,.18);}
-.readiness-card{border-color:rgba(0,230,118,.18);}
-#report-recommendations{border-color:rgba(0,229,255,.18);}
-.report-card{margin-bottom:16px;}
-.report-view-hidden{display:none!important;}
-@media(max-width:980px){.report-grid-v2{grid-template-columns:1fr}.report-side-v2{position:static}.premium-report-switch{grid-template-columns:1fr}}
-
-
-
-/* === BALANCED WIDE REPORT LAYOUT FIX ===
-   Fixes empty right-side feeling by keeping a real two-column report canvas on desktop
-   and giving the sidebar visible, useful management cards instead of dropping below. */
-#screen-report.report-screen-v2{
-  background:var(--bg)!important;
-}
-#screen-report .report-shell{
-  width:calc(100% - 56px)!important;
-  max-width:1680px!important;
-  margin-left:auto!important;
-  margin-right:auto!important;
-  padding-top:88px!important;
-  padding-bottom:88px!important;
-}
-#screen-report .report-grid-v2{
-  display:grid!important;
-  grid-template-columns:minmax(0,1fr) clamp(390px,28vw,470px)!important;
-  gap:32px!important;
-  align-items:start!important;
-}
-#screen-report .report-main-v2,
-#screen-report .report-side-v2{
-  display:flex!important;
-  flex-direction:column!important;
-  gap:28px!important;
-  min-width:0!important;
-}
-#screen-report .report-side-v2{
-  position:sticky!important;
-  top:96px!important;
-  align-self:start!important;
-}
-#screen-report .report-card,
-#screen-report .report-client-header-v2{
-  padding:26px!important;
-  border-radius:20px!important;
-}
-#screen-report .report-card-head{
-  margin-bottom:20px!important;
-}
-#screen-report .report-card-head h3{
-  font-size:18px!important;
-  line-height:1.25!important;
-}
-#screen-report .report-card-head span{
-  font-size:11px!important;
-  letter-spacing:.9px!important;
-}
-#screen-report .report-view-intro{
-  padding:28px!important;
-  border-radius:20px!important;
-  margin-bottom:0!important;
-}
-#screen-report .report-view-intro h2{
-  font-size:28px!important;
-  line-height:1.18!important;
-  margin-bottom:12px!important;
-}
-#screen-report .report-view-intro p,
-#screen-report .ai-report-body-v2,
-#screen-report .business-impact-card p,
-#screen-report .readiness-score-side p,
-#screen-report .next-steps-v2,
-#screen-report .side-list ul{
-  font-size:14px!important;
-  line-height:1.8!important;
-}
-#screen-report .priority-kpi-grid{
-  grid-template-columns:repeat(3,minmax(0,1fr))!important;
-  gap:18px!important;
-}
-#screen-report .report-kpi-grid .rm{
-  min-height:128px!important;
-  padding:24px!important;
-}
-#screen-report .report-kpi-grid .rm-val{
-  font-size:34px!important;
-}
-#screen-report .business-impact-grid{
-  grid-template-columns:repeat(3,minmax(0,1fr))!important;
-  gap:22px!important;
-}
-#screen-report .business-impact-card{
-  min-height:210px!important;
-  padding:24px!important;
-  border-radius:18px!important;
-}
-#screen-report .business-impact-card h4{
-  font-size:16px!important;
-  margin-bottom:14px!important;
-}
-#screen-report .business-impact-card strong{
-  font-size:15px!important;
-  margin-bottom:12px!important;
-}
-#screen-report .premium-summary-table th,
-#screen-report .premium-summary-table td{
-  padding:18px 16px!important;
-  font-size:14px!important;
-  vertical-align:middle!important;
-}
-#screen-report .premium-decision-summary-card .results-table-wrap{
-  overflow-x:auto!important;
-}
-#screen-report .premium-decision-summary-card table{
-  min-width:980px!important;
-}
-#screen-report .readiness-score-side{
-  align-items:center!important;
-  gap:20px!important;
-}
-#screen-report .mini-ring{
-  width:124px!important;
-  height:124px!important;
-}
-#screen-report .mini-ring span{
-  font-size:28px!important;
-}
-#screen-report .readiness-score-side strong{
-  font-size:20px!important;
-}
-#screen-report .next-steps-v2 li{
-  margin-bottom:12px!important;
-  padding-left:4px!important;
-}
-#screen-report .two-list-card{
-  grid-template-columns:1fr!important;
-  gap:18px!important;
-}
-#screen-report .side-list{
-  padding:20px!important;
-  border-radius:16px!important;
-}
-#screen-report .side-list h4{
-  font-size:15px!important;
-  margin-bottom:12px!important;
-}
-#screen-report .report-mode-management .report-main-v2{
-  max-width:none!important;
-}
-#screen-report .report-mode-management .report-side-v2 .report-card[data-report-view="management"]{
-  display:block;
-}
-@media(max-width:1180px){
-  #screen-report .report-grid-v2{grid-template-columns:minmax(0,1fr) 380px!important;gap:24px!important;}
-  #screen-report .business-impact-grid{grid-template-columns:1fr!important;}
-  #screen-report .business-impact-card{min-height:auto!important;}
-}
-@media(max-width:980px){
-  #screen-report .report-shell{width:calc(100% - 28px)!important;padding-top:96px!important;}
-  #screen-report .report-grid-v2{grid-template-columns:1fr!important;}
-  #screen-report .report-side-v2{position:static!important;}
-  #screen-report .priority-kpi-grid{grid-template-columns:1fr 1fr!important;}
-}
-@media(max-width:640px){
-  #screen-report .priority-kpi-grid{grid-template-columns:1fr!important;}
-  #screen-report .report-card,#screen-report .report-client-header-v2,#screen-report .report-view-intro{padding:20px!important;border-radius:16px!important;}
-}
 </style>
 
 <style id="premium-hybrid-report-css">
@@ -1518,22 +1304,6 @@ body.theme-light #screen-login > div > div:nth-child(2),body.theme-light .card,b
 .ai-summary-card{max-height:none!important;}
 .ai-report-body-v2{font-size:12px!important;line-height:1.65!important;}
 @media(max-width:1150px){.report-grid-v2{grid-template-columns:1fr!important}.exec-story-grid,.exec-mini-list,.business-impact-grid{grid-template-columns:1fr!important}}
-
-/* Rebalanced premium report layout: priority-first */
-.report-grid-v2{grid-template-columns:minmax(0,1.72fr) minmax(300px,0.85fr);align-items:start;}
-.report-side-v2{position:sticky;top:84px;align-self:start;}
-.priority-kpi-grid{margin-top:4px;margin-bottom:16px;}
-.priority-exec-summary{border-color:rgba(0,229,255,.22);background:linear-gradient(180deg,rgba(0,229,255,.055),rgba(10,20,37,.98));box-shadow:0 18px 45px rgba(0,0,0,.22);}
-.priority-exec-summary .report-card-head h3{font-size:17px;}
-.priority-exec-story{margin-bottom:16px;}
-.premium-business-impact-card{margin-top:4px;}
-.premium-decision-summary-card{border-color:rgba(255,179,0,.18);}
-.readiness-card{border-color:rgba(0,230,118,.18);}
-#report-recommendations{border-color:rgba(0,229,255,.18);}
-.report-card{margin-bottom:16px;}
-.report-view-hidden{display:none!important;}
-@media(max-width:980px){.report-grid-v2{grid-template-columns:1fr}.report-side-v2{position:static}.premium-report-switch{grid-template-columns:1fr}}
-
 </style>
 </head>
 <body>
@@ -2168,38 +1938,24 @@ body.theme-light #screen-login > div > div:nth-child(2),body.theme-light .card,b
       </div>
     </div>
 
-    <div class="premium-report-switch" role="tablist" aria-label="Report view switcher">
-      <button id="report-tab-management" class="active" role="tab" aria-selected="true" onclick="switchReportView('management')">
-        <span>01</span> Management View
-        <small>Executive narrative, business impact, and next steps</small>
-      </button>
-      <button id="report-tab-technical" role="tab" aria-selected="false" onclick="switchReportView('technical')">
-        <span>02</span> Technical Detail
-        <small>Timeline, decisions, participants, and framework mapping</small>
-      </button>
+    <div class="report-tabs-v2">
+      <button class="active" onclick="document.getElementById('report-exec').scrollIntoView({behavior:'smooth'})">Management Executive Summary</button>
+      <button onclick="document.getElementById('report-performance').scrollIntoView({behavior:'smooth'})">Readiness Analysis</button>
+      <button onclick="document.getElementById('report-timeline').scrollIntoView({behavior:'smooth'})">Timeline & Events</button>
+      <button onclick="document.getElementById('report-decisions').scrollIntoView({behavior:'smooth'})">Decision Review</button>
+      <button onclick="document.getElementById('report-mitre').scrollIntoView({behavior:'smooth'})">MITRE ATT&CK</button>
+      <button onclick="document.getElementById('report-recommendations').scrollIntoView({behavior:'smooth'})">Recommendations</button>
     </div>
 
     <div id="report-exec" class="report-grid-v2">
       <div class="report-main-v2">
-        <div class="report-view-intro" data-report-view="management"><div class="eyebrow">Management View</div><h2>Priority-first executive report</h2><p>Important items appear first: readiness, consultant summary, business impact, decision risks, then detailed evidence and next steps.</p></div>
-        <div class="report-view-intro report-view-hidden" data-report-view="technical"><div class="eyebrow">Technical Detail</div><h2>Evidence and drill-down analysis</h2><p>Designed for security, IT, and facilitators: readiness trend, timeline replay, participant breakdown, decision heatmap, and MITRE/framework alignment.</p></div>
-        <div id="rpt-client-header" class="report-client-header-v2" data-report-view="management"></div>
+        <div id="rpt-client-header" class="report-client-header-v2"></div>
 
-        <div class="report-kpi-grid priority-kpi-grid" id="rpt-metrics" data-report-view="management"></div>
+        <div id="consultant-executive-story"></div>
 
-        <div class="report-card ai-summary-card priority-exec-summary" data-report-view="management">
-          <div class="report-card-head"><h3>Management Executive Summary</h3><button class="btn btn-ghost btn-sm" onclick="exportPDF()">Download PDF</button></div>
-          <div id="rpt-conclusion-title" class="ai-report-title-v2">
-            <div class="ai-icon">🤖</div>
-            <div><strong>AI Consultant Report</strong><small>Generated by Dr. Marcus Reid</small></div>
-            <span>AI VERIFIED</span>
-          </div>
-          <div id="rpt-conclusion" class="ai-report-body-v2"></div>
-        </div>
+        <div class="report-kpi-grid" id="rpt-metrics"></div>
 
-        <div id="consultant-executive-story" class="priority-exec-story" data-report-view="management"></div>
-
-        <div class="report-card report-card-large" id="report-performance" data-report-view="technical">
+        <div class="report-card report-card-large" id="report-performance">
           <div class="report-card-head"><h3>Management Readiness Trend</h3><span>Board-level readiness over time</span></div>
           <div class="readiness-trend-viz" id="readiness-trend-viz">
             <p class="trend-intro">Tracks management decision quality over time during the exercise. Each point shows the running readiness average after a submitted decision.</p>
@@ -2215,7 +1971,7 @@ body.theme-light #screen-login > div > div:nth-child(2),body.theme-light .card,b
           </div>
         </div>
 
-        <div class="report-two-col" data-report-view="technical">
+        <div class="report-two-col">
           <div class="report-card">
             <div class="report-card-head"><h3>Readiness by Function</h3><span>Skill domains</span></div>
             <div id="rpt-skill-rows" class="report-skill-bars"></div>
@@ -2233,12 +1989,12 @@ body.theme-light #screen-login > div > div:nth-child(2),body.theme-light .card,b
           </div>
         </div>
 
-        <div class="report-card premium-business-impact-card" data-report-view="management">
+        <div class="report-card premium-business-impact-card">
           <div class="report-card-head"><h3>Business Impact</h3><span>Executive risk lens</span></div>
           <div class="business-impact-grid" id="business-impact-grid"></div>
         </div>
 
-        <div class="report-card premium-decision-summary-card" data-report-view="management">
+        <div class="report-card premium-decision-summary-card">
           <div class="report-card-head"><h3>Decision Summary (Aggregated)</h3><span>Evidence without noise</span></div>
           <div class="results-table-wrap">
             <table class="results-table report-table-v2 premium-summary-table">
@@ -2248,12 +2004,12 @@ body.theme-light #screen-login > div > div:nth-child(2),body.theme-light .card,b
           </div>
         </div>
 
-        <div class="report-card" data-report-view="management">
+        <div class="report-card">
           <div class="report-card-head"><h3>Key Insights</h3><span>Observed issues</span></div>
           <div id="rpt-findings" class="report-insight-row"></div>
         </div>
 
-        <div class="report-card" id="report-performance-detail" data-report-view="technical">
+        <div class="report-card" id="report-performance-detail">
           <div class="report-card-head"><h3>Individual Readiness</h3><span>Participant-level rating</span></div>
           <div class="results-table-wrap">
             <table class="results-table report-table-v2">
@@ -2263,7 +2019,7 @@ body.theme-light #screen-login > div > div:nth-child(2),body.theme-light .card,b
           </div>
         </div>
 
-        <div class="report-card" data-report-view="technical">
+        <div class="report-card">
           <div class="report-card-head"><h3>Team Readiness</h3><span>Department-level rating</span></div>
           <div class="results-table-wrap">
             <table class="results-table report-table-v2">
@@ -2273,49 +2029,64 @@ body.theme-light #screen-login > div > div:nth-child(2),body.theme-light .card,b
           </div>
         </div>
 
-        <div class="report-card" id="report-timeline" data-report-view="technical">
+        <div class="report-card" id="report-timeline">
           <div class="report-card-head"><h3>Timeline & Events</h3><span id="timeline-timezone-label">All times shown in local time</span></div>
           <div class="evidence-layout"><div><div class="exec-story-pill">AGGREGATED EVIDENCE · EXECUTIVE VIEW</div><div id="aggregate-evidence" class="aggregate-evidence-list"></div></div><div><div class="exec-story-pill">PARTICIPANT DRILL-DOWN · FACILITATOR VIEW</div><div id="participant-drill-list" class="participant-drill-list"></div><div id="participant-history-panel" class="participant-history-panel"><span style="color:var(--muted);font-size:12px;">Select a participant to view history.</span></div></div></div><div class="timeline-note" id="timeline-note"></div>
         </div>
 
-        <div class="report-card" id="report-decisions" data-report-view="technical">
+        <div class="report-card" id="report-decisions">
           <div class="report-card-head"><h3>Decision Heatmap</h3><span>Strong / partial / weak distribution</span></div>
           <div id="decision-heatmap"></div>
         </div>
 
-        <div class="report-card" data-report-view="technical">
+        <div class="report-card">
           <div class="report-card-head"><h3>Decision Replay</h3><span>Answers, expected actions, and AI feedback</span></div>
           <div id="decision-replay"></div>
         </div>
 
-        <div class="report-card" id="report-mitre" data-report-view="technical">
+        <div class="report-card" id="report-mitre">
           <div class="report-card-head"><h3>MITRE ATT&CK / Framework Alignment</h3><span>Mapped techniques and standards</span></div>
           <div class="fw-tags" id="rpt-fw"></div>
         </div>
       </div>
 
       <aside class="report-side-v2">
-        <div class="report-card premium-benchmark-card" data-report-view="technical">
+        <div class="report-card premium-benchmark-card">
           <div class="report-card-head"><h3>Performance vs Benchmark</h3><span>How you compare</span></div>
           <div id="premium-benchmark"></div>
         </div>
 
-        <div class="report-card premium-participants-card" data-report-view="technical">
+        <div class="report-card premium-participants-card">
           <div class="report-card-head"><h3>Participants Overview</h3><span>Role-level view</span></div>
           <div id="premium-participants"></div>
         </div>
 
-        <div class="report-card premium-risk-card" data-report-view="technical">
+        <div class="report-card premium-risk-card">
           <div class="report-card-head"><h3>Top Risk Contributors</h3><span>Decision patterns</span></div>
           <div id="premium-risk-contributors"></div>
         </div>
 
-        <div class="report-card readiness-card" data-report-view="management">
+        <div class="report-card ai-summary-card">
+          <div class="report-card-head"><h3>Management Executive Summary</h3><button class="btn btn-ghost btn-sm" onclick="exportPDF()">Download PDF</button></div>
+          <div id="rpt-conclusion-title" class="ai-report-title-v2">
+            <div class="ai-icon">🤖</div>
+            <div><strong>AI Consultant Report</strong><small>Generated by Dr. Marcus Reid</small></div>
+            <span>AI VERIFIED</span>
+          </div>
+          <div id="rpt-conclusion" class="ai-report-body-v2"></div>
+        </div>
+
+        <div class="report-card readiness-card">
           <div class="report-card-head"><h3>Overall Readiness</h3><span>Current posture</span></div>
           <div class="readiness-score-side"><div class="mini-ring"><span id="rpt-side-score">0%</span></div><div><strong id="rpt-side-label">Moderate</strong><p>Overall readiness based on scenario outcome and decision quality.</p></div></div>
         </div>
 
-        <div class="report-card" id="report-recommendations" data-report-view="management">
+        <div class="report-card two-list-card">
+          <div class="side-list success"><h4>Management Strengths</h4><ul id="rpt-strengths"><li>Strong containment decisions</li><li>Good incident awareness</li><li>Evidence preserved</li></ul></div>
+          <div class="side-list danger"><h4>Priority Improvement Areas</h4><ul id="rpt-improvements"><li>Escalation timing</li><li>Legal notification workflow</li><li>Cross-team coordination</li></ul></div>
+        </div>
+
+        <div class="report-card" id="report-recommendations">
           <div class="report-card-head"><h3>Next Steps</h3><span>Priority actions</span></div>
           <ol class="next-steps-v2">
             <li>Review weak decisions and update escalation procedure.</li>
@@ -2323,11 +2094,6 @@ body.theme-light #screen-login > div > div:nth-child(2),body.theme-light .card,b
             <li>Update playbook gaps identified by AI advisor.</li>
             <li>Re-assess in 30–90 days.</li>
           </ol>
-        </div>
-
-        <div class="report-card two-list-card" data-report-view="management">
-          <div class="side-list success"><h4>Management Strengths</h4><ul id="rpt-strengths"><li>Strong containment decisions</li><li>Good incident awareness</li><li>Evidence preserved</li></ul></div>
-          <div class="side-list danger"><h4>Priority Improvement Areas</h4><ul id="rpt-improvements"><li>Escalation timing</li><li>Legal notification workflow</li><li>Cross-team coordination</li></ul></div>
         </div>
       </aside>
     </div>
@@ -2373,29 +2139,6 @@ body.theme-light #screen-login > div > div:nth-child(2),body.theme-light .card,b
 </div>
 
 <script>
-
-function switchReportView(view){
-  const isTech = view === 'technical';
-  document.querySelectorAll('[data-report-view]').forEach(el=>{
-    const modes=(el.getAttribute('data-report-view')||'').split(/\s+/);
-    el.classList.toggle('report-view-hidden', !modes.includes(view));
-  });
-  const managementTab=document.getElementById('report-tab-management');
-  const technicalTab=document.getElementById('report-tab-technical');
-  if(managementTab){managementTab.classList.toggle('active',!isTech);managementTab.setAttribute('aria-selected',String(!isTech));}
-  if(technicalTab){technicalTab.classList.toggle('active',isTech);technicalTab.setAttribute('aria-selected',String(isTech));}
-  const title=document.querySelector('.report-title-row h1');
-  if(title) title.textContent=isTech?'Technical Detail Report':'Management Executive Summary';
-  const grid=document.getElementById('report-exec');
-  if(grid){
-    grid.classList.toggle('report-mode-management', !isTech);
-    grid.classList.toggle('report-mode-technical', isTech);
-  }
-  const shell=document.querySelector('#screen-report .report-shell');
-  if(shell) shell.scrollIntoView({behavior:'smooth',block:'start'});
-}
-document.addEventListener('DOMContentLoaded',()=>switchReportView('management'));
-
 // ══════════════════════════════════════════════════════════
 // CONSTANTS
 // ══════════════════════════════════════════════════════════
@@ -4369,7 +4112,48 @@ function formatContent(html){
     .replace(/<\/li>/g, '</span></li>');
 }
 
-async function fetchAIConclusion(scenario, simState, decisions, resultId){
+async 
+function splitReportLayersClient(raw){
+  const text = String(raw || '');
+  const execHeadings = ['C-Suite Executive Summary','Business Impact Assessment','Top Executive Risks','Executive Recommendations'];
+  const detailHeadings = ['Cyber Resilience Posture Assessment','Skill Domain Readiness','Decision Quality Review','Decision Failures & Consequences','Validated Responses','Team & Participant Insights','Threat Behaviour / Framework Mapping',"Consultant's Verdict"];
+  function pick(headings){
+    return headings.map(h=>{
+      const escaped=h.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+      const re=new RegExp(`<strong>\\s*${escaped}\\s*<\\/strong>\\s*<br>`,'i');
+      const m=text.match(re);
+      if(!m) return '';
+      const start=(m.index||0)+m[0].length;
+      const next=text.slice(start).search(/<strong>[^<]+<\\/strong>\\s*<br>/i);
+      const body=next>=0 ? text.slice(start,start+next) : text.slice(start);
+      return `<strong>${h}</strong><br>${body.trim()}`;
+    }).filter(Boolean).join('<br><br>');
+  }
+  return { executive: pick(execHeadings), details: pick(detailHeadings) };
+}
+function renderLayeredConclusion(raw, layers){
+  layers = layers || splitReportLayersClient(raw);
+  const exec = layers.executive || '';
+  const details = layers.details || '';
+  if(!exec && !details) return renderConclusionHTML(raw);
+  return `
+    <div class="report-layer-tabs">
+      <button type="button" class="active" onclick="switchConclusionLayer(event,'exec')">C-Suite Summary</button>
+      <button type="button" onclick="switchConclusionLayer(event,'details')">Simulation Details</button>
+    </div>
+    <div id="conclusion-layer-exec" class="conclusion-layer active">${renderConclusionHTML(exec || raw)}</div>
+    <div id="conclusion-layer-details" class="conclusion-layer">${renderConclusionHTML(details || raw)}</div>`;
+}
+function switchConclusionLayer(event, layer){
+  const root = event.target.closest('.ai-report-body-v2') || document;
+  root.querySelectorAll('.report-layer-tabs button').forEach(b=>b.classList.remove('active'));
+  event.target.classList.add('active');
+  root.querySelectorAll('.conclusion-layer').forEach(el=>el.classList.remove('active'));
+  const target = root.querySelector(layer === 'details' ? '#conclusion-layer-details' : '#conclusion-layer-exec');
+  if(target) target.classList.add('active');
+}
+
+function fetchAIConclusion(scenario, simState, decisions, resultId){
   const conclusionEl = document.getElementById('rpt-conclusion');
   const titleEl = document.getElementById('rpt-conclusion-title');
   titleEl.style.display = 'flex';
@@ -4377,10 +4161,12 @@ async function fetchAIConclusion(scenario, simState, decisions, resultId){
 
   // ── If viewing a past result with saved conclusion — show immediately, no API call ──
   if(simState.savedConclusionForView){
-    conclusionEl.innerHTML = renderConclusionHTML(simState.savedConclusionForView);
+    simState.reportLayers = simState.savedReportLayersForView || splitReportLayersClient(simState.savedConclusionForView);
+    conclusionEl.innerHTML = renderLayeredConclusion(simState.savedConclusionForView, simState.reportLayers);
     // Reset flags now that we're done
     simState.isViewingPastResult = false;
     simState.savedConclusionForView = null;
+    simState.savedReportLayersForView = null;
     simState.viewingResultId = null;
     return;
   }
@@ -4398,7 +4184,7 @@ async function fetchAIConclusion(scenario, simState, decisions, resultId){
   conclusionEl.innerHTML = `
     <div style="display:flex;align-items:center;gap:10px;color:var(--muted);">
       <div style="width:14px;height:14px;border:2px solid var(--cyan);border-top-color:transparent;border-radius:50%;animation:spin 0.8s linear infinite;flex-shrink:0;"></div>
-      <span style="font-family:var(--mono);font-size:11px;letter-spacing:0.5px;">Generating AI consultant report...</span>
+      <span style="font-family:var(--mono);font-size:11px;letter-spacing:0.5px;">Generating consultant assessment...</span>
     </div>`;
 
   // Build skill scores as percentages. Only include domains actually tested by decisions.
@@ -4458,18 +4244,20 @@ async function fetchAIConclusion(scenario, simState, decisions, resultId){
     }
     const data = await response.json();
     const rawConclusion = data.conclusion;
+    simState.reportLayers = data.reportLayers || splitReportLayersClient(rawConclusion);
 
     // Save the conclusion into the result record — works for both new runs and old results
     if(saveToId){
       const savedResult = DB.simResults.find(r => r.id === saveToId);
       if(savedResult){
         savedResult.savedConclusion = rawConclusion;
+        savedResult.reportLayers = simState.reportLayers;
         saveData();
-        console.log(`Conclusion saved to result ${saveToId} — future views won't call AI`);
+        console.log(`Conclusion saved to result ${saveToId} — future views won't call consultant service`);
       }
     }
 
-    conclusionEl.innerHTML = renderConclusionHTML(rawConclusion);
+    conclusionEl.innerHTML = renderLayeredConclusion(rawConclusion, simState.reportLayers);
 
   } catch(err) {
     console.error('AI conclusion error:', err);
@@ -4477,7 +4265,7 @@ async function fetchAIConclusion(scenario, simState, decisions, resultId){
     const worstSkill = Object.entries(skillScores).sort((a,b)=>a[1]-b[1])[0];
     conclusionEl.innerHTML = `
       <div style="background:rgba(255,179,0,0.06);border-left:3px solid var(--amber);border-radius:0 8px 8px 0;padding:14px 16px;margin-bottom:12px;">
-        <div style="font-family:var(--mono);font-size:10px;color:var(--amber);letter-spacing:1px;margin-bottom:6px;">⚠ AI REPORT UNAVAILABLE</div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--amber);letter-spacing:1px;margin-bottom:6px;">⚠ CONSULTANT REPORT UNAVAILABLE</div>
         <div style="font-size:12px;color:var(--text);margin-bottom:6px;">Error: <strong style="color:var(--white)">${err.message}</strong></div>
         <div style="font-size:11px;color:var(--muted);">Check browser console (F12) for details. Make sure server is running and you are logged in.</div>
       </div>
@@ -4748,6 +4536,7 @@ function viewResult(resultId){
   simState.isViewingPastResult=true;
   simState.viewingResultId=resultId;  // track which result we're viewing
   simState.savedConclusionForView=r.savedConclusion||null;
+  simState.savedReportLayersForView=r.reportLayers||null;
   simState.scenario=DB.scenarios.find(s=>s.id===r.scenarioId);
   simState.client=DB.clients.find(c=>c.id===r.clientId)||null;
   simState.score=r.score;
@@ -4888,23 +4677,7 @@ function exportPDF(){
   const sectionMap=Object.fromEntries(sections.map(x=>[x.title,x.body]));
   const sectionHtml=preferred.filter(t=>sectionMap[t]).map((title,idx)=>`<section class="section"><div class="section-kicker">SECTION ${String(idx+1).padStart(2,'0')}</div><h2>${esc(title)}</h2><div class="section-body">${bodyToHtml(sectionMap[title], title)}</div></section>`).join('') || `<section class="section"><h2>Management Executive Summary</h2>${bodyToHtml(rawConclusion)}</section>`;
 
-  const html=`<!doctype html><html><head><meta charset="utf-8"><title>NexaCyberSim Executive Report</title><style>@page{size:A4;margin:15mm 14mm}*{box-sizing:border-box}body{font-family:Arial,Helvetica,sans-serif;color:#172033;margin:0;background:#fff;font-size:11.5px;line-height:1.55;-webkit-print-color-adjust:exact;print-color-adjust:exact}.cover{background:linear-gradient(135deg,#071527,#0f3557);color:#fff;padding:32px 34px 26px;border-radius:0 0 18px 18px}.brand{font-size:12px;letter-spacing:2.4px;text-transform:uppercase;color:#8fe8ff;font-weight:800}.title{font-size:31px;font-weight:800;margin:23px 0 8px}.sub{color:#d9eaf7;font-size:12.5px}.grade-row{margin-top:24px;display:flex;align-items:center;gap:18px}.badge{width:82px;height:82px;border-radius:18px;background:${gradeColor};display:flex;align-items:center;justify-content:center;color:#fff;font-size:44px;font-weight:800}.grade-text strong{display:block;font-size:19px}.grade-text span{color:#d9eaf7}.content{padding:24px 0}.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:0 0 18px}.metric{border:1px solid #d8e2ea;border-radius:13px;padding:12px;background:#f8fbfd}.mv{font-size:23px;font-weight:800;color:#0f3557}.ml{font-size:9.5px;color:#667085;text-transform:uppercase;letter-spacing:.7px}.section{border:1px solid #d8e2ea;border-radius:14px;padding:16px 18px;margin:14px 0;background:#fff;page-break-inside:avoid;box-shadow:0 1px 0 rgba(15,53,87,.05)}.section-kicker{font-size:9.5px;color:#64748b;letter-spacing:1.5px;font-weight:800}.section h2{font-size:16px;color:#0f3557;margin:2px 0 9px;border-bottom:2px solid #e2e8f0;padding-bottom:7px}.section p{margin:6px 0}.subhead{font-size:12.5px;color:#0f3557;margin:12px 0 4px;text-transform:uppercase;letter-spacing:.5px}.section ul,.premium-list{margin:8px 0 0 18px;padding:0}.section li,.premium-list li{margin:5px 0;padding-left:2px}.rec-card{border-radius:12px;padding:10px 12px;margin:8px 0;border-left:5px solid #0f3557;background:#f8fbfd}.rec-card .rec-label{font-size:9px;font-weight:800;letter-spacing:1.2px;margin-bottom:3px}.rec-card.fail{border-left-color:#B91C1C;background:#fff5f5}.rec-card.warn{border-left-color:#B45309;background:#fffbeb}.rec-card.pass{border-left-color:#0F766E;background:#f0fdfa}.rec-card.fail .rec-label{color:#B91C1C}.rec-card.warn .rec-label{color:#B45309}.rec-card.pass .rec-label{color:#0F766E}.skill-card{display:flex;justify-content:space-between;gap:14px;align-items:center;border:1px solid #e2e8f0;border-left:5px solid #0f3557;border-radius:10px;padding:9px 11px;margin:7px 0;background:#f8fbfd}.skill-card p{margin:2px 0 0;color:#475569}.score{min-width:72px;text-align:center;font-size:18px;font-weight:800}.score span{display:block;font-size:9px;letter-spacing:.8px}.pass{color:#0F766E}.warn{color:#B45309}.fail{color:#B91C1C}.na{color:#64748b}.bar{height:8px;background:#edf2f7;border-radius:99px;overflow:hidden}.bar span{display:block;height:100%;border-radius:99px}.bar span.pass{background:#0F766E}.bar span.warn{background:#B45309}.bar span.fail{background:#B91C1C}.pill{display:inline-block;border-radius:999px;padding:3px 8px;font-size:9px;font-weight:800;color:#fff}.pill.pass{background:#0F766E;color:#fff}.pill.warn{background:#B45309;color:#fff}.pill.fail{background:#B91C1C;color:#fff}.pill.na{background:#64748b;color:#fff}table{width:100%;border-collapse:collapse;margin-top:9px}th{background:#0f3557;color:#fff;text-align:left;padding:8px;font-size:10px;text-transform:uppercase}td{border-bottom:1px solid #e5edf3;padding:8px;vertical-align:top}.num{font-family:Consolas,monospace;text-align:right;white-space:nowrap;font-weight:800}small{color:#667085}.chip{display:inline-block;border:1px solid #d8e2ea;background:#f8fbfd;border-radius:20px;padding:4px 9px;margin:2px;font-size:10px;color:#344054}.footer{margin-top:20px;border-top:1px solid #d8e2ea;padding-top:10px;color:#667085;font-size:10px;text-align:center}@media print{.cover{border-radius:0}.section{break-inside:avoid}}
-/* Rebalanced premium report layout: priority-first */
-.report-grid-v2{grid-template-columns:minmax(0,1.72fr) minmax(300px,0.85fr);align-items:start;}
-.report-side-v2{position:sticky;top:84px;align-self:start;}
-.priority-kpi-grid{margin-top:4px;margin-bottom:16px;}
-.priority-exec-summary{border-color:rgba(0,229,255,.22);background:linear-gradient(180deg,rgba(0,229,255,.055),rgba(10,20,37,.98));box-shadow:0 18px 45px rgba(0,0,0,.22);}
-.priority-exec-summary .report-card-head h3{font-size:17px;}
-.priority-exec-story{margin-bottom:16px;}
-.premium-business-impact-card{margin-top:4px;}
-.premium-decision-summary-card{border-color:rgba(255,179,0,.18);}
-.readiness-card{border-color:rgba(0,230,118,.18);}
-#report-recommendations{border-color:rgba(0,229,255,.18);}
-.report-card{margin-bottom:16px;}
-.report-view-hidden{display:none!important;}
-@media(max-width:980px){.report-grid-v2{grid-template-columns:1fr}.report-side-v2{position:static}.premium-report-switch{grid-template-columns:1fr}}
-
-</style>
+  const html=`<!doctype html><html><head><meta charset="utf-8"><title>NexaCyberSim Executive Report</title><style>@page{size:A4;margin:15mm 14mm}*{box-sizing:border-box}body{font-family:Arial,Helvetica,sans-serif;color:#172033;margin:0;background:#fff;font-size:11.5px;line-height:1.55;-webkit-print-color-adjust:exact;print-color-adjust:exact}.cover{background:linear-gradient(135deg,#071527,#0f3557);color:#fff;padding:32px 34px 26px;border-radius:0 0 18px 18px}.brand{font-size:12px;letter-spacing:2.4px;text-transform:uppercase;color:#8fe8ff;font-weight:800}.title{font-size:31px;font-weight:800;margin:23px 0 8px}.sub{color:#d9eaf7;font-size:12.5px}.grade-row{margin-top:24px;display:flex;align-items:center;gap:18px}.badge{width:82px;height:82px;border-radius:18px;background:${gradeColor};display:flex;align-items:center;justify-content:center;color:#fff;font-size:44px;font-weight:800}.grade-text strong{display:block;font-size:19px}.grade-text span{color:#d9eaf7}.content{padding:24px 0}.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:0 0 18px}.metric{border:1px solid #d8e2ea;border-radius:13px;padding:12px;background:#f8fbfd}.mv{font-size:23px;font-weight:800;color:#0f3557}.ml{font-size:9.5px;color:#667085;text-transform:uppercase;letter-spacing:.7px}.section{border:1px solid #d8e2ea;border-radius:14px;padding:16px 18px;margin:14px 0;background:#fff;page-break-inside:avoid;box-shadow:0 1px 0 rgba(15,53,87,.05)}.section-kicker{font-size:9.5px;color:#64748b;letter-spacing:1.5px;font-weight:800}.section h2{font-size:16px;color:#0f3557;margin:2px 0 9px;border-bottom:2px solid #e2e8f0;padding-bottom:7px}.section p{margin:6px 0}.subhead{font-size:12.5px;color:#0f3557;margin:12px 0 4px;text-transform:uppercase;letter-spacing:.5px}.section ul,.premium-list{margin:8px 0 0 18px;padding:0}.section li,.premium-list li{margin:5px 0;padding-left:2px}.rec-card{border-radius:12px;padding:10px 12px;margin:8px 0;border-left:5px solid #0f3557;background:#f8fbfd}.rec-card .rec-label{font-size:9px;font-weight:800;letter-spacing:1.2px;margin-bottom:3px}.rec-card.fail{border-left-color:#B91C1C;background:#fff5f5}.rec-card.warn{border-left-color:#B45309;background:#fffbeb}.rec-card.pass{border-left-color:#0F766E;background:#f0fdfa}.rec-card.fail .rec-label{color:#B91C1C}.rec-card.warn .rec-label{color:#B45309}.rec-card.pass .rec-label{color:#0F766E}.skill-card{display:flex;justify-content:space-between;gap:14px;align-items:center;border:1px solid #e2e8f0;border-left:5px solid #0f3557;border-radius:10px;padding:9px 11px;margin:7px 0;background:#f8fbfd}.skill-card p{margin:2px 0 0;color:#475569}.score{min-width:72px;text-align:center;font-size:18px;font-weight:800}.score span{display:block;font-size:9px;letter-spacing:.8px}.pass{color:#0F766E}.warn{color:#B45309}.fail{color:#B91C1C}.na{color:#64748b}.bar{height:8px;background:#edf2f7;border-radius:99px;overflow:hidden}.bar span{display:block;height:100%;border-radius:99px}.bar span.pass{background:#0F766E}.bar span.warn{background:#B45309}.bar span.fail{background:#B91C1C}.pill{display:inline-block;border-radius:999px;padding:3px 8px;font-size:9px;font-weight:800;color:#fff}.pill.pass{background:#0F766E;color:#fff}.pill.warn{background:#B45309;color:#fff}.pill.fail{background:#B91C1C;color:#fff}.pill.na{background:#64748b;color:#fff}table{width:100%;border-collapse:collapse;margin-top:9px}th{background:#0f3557;color:#fff;text-align:left;padding:8px;font-size:10px;text-transform:uppercase}td{border-bottom:1px solid #e5edf3;padding:8px;vertical-align:top}.num{font-family:Consolas,monospace;text-align:right;white-space:nowrap;font-weight:800}small{color:#667085}.chip{display:inline-block;border:1px solid #d8e2ea;background:#f8fbfd;border-radius:20px;padding:4px 9px;margin:2px;font-size:10px;color:#344054}.footer{margin-top:20px;border-top:1px solid #d8e2ea;padding-top:10px;color:#667085;font-size:10px;text-align:center}@media print{.cover{border-radius:0}.section{break-inside:avoid}}</style>
 <style id="premium-hybrid-report-css">
 .report-screen-v2{background:radial-gradient(circle at 15% 0%,rgba(0,229,255,.08),transparent 28%),radial-gradient(circle at 85% 20%,rgba(41,121,255,.07),transparent 30%),#020814!important;}
 .report-shell{max-width:1540px!important;padding:22px 30px 60px!important;}
@@ -4955,23 +4728,75 @@ function exportPDF(){
 .ai-report-body-v2{font-size:12px!important;line-height:1.65!important;}
 @media(max-width:1150px){.report-grid-v2{grid-template-columns:1fr!important}.exec-story-grid,.exec-mini-list,.business-impact-grid{grid-template-columns:1fr!important}}
 
-/* Rebalanced premium report layout: priority-first */
-.report-grid-v2{grid-template-columns:minmax(0,1.72fr) minmax(300px,0.85fr);align-items:start;}
-.report-side-v2{position:sticky;top:84px;align-self:start;}
-.priority-kpi-grid{margin-top:4px;margin-bottom:16px;}
-.priority-exec-summary{border-color:rgba(0,229,255,.22);background:linear-gradient(180deg,rgba(0,229,255,.055),rgba(10,20,37,.98));box-shadow:0 18px 45px rgba(0,0,0,.22);}
-.priority-exec-summary .report-card-head h3{font-size:17px;}
-.priority-exec-story{margin-bottom:16px;}
-.premium-business-impact-card{margin-top:4px;}
-.premium-decision-summary-card{border-color:rgba(255,179,0,.18);}
-.readiness-card{border-color:rgba(0,230,118,.18);}
-#report-recommendations{border-color:rgba(0,229,255,.18);}
-.report-card{margin-bottom:16px;}
-.report-view-hidden{display:none!important;}
-@media(max-width:980px){.report-grid-v2{grid-template-columns:1fr}.report-side-v2{position:static}.premium-report-switch{grid-template-columns:1fr}}
+
+/* === Report top spacing fix === */
+#screen-report .report-shell,
+#screen-report .report-wrap,
+.report-screen-v2 .report-shell {
+  padding-top: 96px !important;
+}
+
+.report-topbar-v2 {
+  margin-top: 0 !important;
+  padding-top: 8px !important;
+}
+
+.report-title-row h1 {
+  margin-top: 0 !important;
+  line-height: 1.15 !important;
+}
+
+.report-actions-v2 {
+  padding-top: 4px !important;
+}
+
+@media (max-width: 900px) {
+  #screen-report .report-shell,
+  #screen-report .report-wrap,
+  .report-screen-v2 .report-shell {
+    padding-top: 88px !important;
+  }
+}
+
+
+
+/* === Two-layer consultant assessment === */
+.report-layer-tabs {
+  display:flex;
+  gap:8px;
+  margin:0 0 14px;
+  border-bottom:1px solid rgba(0,229,255,.12);
+  padding-bottom:8px;
+}
+.report-layer-tabs button {
+  border:1px solid rgba(0,229,255,.18);
+  background:rgba(10,20,37,.72);
+  color:var(--muted);
+  border-radius:8px;
+  padding:8px 12px;
+  font-family:var(--head);
+  font-size:12px;
+  font-weight:700;
+  cursor:pointer;
+}
+.report-layer-tabs button.active {
+  color:var(--cyan);
+  border-color:rgba(0,229,255,.45);
+  background:rgba(0,229,255,.12);
+}
+.conclusion-layer { display:none; }
+.conclusion-layer.active { display:block; }
 
 </style>
-</head><body><section class="cover"><div class="brand">NexaCyberSim Confidential Report</div><div class="title">Cyber Crisis Simulation Report</div><div class="sub">${client?esc(client.name)+' · ':''}${esc(s.title)} · ${esc(String(simState.level||'').toUpperCase())} Level<br>${date}</div><div class="grade-row"><div class="badge">${grade}</div><div class="grade-text"><strong>${pct}% Overall Readiness — ${gradeLabel}</strong><span>Team readiness view · ${correct}/${decs.length} decisions passed · ${execMetrics.participantCount||1} participant(s) · ${execMetrics.submissions} submissions</span></div></div></section><main class="content"><div class="metrics"><div class="metric"><div class="mv">${pct}%</div><div class="ml">Team Readiness</div></div><div class="metric"><div class="mv">${grade}</div><div class="ml">Grade</div></div><div class="metric"><div class="mv">${correct}/${decs.length}</div><div class="ml">Decisions Passed</div></div><div class="metric"><div class="mv">${execMetrics.participantCount||1}</div><div class="ml">Participants</div></div></div>${sectionHtml}<section class="section"><div class="section-kicker">APPENDIX A</div><h2>Skill Readiness Matrix</h2><table><thead><tr><th>Capability</th><th>Readiness</th><th class="num">Score</th><th>Status</th></tr></thead><tbody>${skillRows}</tbody></table></section><section class="section"><div class="section-kicker">APPENDIX B</div><h2>Decision Breakdown</h2><table><thead><tr><th class="num">#</th><th>Decision / Response</th><th class="num">Score</th><th>Assessment</th><th>Finding</th></tr></thead><tbody>${decisionRows}</tbody></table></section><section class="section"><div class="section-kicker">APPENDIX C</div><h2>Framework Alignment</h2><div>${(FW||[]).map(f=>`<span class="chip">${esc(f)}</span>`).join('')}</div></section><div class="footer">Generated by NexaCyberSim · Internal training report only · Not a penetration test or formal audit.</div></main><script>window.onload=()=>setTimeout(()=>window.print(),300)<\/script></body></html>`;
+</head><body><section class="cover"><div class="brand">NexaCyberSim Confidential Report</div><div class="title">Cyber Crisis Simulation Report</div><div class="sub">${client?esc(client.name)+' · ':''}${esc(s.title)} · ${esc(String(simState.level||'').toUpperCase())} Level<br>${date}</div><div class="grade-row"><div class="badge">${grade}</div><div class="grade-text"><strong>${pct}% Overall Readiness — ${gradeLabel}</strong><span>Team readiness view · ${correct}/${decs.length} decisions passed · ${execMetrics.participantCount||1} participant(s) · ${execMetrics.submissions} submissions</span></div></div></section><main class="content"><div class="metrics"><div class="metric"><div class="mv">${pct}%</div><div class="ml">Team Readiness</div></div><div class="metric"><div class="mv">${grade}</div><div class="ml">Grade</div></div><div class="metric"><div class="mv">${correct}/${decs.length}</div><div class="ml">Decisions Passed</div></div><div class="metric"><div class="mv">${execMetrics.participantCount||1}</div><div class="ml">Participants</div></div></div>${sectionHtml}<section class="section"><div class="section-kicker">APPENDIX A</div><h2>Skill Readiness Matrix</h2><table><thead><tr><th>Capability</th><th>Readiness</th><th class="num">Score</th><th>Status</th></tr></thead><tbody>${skillRows}</tbody></table></section><section class="section"><div class="section-kicker">APPENDIX B</div><h2>Decision Breakdown</h2><table><thead><tr><th class="num">#</th><th>Decision / Response</th><th class="num">Score</th><th>Assessment</th><th>Finding</th></tr></thead><tbody>${decisionRows}</tbody></table></section><section class="section"><div class="section-kicker">APPENDIX C</div><h2>Framework Alignment</h2><div>${(FW||[]).map(f=>`<span class="chip">${esc(f)}</span>`).join('')}</div></section><div class="footer">Generated by NexaCyberSim · Internal training report only · Not a penetration test or formal audit.</div></main><script>window.onload=()=>setTimeout(()=>window.print(),300)<\/script>
+<script>
+
+
+
+<script>
+
+
+</body></html>`;
   const w=window.open('', '_blank');
   if(!w){ alert('Popup blocked. Please allow popups to export PDF.'); return; }
   w.document.write(html); w.document.close();
@@ -6643,141 +6468,16 @@ function buildManagementThemes(results, good){
 }
 
 
-/* Rebalanced premium report layout: priority-first */
-.report-grid-v2{grid-template-columns:minmax(0,1.72fr) minmax(300px,0.85fr);align-items:start;}
-.report-side-v2{position:sticky;top:84px;align-self:start;}
-.priority-kpi-grid{margin-top:4px;margin-bottom:16px;}
-.priority-exec-summary{border-color:rgba(0,229,255,.22);background:linear-gradient(180deg,rgba(0,229,255,.055),rgba(10,20,37,.98));box-shadow:0 18px 45px rgba(0,0,0,.22);}
-.priority-exec-summary .report-card-head h3{font-size:17px;}
-.priority-exec-story{margin-bottom:16px;}
-.premium-business-impact-card{margin-top:4px;}
-.premium-decision-summary-card{border-color:rgba(255,179,0,.18);}
-.readiness-card{border-color:rgba(0,230,118,.18);}
-#report-recommendations{border-color:rgba(0,229,255,.18);}
-.report-card{margin-bottom:16px;}
-.report-view-hidden{display:none!important;}
-@media(max-width:980px){.report-grid-v2{grid-template-columns:1fr}.report-side-v2{position:static}.premium-report-switch{grid-template-columns:1fr}}
 
-</style>
+
+
+
 <script>
-(function(){
-  function $id(id){return document.getElementById(id);}
-  function esc(v){return (window.escapeHTML?escapeHTML(String(v??'')):String(v??'').replace(/[&<>\"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[m])));}
-  function sScore(r){ if(typeof window.scoreOfResult==='function') return scoreOfResult(r); if(typeof r.aiScore==='number') return r.aiScore; if(typeof r.score==='number') return r.score; return r.correct?100:0; }
-  function avg(rows){ const a=(rows||[]).map(sScore).filter(Number.isFinite); return a.length?Math.round(a.reduce((x,y)=>x+y,0)/a.length):0; }
-  function group(rows,keyFn){ return (rows||[]).reduce((m,r,i)=>{ const k=keyFn(r,i)||'Unassigned'; (m[k]||(m[k]=[])).push(r); return m; },{}); }
-  function band(p){return p>=80?['Strong','var(--green)','✓']:p>=50?['Partial','var(--amber)','!']:['Weak','var(--red)','×'];}
-  function timeFmt(v){ return (typeof window.formatReportLocalTime==='function') ? formatReportLocalTime(v) : {main:'—',alt:'',full:''}; }
-  function questionOf(r,i){return r.question || r.decisionTitle || ('Decision '+(Number(r.decisionIndex??r.step??i)+1));}
-  function roleOf(r){return r.role || r.level || r.participantRole || (window.simState && simState.level) || 'participant';}
 
-  window.renderExecutiveStory = function(results, pct){
-    const host=$id('consultant-executive-story');
-    if(!host) return;
-    results=results||[];
-    const weak=results.filter(r=>sScore(r)<50).length;
-    const partial=results.filter(r=>sScore(r)>=50&&sScore(r)<80).length;
-    const strong=results.filter(r=>sScore(r)>=80).length;
-    const people=Object.keys(group(results,r=>r.participantName||r.name||'Participant')).length || 1;
-    const finalLabel=pct>=80?'Strong':pct>=60?'Moderate':pct>=40?'Developing':'Critical';
-    const headline=pct>=80
-      ? 'Strong readiness observed, with evidence of effective decision-making across the exercise.'
-      : pct>=60
-        ? 'Moderate readiness observed, with effective response capability but clear improvement areas.'
-        : 'Readiness requires improvement, with decision gaps that could increase business and regulatory exposure.';
-    const keyFinding = weak>0 ? weak+' weak decision submission(s) created potential response risk.' : 'No weak decision submissions were recorded in the captured evidence.';
-    host.innerHTML=`<div class="exec-story-grid">
-      <div class="exec-story-card">
-        <div class="exec-story-pill">EXECUTIVE HEADLINE · ${esc(finalLabel.toUpperCase())} READINESS</div>
-        <h2>${esc(finalLabel)} (${pct}%) — ${esc(headline)}</h2>
-        <p>This report prioritises consultant interpretation before raw data. The exercise evidence is summarised at team level first, with participant history available through drill-down for facilitator review.</p>
-      </div>
-      <div class="exec-mini-list">
-        <div class="exec-mini-item"><strong>Key finding</strong><span>${esc(keyFinding)} Strong: ${strong}, Partial: ${partial}, Weak: ${weak}.</span></div>
-        <div class="exec-mini-item"><strong>Business impact lens</strong><span>${weak>0?'Weak decisions may delay containment, escalation, or breach-notification workflow.':'Captured decisions indicate low immediate business impact from decision quality.'}</span></div>
-        <div class="exec-mini-item"><strong>Evidence coverage</strong><span>${people} participant(s) assessed. Use the participant drill-down section for individual decision history.</span></div>
-      </div>
-    </div>`;
-  };
 
-  window.renderAggregateEvidence = function(results){
-    const host=$id('aggregate-evidence');
-    if(!host) return;
-    results=results||[];
-    if(!results.length){host.innerHTML='<div style="color:var(--muted);font-size:12px;">No evidence captured.</div>';return;}
-    const by=group(results,(r,i)=>String(Number(r.decisionIndex??r.step??i)+1));
-    host.innerHTML=Object.entries(by).sort((a,b)=>Number(a[0])-Number(b[0])).map(([n,rows])=>{
-      const scores=rows.map(sScore); const total=rows.length||1;
-      const strong=scores.filter(x=>x>=80).length, partial=scores.filter(x=>x>=50&&x<80).length, weak=scores.filter(x=>x<50).length;
-      const pStrong=Math.round(strong/total*100), pPartial=Math.round(partial/total*100), pWeak=Math.max(0,100-pStrong-pPartial);
-      const avgScore=avg(rows); const [label,color]=band(avgScore);
-      const q=questionOf(rows[0],Number(n)-1);
-      const branches=Object.entries(group(rows,r=>r.branch||'n/a')).sort((a,b)=>b[1].length-a[1].length).slice(0,2).map(([k,v])=>`${k.toUpperCase()} ${v.length}`).join(' · ');
-      return `<div class="aggregate-evidence-card">
-        <div class="aggregate-evidence-top"><div><div class="aggregate-evidence-title">Decision ${n}: ${esc(q)}</div><div class="aggregate-evidence-stats" style="margin-top:4px;">${esc(branches||'No branch data')}</div></div><div class="aggregate-evidence-meta" style="color:${color}">${avgScore}% · ${label}</div></div>
-        <div class="aggregate-stack"><span style="width:${pStrong}%;background:var(--green)"></span><span style="width:${pPartial}%;background:var(--amber)"></span><span style="width:${pWeak}%;background:var(--red)"></span></div>
-        <div class="aggregate-evidence-stats"><span>Strong ${strong}/${total}</span><span>Partial ${partial}/${total}</span><span>Weak ${weak}/${total}</span></div>
-      </div>`;
-    }).join('');
-  };
 
-  window.renderParticipantDrilldown = function(results){
-    const list=$id('participant-drill-list'), panel=$id('participant-history-panel');
-    if(!list||!panel) return;
-    results=results||[];
-    const people=group(results,r=>r.participantName||r.name||'Participant');
-    const entries=Object.entries(people).sort((a,b)=>avg(b[1])-avg(a[1]));
-    if(!entries.length){list.innerHTML='<div style="color:var(--muted);font-size:12px;">No participant data captured.</div>'; panel.innerHTML='<span style="color:var(--muted);font-size:12px;">Select a participant to view history.</span>'; return;}
-    list.innerHTML=entries.map(([name,rows],idx)=>{ const p=avg(rows); const [label,color]=band(p); return `<button class="participant-drill-card ${idx===0?'active':''}" data-participant="${esc(name)}" onclick="showParticipantHistory('${encodeURIComponent(name)}')"><div><div class="participant-drill-name">${esc(name)}</div><div class="participant-drill-role">${esc(rows[0]?.team||'Unassigned')} · ${esc(roleOf(rows[0]))}</div></div><div class="participant-drill-score" style="color:${color}">${p}%</div></button>`; }).join('');
-    window.__participantEvidenceMap=people;
-    window.showParticipantHistory(encodeURIComponent(entries[0][0]));
-  };
+<script>
 
-  window.showParticipantHistory = function(encodedName){
-    const name=decodeURIComponent(encodedName||'');
-    const panel=$id('participant-history-panel'); if(!panel) return;
-    document.querySelectorAll('.participant-drill-card').forEach(b=>b.classList.toggle('active', b.dataset.participant===name));
-    const rows=((window.__participantEvidenceMap||{})[name]||[]).slice().sort((a,b)=>(Number(a.decisionIndex??a.step??0)-Number(b.decisionIndex??b.step??0)) || String(a.submittedAt||'').localeCompare(String(b.submittedAt||'')) );
-    if(!rows.length){panel.innerHTML='<span style="color:var(--muted);font-size:12px;">No history available.</span>';return;}
-    const p=avg(rows); const [label,color]=band(p);
-    panel.innerHTML=`<div class="participant-history-head"><div><h4>${esc(name)}</h4><span>${esc(rows[0]?.team||'Unassigned')} · ${rows.length} submission(s)</span></div><div style="font-family:var(--head);font-size:22px;font-weight:850;color:${color}">${p}%</div></div>`+
-      rows.map((r,i)=>{ const score=sScore(r); const [lbl,col,ic]=band(score); const t=timeFmt(r.submittedAt||r.createdAt||r.at); const dNo=Number(r.decisionIndex??r.step??i)+1; const taken=Number(r.responseTimeSec||r.timeTakenSec||0); return `<div class="participant-history-item"><div class="participant-history-time">D${dNo}<br>${esc(t.main)}<br>${esc(t.alt)}</div><div class="participant-history-status" style="background:${col}22;color:${col};border:1px solid ${col}55">${ic}</div><div class="participant-history-copy"><strong>${esc(questionOf(r,i))}</strong><p>${esc(r.aiFeedback||r.feedback||r.freeTextAnswer||'Decision submitted.')}</p><small>Score: ${score}% · ${lbl} · Branch: ${esc((r.branch||'n/a').toUpperCase())} · Time taken: ${taken}s</small></div></div>`; }).join('');
-  };
-
-  const oldParticipantTeam=window.renderParticipantTeamReport;
-  window.renderParticipantTeamReport=function(results){
-    if(typeof oldParticipantTeam==='function') oldParticipantTeam(results);
-    const tbody=$id('individual-breakdown');
-    if(tbody){
-      const people=group(results||[],r=>r.participantName||r.name||'Participant');
-      tbody.innerHTML=Object.entries(people).map(([name,rows])=>`<tr class="drill-row" onclick="document.getElementById('report-timeline').scrollIntoView({behavior:'smooth'});setTimeout(()=>showParticipantHistory('${encodeURIComponent(name)}'),250)"><td>${esc(name)}</td><td>${esc(rows[0]?.team||'Unassigned')}</td><td>${avg(rows)}%</td><td>${esc(typeof strongestSkill==='function'?strongestSkill(rows):'—')}</td><td>${esc(typeof weakestSkill==='function'?weakestSkill(rows):'—')}</td></tr>`).join('') || '<tr><td colspan="5" style="color:var(--muted);">No participant data captured.</td></tr>';
-    }
-    renderParticipantDrilldown(results||[]);
-  };
-
-  window.renderExerciseTimeline=function(results){
-    const note=$id('timeline-note'); if(note && typeof localTimezoneLabel==='function') note.textContent=localTimezoneLabel();
-    renderAggregateEvidence(results||[]);
-    renderParticipantDrilldown(results||[]);
-  };
-
-  const prevShow=window.showReport;
-  if(typeof prevShow==='function'){
-    window.showReport=function(){
-      prevShow.apply(this,arguments);
-      try{
-        const s=window.simState?.scenario||{};
-        const decs=(s.decisions&&s.decisions[window.simState.level])||[];
-        const metrics=(typeof calculateExecutiveMetrics==='function')?calculateExecutiveMetrics(window.simState.results||[],decs.length):null;
-        const pct=metrics?metrics.pct:avg(window.simState.results||[]);
-        renderExecutiveStory(window.simState.results||[],pct);
-        renderAggregateEvidence(window.simState.results||[]);
-        renderParticipantDrilldown(window.simState.results||[]);
-      }catch(e){console.warn('Consultant report restructure skipped',e);}
-    };
-  }
-})();
-</script>
 
 </body>
 </html>
