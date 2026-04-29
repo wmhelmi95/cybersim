@@ -1366,6 +1366,49 @@ body.theme-light #screen-login > div > div:nth-child(2),body.theme-light .card,b
 @media(max-width:620px){.tbl-head{flex-direction:column}.tbl-kpis{grid-template-columns:1fr}.tabletop-summary-card{padding:16px}.tbl-title{font-size:21px}.tbl-section-body{padding:16px}.tbl-trend-legend{grid-template-columns:1fr}.tbl-outcome-box{grid-template-columns:1fr}.tbl-function-row{grid-template-columns:28px 1fr 44px}}
 </style>
 
+
+
+<style id="enterprise-report-polish-css">
+/* Enterprise-grade report cleanup: remove duplicate intro blocks and create one executive flow */
+.report-screen-v2 .report-shell{max-width:1480px!important;padding:38px 34px 64px!important;}
+.report-topbar-v2{margin-bottom:22px!important;padding-bottom:18px!important;border-bottom:1px solid rgba(84,145,220,.16)!important;}
+.report-breadcrumb{font-size:11px!important;letter-spacing:.08em!important;text-transform:uppercase!important;color:#4f83bd!important;}
+.report-title-row h1{font-size:34px!important;line-height:1.05!important;font-weight:900!important;letter-spacing:-1.1px!important;}
+.report-meta-line{max-width:1050px!important;line-height:1.65!important;color:#5f8fc8!important;}
+.report-tabs-v2{position:sticky;top:54px;z-index:30;background:rgba(2,8,20,.92);backdrop-filter:blur(12px);margin:0 0 22px!important;padding-top:4px!important;}
+.tabletop-summary-card{padding:0!important;overflow:hidden!important;border-radius:20px!important;margin-bottom:20px!important;}
+.tbl-head{padding:26px 28px 8px!important;margin-bottom:0!important;}
+.tbl-title{font-size:22px!important;letter-spacing:-.35px!important;}
+.tbl-kpis{padding:18px 28px 28px!important;margin:0!important;}
+.tbl-kpi{min-height:120px!important;border-color:rgba(100,160,230,.24)!important;background:linear-gradient(180deg,rgba(15,28,50,.86),rgba(8,16,31,.98))!important;}
+.tbl-kpi-value{font-size:34px!important;}
+.tbl-section{margin:0 28px 20px!important;border-color:rgba(100,160,230,.22)!important;}
+.tbl-section-head{padding:15px 20px!important;}
+.tbl-section-title{font-size:17px!important;}
+.tbl-section-kicker{color:#8fbff5!important;letter-spacing:2px!important;}
+.tbl-section-icon{background:rgba(0,229,255,.08)!important;border-color:rgba(0,229,255,.22)!important;}
+.tbl-two-col{padding:0 28px!important;}
+.tbl-two-col .tbl-section{margin-left:0!important;margin-right:0!important;}
+/* Hide older duplicated intro/metrics/readiness blocks; the tabletop summary card is the single source of truth. */
+#rpt-client-header,#consultant-executive-story,#rpt-metrics,#report-performance,#report-performance + .report-two-col{display:none!important;}
+#report-exec{display:block!important;}
+.report-main-v2{display:block!important;}
+.report-main-v2>.report-card{margin-bottom:18px!important;}
+.report-card{border-radius:18px!important;padding:0!important;overflow:hidden!important;background:linear-gradient(180deg,rgba(8,17,32,.96),rgba(5,11,22,.99))!important;border:1px solid rgba(100,160,230,.22)!important;box-shadow:0 16px 46px rgba(0,0,0,.22)!important;}
+.report-card-head{margin:0!important;padding:18px 22px!important;background:linear-gradient(90deg,rgba(41,121,255,.10),rgba(0,229,255,.035),transparent)!important;border-bottom:1px solid rgba(100,160,230,.14)!important;}
+.report-card-head h3{font-size:17px!important;letter-spacing:-.2px!important;}
+.report-card-head span{color:#5da7ff!important;letter-spacing:1.2px!important;text-transform:uppercase!important;}
+.report-card>div:not(.report-card-head),.report-card>p,.report-card>ul,.report-card>.business-impact-grid{margin:0!important;padding:22px 24px!important;}
+.premium-business-impact-card .business-impact-grid{display:grid!important;grid-template-columns:repeat(3,1fr)!important;gap:14px!important;}
+.ai-summary-card{margin-top:18px!important;}
+.ai-report-body-v2 .ai-section{border-left:3px solid rgba(0,229,255,.7)!important;background:rgba(0,229,255,.035)!important;border-radius:14px!important;margin-bottom:12px!important;}
+/* Better reading rhythm */
+.report-card p,.report-card li,.tbl-exec-body{font-size:14px!important;line-height:1.85!important;}
+.report-card ul{padding-left:22px!important;}
+.report-card li{margin:8px 0!important;}
+@media(max-width:980px){.report-screen-v2 .report-shell{padding-left:18px!important;padding-right:18px!important}.premium-business-impact-card .business-impact-grid{grid-template-columns:1fr!important}.tbl-two-col{padding:0 18px!important}.tbl-section{margin-left:18px!important;margin-right:18px!important}.tbl-head,.tbl-kpis{padding-left:18px!important;padding-right:18px!important}.report-tabs-v2{top:0}}
+</style>
+
 </head>
 <body>
 
@@ -2021,8 +2064,8 @@ body.theme-light #screen-login > div > div:nth-child(2),body.theme-light .card,b
     <section id="tabletop-summary" class="tabletop-summary-card">
       <div class="tbl-head">
         <div>
-          <div class="tbl-title">Tabletop Exercise Summary</div>
-          <div class="tbl-sub"><span id="tbl-scenario-title">Scenario</span> · <span id="tbl-level-sub">Management / Working Level</span></div>
+          <div class="tbl-title">Exercise Overview</div>
+          <div class="tbl-sub"><span id="tbl-scenario-title">Scenario</span> · <span id="tbl-level-sub">Management / Working Level</span> · Core exercise metrics</div>
         </div>
         <div id="tbl-level-pill" class="tbl-level-pill">LEVEL</div>
       </div>
@@ -4912,6 +4955,49 @@ function exportPDF(){
 .ai-report-body-v2{font-size:12px!important;line-height:1.65!important;}
 @media(max-width:1150px){.report-grid-v2{grid-template-columns:1fr!important}.exec-story-grid,.exec-mini-list,.business-impact-grid{grid-template-columns:1fr!important}}
 </style>
+
+
+<style id="enterprise-report-polish-css">
+/* Enterprise-grade report cleanup: remove duplicate intro blocks and create one executive flow */
+.report-screen-v2 .report-shell{max-width:1480px!important;padding:38px 34px 64px!important;}
+.report-topbar-v2{margin-bottom:22px!important;padding-bottom:18px!important;border-bottom:1px solid rgba(84,145,220,.16)!important;}
+.report-breadcrumb{font-size:11px!important;letter-spacing:.08em!important;text-transform:uppercase!important;color:#4f83bd!important;}
+.report-title-row h1{font-size:34px!important;line-height:1.05!important;font-weight:900!important;letter-spacing:-1.1px!important;}
+.report-meta-line{max-width:1050px!important;line-height:1.65!important;color:#5f8fc8!important;}
+.report-tabs-v2{position:sticky;top:54px;z-index:30;background:rgba(2,8,20,.92);backdrop-filter:blur(12px);margin:0 0 22px!important;padding-top:4px!important;}
+.tabletop-summary-card{padding:0!important;overflow:hidden!important;border-radius:20px!important;margin-bottom:20px!important;}
+.tbl-head{padding:26px 28px 8px!important;margin-bottom:0!important;}
+.tbl-title{font-size:22px!important;letter-spacing:-.35px!important;}
+.tbl-kpis{padding:18px 28px 28px!important;margin:0!important;}
+.tbl-kpi{min-height:120px!important;border-color:rgba(100,160,230,.24)!important;background:linear-gradient(180deg,rgba(15,28,50,.86),rgba(8,16,31,.98))!important;}
+.tbl-kpi-value{font-size:34px!important;}
+.tbl-section{margin:0 28px 20px!important;border-color:rgba(100,160,230,.22)!important;}
+.tbl-section-head{padding:15px 20px!important;}
+.tbl-section-title{font-size:17px!important;}
+.tbl-section-kicker{color:#8fbff5!important;letter-spacing:2px!important;}
+.tbl-section-icon{background:rgba(0,229,255,.08)!important;border-color:rgba(0,229,255,.22)!important;}
+.tbl-two-col{padding:0 28px!important;}
+.tbl-two-col .tbl-section{margin-left:0!important;margin-right:0!important;}
+/* Hide older duplicated intro/metrics/readiness blocks; the tabletop summary card is the single source of truth. */
+#rpt-client-header,#consultant-executive-story,#rpt-metrics,#report-performance,#report-performance + .report-two-col{display:none!important;}
+#report-exec{display:block!important;}
+.report-main-v2{display:block!important;}
+.report-main-v2>.report-card{margin-bottom:18px!important;}
+.report-card{border-radius:18px!important;padding:0!important;overflow:hidden!important;background:linear-gradient(180deg,rgba(8,17,32,.96),rgba(5,11,22,.99))!important;border:1px solid rgba(100,160,230,.22)!important;box-shadow:0 16px 46px rgba(0,0,0,.22)!important;}
+.report-card-head{margin:0!important;padding:18px 22px!important;background:linear-gradient(90deg,rgba(41,121,255,.10),rgba(0,229,255,.035),transparent)!important;border-bottom:1px solid rgba(100,160,230,.14)!important;}
+.report-card-head h3{font-size:17px!important;letter-spacing:-.2px!important;}
+.report-card-head span{color:#5da7ff!important;letter-spacing:1.2px!important;text-transform:uppercase!important;}
+.report-card>div:not(.report-card-head),.report-card>p,.report-card>ul,.report-card>.business-impact-grid{margin:0!important;padding:22px 24px!important;}
+.premium-business-impact-card .business-impact-grid{display:grid!important;grid-template-columns:repeat(3,1fr)!important;gap:14px!important;}
+.ai-summary-card{margin-top:18px!important;}
+.ai-report-body-v2 .ai-section{border-left:3px solid rgba(0,229,255,.7)!important;background:rgba(0,229,255,.035)!important;border-radius:14px!important;margin-bottom:12px!important;}
+/* Better reading rhythm */
+.report-card p,.report-card li,.tbl-exec-body{font-size:14px!important;line-height:1.85!important;}
+.report-card ul{padding-left:22px!important;}
+.report-card li{margin:8px 0!important;}
+@media(max-width:980px){.report-screen-v2 .report-shell{padding-left:18px!important;padding-right:18px!important}.premium-business-impact-card .business-impact-grid{grid-template-columns:1fr!important}.tbl-two-col{padding:0 18px!important}.tbl-section{margin-left:18px!important;margin-right:18px!important}.tbl-head,.tbl-kpis{padding-left:18px!important;padding-right:18px!important}.report-tabs-v2{top:0}}
+</style>
+
 </head><body><section class="cover"><div class="brand">NexaCyberSim Confidential Report</div><div class="title">Cyber Crisis Simulation Report</div><div class="sub">${client?esc(client.name)+' · ':''}${esc(s.title)} · ${esc(String(simState.level||'').toUpperCase())} Level<br>${date}</div><div class="grade-row"><div class="badge">${grade}</div><div class="grade-text"><strong>${pct}% Overall Readiness — ${gradeLabel}</strong><span>Team readiness view · ${correct}/${decs.length} decisions passed · ${execMetrics.participantCount||1} participant(s) · ${execMetrics.submissions} submissions</span></div></div></section><main class="content"><div class="metrics"><div class="metric"><div class="mv">${pct}%</div><div class="ml">Team Readiness</div></div><div class="metric"><div class="mv">${grade}</div><div class="ml">Grade</div></div><div class="metric"><div class="mv">${correct}/${decs.length}</div><div class="ml">Decisions Passed</div></div><div class="metric"><div class="mv">${execMetrics.participantCount||1}</div><div class="ml">Participants</div></div></div>${sectionHtml}<section class="section"><div class="section-kicker">APPENDIX A</div><h2>Skill Readiness Matrix</h2><table><thead><tr><th>Capability</th><th>Readiness</th><th class="num">Score</th><th>Status</th></tr></thead><tbody>${skillRows}</tbody></table></section><section class="section"><div class="section-kicker">APPENDIX B</div><h2>Decision Breakdown</h2><table><thead><tr><th class="num">#</th><th>Decision / Response</th><th class="num">Score</th><th>Assessment</th><th>Finding</th></tr></thead><tbody>${decisionRows}</tbody></table></section><section class="section"><div class="section-kicker">APPENDIX C</div><h2>Framework Alignment</h2><div>${(FW||[]).map(f=>`<span class="chip">${esc(f)}</span>`).join('')}</div></section><div class="footer">Generated by NexaCyberSim · Internal training report only · Not a penetration test or formal audit.</div></main><script>window.onload=()=>setTimeout(()=>window.print(),300)<\/script></body></html>`;
   const w=window.open('', '_blank');
   if(!w){ alert('Popup blocked. Please allow popups to export PDF.'); return; }
