@@ -4158,119 +4158,51 @@ const API_BASE = ''; // same server — works both locally and when deployed
 function renderConclusionHTML(raw){
   if(!raw) return '<span style="color:var(--muted)">No AI report available.</span>';
 
-  const SECTIONS = [
-    { key:'Management Executive Summary',           icon:'📋', accent:'#00e5ff', bg:'rgba(0,229,255,0.05)',  num:'01' },
-    { key:'Cyber Resilience Posture',    icon:'🛡️', accent:'#ff2d55', bg:'rgba(255,45,85,0.05)',  num:'02' },
-    { key:'Skill Domain',                icon:'📊', accent:'#2979ff', bg:'rgba(41,121,255,0.05)', num:'03' },
-    { key:'Decision Analysis: Failures', icon:'⚠️', accent:'#ff2d55', bg:'rgba(255,45,85,0.05)',  num:'04' },
-    { key:'Decision Failures',           icon:'⚠️', accent:'#ff2d55', bg:'rgba(255,45,85,0.05)',  num:'04' },
-    { key:'Decision Analysis: Validated',  icon:'✅', accent:'#00e676', bg:'rgba(0,230,118,0.05)', num:'05' },
-    { key:'Validated Responses',           icon:'✅', accent:'#00e676', bg:'rgba(0,230,118,0.05)', num:'05' },
-    { key:'Prioritised Recommendations', icon:'🎯', accent:'#ffb300', bg:'rgba(255,179,0,0.05)',  num:'06' },
-    { key:'Recommendations',             icon:'🎯', accent:'#ffb300', bg:'rgba(255,179,0,0.05)',  num:'06' },
-    { key:"Consultant",                  icon:'💼', accent:'#d500f9', bg:'rgba(213,0,249,0.05)',  num:'07' },
-    { key:"Verdict",                     icon:'💼', accent:'#d500f9', bg:'rgba(213,0,249,0.05)',  num:'07' },
+  const FLOW = [
+    { id:'exec', title:'Executive Summary', icon:'📋', accent:'#00e5ff', bg:'rgba(0,229,255,0.055)', aliases:['Management Executive Summary','Executive Summary','Summary'] },
+    { id:'posture', title:'Cyber Resilience Posture Assessment', icon:'🛡️', accent:'#ff2d55', bg:'rgba(255,45,85,0.055)', aliases:['Cyber Resilience Posture Assessment','Cyber Resilience Posture','Resilience Posture'] },
+    { id:'skills', title:'Skill Domain Readiness', icon:'📊', accent:'#2979ff', bg:'rgba(41,121,255,0.055)', aliases:['Skill Domain Readiness','Skill Domain','Readiness by Function','Function Readiness'] },
+    { id:'evidence', title:'Decision Evidence & Response Analysis', icon:'✅', accent:'#00e676', bg:'rgba(0,230,118,0.05)', aliases:['Decision Failures & Consequences','Decision Failures','Correct Responses','Validated Responses','Decision Analysis: Failures','Decision Analysis: Validated','Correct Response','Validated Response'] },
+    { id:'insights', title:'Team, Timeline & Threat Mapping', icon:'🧭', accent:'#7c4dff', bg:'rgba(124,77,255,0.05)', aliases:['Team & Individual Insights','Timeline, Replay & Heatmap Insights','Timeline & Replay Insights','MITRE ATT&CK / Threat Behaviour Mapping','MITRE ATT&CK','Threat Behaviour Mapping','Team Insights'] },
+    { id:'recommendations', title:'Playbook Advisory & Prioritised Recommendations', icon:'🎯', accent:'#ffb300', bg:'rgba(255,179,0,0.055)', aliases:['Playbook Advisory Assessment','Prioritised Recommendations','Prioritized Recommendations','Recommendations','Top Strengths','Top Areas for Improvement','Areas for Improvement','Improvement Areas','Strengths'] },
+    { id:'verdict', title:"Consultant's Verdict", icon:'💼', accent:'#d500f9', bg:'rgba(213,0,249,0.055)', aliases:["Consultant's Verdict",'Consultant Verdict','Verdict','Final Verdict','Closing Statement'] }
   ];
 
-  // Step 1: Normalise the raw HTML — strip surrounding <br> from strong tags
-  let text = raw
-    .replace(/<br\s*\/?>\s*<strong>/gi, '\n<strong>')
-    .replace(/<\/strong>\s*<br\s*\/?>/gi, '</strong>\n')
-    .trim();
-
-  // Step 2: Split on <strong>...</strong> section headers
-  // A header is a <strong> that is on its own line (preceded/followed by \n or start)
-  const parts = text.split(/(<strong style="[^"]*">[^<]+<\/strong>|<strong>[^<]+<\/strong>)/g);
-
-  let html = '<div style="display:flex;flex-direction:column;gap:14px;">';
-  let i = 0;
-
-  while(i < parts.length){
-    const part = (parts[i]||'').trim();
-    if(!part){i++;continue;}
-
-    // Check if this chunk is a section header <strong>
-    const headerMatch = part.match(/^<strong[^>]*>([^<]+)<\/strong>$/);
-    if(headerMatch){
-      const title = headerMatch[1].replace(/<[^>]+>/g,'').trim();
-      const sec = SECTIONS.find(s => title.toLowerCase().includes(s.key.toLowerCase()));
-
-      // Grab the next chunk as content
-      const rawContent = (parts[i+1]||'').replace(/^\s*\n+/,'').replace(/\n+\s*$/,'').trim();
-
-      if(sec){
-        html += buildSection(sec, title, rawContent);
-        i += 2;
-      } else {
-        // Sub-heading inside a section (e.g. skill names like "Technical Response:")
-        // Don't create a new card — just render as styled text
-        html += `<div style="font-size:13px;font-weight:600;color:var(--white);padding:2px 0;">${title}</div>`;
-        if(rawContent){
-          html += `<div style="font-size:13px;line-height:1.85;color:var(--text);padding-left:4px;">${formatContent(rawContent)}</div>`;
-        }
-        i += 2;
-      }
-    } else {
-      // Plain content block
-      const cleaned = part.replace(/^\n+/,'').replace(/\n+$/,'').trim();
-      if(cleaned){
-        html += `<div style="font-size:13px;line-height:1.85;color:var(--text);">${formatContent(cleaned)}</div>`;
-      }
-      i++;
-    }
+  function esc(v){ return String(v ?? '').replace(/[&<>\"]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m] || m)); }
+  function cleanTitle(t){ return String(t || '').replace(/<[^>]+>/g,'').replace(/^\s*(section\s*\d+\s*[:\-–—]?\s*)/i,'').replace(/^\s*#+\s*/,'').replace(/[:\-–—]\s*$/,'').trim(); }
+  function canonicalFor(title){ const t = cleanTitle(title).toLowerCase(); for(const sec of FLOW){ if(sec.aliases.some(a => t === a.toLowerCase() || t.includes(a.toLowerCase()))) return sec; } return null; }
+  function normaliseToLines(input){ return String(input || '')
+      .replace(/\r/g,'')
+      .replace(/<\/?div[^>]*>/gi,'\n')
+      .replace(/<\/?p[^>]*>/gi,'\n')
+      .replace(/<br\s*\/?\s*>/gi,'\n')
+      .replace(/<li[^>]*>/gi,'\n• ')
+      .replace(/<\/li>/gi,'')
+      .replace(/<\/ul>/gi,'\n')
+      .replace(/<ul[^>]*>/gi,'\n')
+      .replace(/<strong[^>]*>(.*?)<\/strong>/gis,'\n$1\n')
+      .replace(/<b[^>]*>(.*?)<\/b>/gis,'\n$1\n')
+      .replace(/&nbsp;/gi,' ')
+      .replace(/&amp;/gi,'&')
+      .replace(/&lt;/gi,'<')
+      .replace(/&gt;/gi,'>')
+      .replace(/&quot;/gi,'"')
+      .replace(/<[^>]+>/g,'')
+      .split('\n').map(x => x.trim()).filter(Boolean); }
+  function parseLines(lines){ const buckets = Object.fromEntries(FLOW.map(sec => [sec.id, []])); let current = FLOW[0];
+    for(const line of lines){ const maybe = canonicalFor(line); const isShortHeading = maybe && line.length < 85 && !/[.!?]$/.test(line); if(isShortHeading){ current = maybe; continue; } buckets[current.id].push(line); } return buckets; }
+  function lineToHtml(line){
+    const priority = line.match(/^\[?(IMMEDIATE|30 DAYS|NEXT QUARTER)\]?\s*[—–\-: ]+(.+)/i);
+    if(priority){ const label = priority[1].toUpperCase(); const cls = label === 'IMMEDIATE' ? 'immediate' : label === '30 DAYS' ? 'days' : 'quarter'; const icon = label === 'IMMEDIATE' ? '⚡' : label === '30 DAYS' ? '📅' : '📆'; return `<div class="report-rec-line"><span class="report-priority ${cls}">${icon} ${esc(label)}</span><span>${esc(priority[2])}</span></div>`; }
+    const skill = line.match(/^([^:]{2,46}):\s*(\d{1,3})%\s*\[?(PASS|FAIL|BORDERLINE|DEVELOPING|PARTIAL|NOT ASSESSED|CRITICAL|GOOD|STRONG)\]?\s*[—–\-]?\s*(.*)$/i);
+    if(skill){ const pct = Math.max(0, Math.min(100, Number(skill[2]))); const status = skill[3].toUpperCase(); const cls = pct >= 70 ? 'pass' : pct >= 50 ? 'warn' : 'fail'; return `<div class="report-skill-line"><div class="report-skill-main"><strong>${esc(skill[1])}</strong><small>${esc(skill[4] || status)}</small></div><div class="report-skill-score ${cls}">${pct}%<span>${esc(status)}</span></div><div class="report-skill-bar"><i class="${cls}" style="width:${Math.max(3,pct)}%"></i></div></div>`; }
+    if(/^[•●\-*–—]\s+/.test(line)) return `<li>${esc(line.replace(/^[•●\-*–—]\s+/,''))}</li>`;
+    return `<p>${esc(line)}</p>`;
   }
-  html += '</div>';
-  return html;
-}
-
-function buildSection(sec, title, content){
-  const formattedContent = formatContent(content);
-  return `<div style="border-radius:10px;overflow:hidden;border:1px solid rgba(255,255,255,0.07);">
-    <div style="background:${sec.bg};border-left:3px solid ${sec.accent};padding:13px 16px;display:flex;align-items:center;gap:10px;">
-      <div style="width:26px;height:26px;border-radius:6px;background:${sec.accent}18;border:1px solid ${sec.accent}40;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;">${sec.icon}</div>
-      <div style="flex:1;min-width:0;">
-        <div style="font-family:var(--mono);font-size:9px;color:${sec.accent};letter-spacing:1.5px;margin-bottom:2px;opacity:0.8;">SECTION ${sec.num}</div>
-        <div style="font-family:var(--head);font-size:13px;font-weight:700;color:var(--white);">${title}</div>
-      </div>
-    </div>
-    <div style="padding:14px 16px;background:rgba(255,255,255,0.012);font-size:13px;line-height:1.85;color:var(--text);display:block;width:100%;box-sizing:border-box;">
-      ${formattedContent || '<span style="color:var(--muted);font-size:12px;">No content for this section.</span>'}
-    </div>
-  </div>`;
-}
-
-function formatContent(html){
-  if(!html) return '';
-  return html
-    // Skill rows: "Label: XX% [PASS/FAIL]" → styled row
-    .replace(/([A-Za-z &]+):\s*(\d+)%\s*\[([A-Z]+)\]/g, (_, label, pct, status) => {
-      const isPass = status==='PASS';
-      const pctN = parseInt(pct);
-      const col = isPass ? '#00e676' : pctN>=50 ? '#ffb300' : '#ff2d55';
-      return `<div style="display:block;width:100%;box-sizing:border-box;padding:10px 12px;margin:5px 0;border-radius:7px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);">
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:7px;">
-          <span style="font-size:12px;color:var(--white);font-weight:600;flex:1;min-width:0;">${label.trim()}</span>
-          <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
-            <span style="font-family:var(--mono);font-size:12px;font-weight:700;color:${col};">${pct}%</span>
-            <span style="font-family:var(--mono);font-size:9px;padding:2px 7px;border-radius:3px;background:${col}22;border:1px solid ${col}55;color:${col};letter-spacing:0.5px;">${status}</span>
-          </div>
-        </div>
-        <div style="display:block;width:100%;height:5px;background:rgba(255,255,255,0.1);border-radius:3px;overflow:hidden;box-sizing:border-box;">
-          <div style="height:100%;width:${pctN}%;background:${col};border-radius:3px;"></div>
-        </div>
-      </div>`;
-    })
-    // Recommendation priority badges (before li processing)
-    .replace(/\[IMMEDIATE\]/g,    '<span style="display:inline-flex;align-items:center;gap:4px;font-family:var(--mono);font-size:9px;font-weight:700;padding:3px 8px;border-radius:4px;background:rgba(255,45,85,0.15);color:#ff2d55;border:1px solid rgba(255,45,85,0.35);margin-right:8px;">⚡ IMMEDIATE</span>')
-    .replace(/\[30 DAYS\]/g,      '<span style="display:inline-flex;align-items:center;gap:4px;font-family:var(--mono);font-size:9px;font-weight:700;padding:3px 8px;border-radius:4px;background:rgba(255,179,0,0.15);color:#ffb300;border:1px solid rgba(255,179,0,0.35);margin-right:8px;">📅 30 DAYS</span>')
-    .replace(/\[NEXT QUARTER\]/g, '<span style="display:inline-flex;align-items:center;gap:4px;font-family:var(--mono);font-size:9px;font-weight:700;padding:3px 8px;border-radius:4px;background:rgba(41,121,255,0.15);color:#2979ff;border:1px solid rgba(41,121,255,0.35);margin-right:8px;">📆 NEXT QUARTER</span>')
-    // Style inline strong
-    .replace(/<strong\s*>/g, '<strong style="color:var(--white);font-weight:600;">')
-    // Style ul/li with custom cyan bullet
-    .replace(/<ul>/g, '<ul style="list-style:none;padding:0;margin:8px 0;display:flex;flex-direction:column;gap:6px;">')
-    .replace(/<li>(<div)/g, '<li style="display:block;list-style:none;margin:0;padding:0;">$1')
-    .replace(/<li>/g, '<li style="display:flex;gap:10px;align-items:flex-start;font-size:13px;line-height:1.75;"><span style="color:var(--cyan);font-size:8px;margin-top:6px;flex-shrink:0;">●</span><span>')
-    .replace(/<\/li>/g, '</span></li>');
+  function formatBody(lines){ if(!lines || !lines.length) return '<p class="report-muted">No narrative available for this section.</p>'; let html = '', list = []; const flush = () => { if(list.length){ html += `<ul class="report-section-list">${list.join('')}</ul>`; list = []; } }; for(const line of lines){ const h = lineToHtml(line); if(h.startsWith('<li>')) list.push(h); else { flush(); html += h; } } flush(); return html; }
+  function sectionCard(sec, idx, body){ return `<div class="report-ai-section" style="--sec-accent:${sec.accent};--sec-bg:${sec.bg};"><div class="report-ai-section-head"><div class="report-ai-icon">${sec.icon}</div><div><div class="report-ai-kicker">SECTION ${String(idx+1).padStart(2,'0')}</div><div class="report-ai-title">${esc(sec.title)}</div></div></div><div class="report-ai-body">${formatBody(body)}</div></div>`; }
+  const lines = normaliseToLines(raw); const buckets = parseLines(lines);
+  return `<div class="report-ai-flow">${FLOW.map((sec, idx) => sectionCard(sec, idx, buckets[sec.id])).join('')}</div>`;
 }
 
 async function fetchAIConclusion(scenario, simState, decisions, resultId){
@@ -6605,6 +6537,36 @@ function buildManagementThemes(results, good){
     padding-right: 0 !important;
   }
 }
+
+/* Unified 01–07 AI report section system */
+.report-ai-flow{display:flex;flex-direction:column;gap:16px;margin-top:10px;}
+.report-ai-section{border:1px solid rgba(110,160,220,.18);border-radius:14px;overflow:hidden;background:linear-gradient(180deg,rgba(10,20,36,.96),rgba(6,13,26,.98));box-shadow:0 10px 28px rgba(0,0,0,.18);}
+.report-ai-section-head{display:flex;align-items:center;gap:12px;padding:16px 18px;background:linear-gradient(90deg,var(--sec-bg),rgba(255,255,255,.015));border-left:3px solid var(--sec-accent);}
+.report-ai-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.10);font-size:15px;flex-shrink:0;}
+.report-ai-kicker{font-family:var(--mono);font-size:10px;letter-spacing:2px;color:var(--sec-accent);margin-bottom:4px;}
+.report-ai-title{font-family:var(--head);font-size:15px;font-weight:800;color:var(--white);}
+.report-ai-body{padding:18px 20px;font-size:14px;line-height:1.85;color:var(--text);}
+.report-ai-body p{margin:0 0 12px;}
+.report-ai-body p:last-child{margin-bottom:0;}
+.report-section-list{list-style:none;margin:8px 0 0;padding:0;display:flex;flex-direction:column;gap:10px;}
+.report-section-list li{position:relative;padding-left:18px;line-height:1.75;}
+.report-section-list li:before{content:'•';position:absolute;left:0;color:var(--cyan);font-weight:900;}
+.report-muted{color:var(--muted)!important;font-size:13px!important;}
+.report-rec-line{display:flex;align-items:flex-start;gap:14px;margin:10px 0;line-height:1.7;}
+.report-priority{font-family:var(--mono);font-size:10px;font-weight:800;padding:4px 9px;border-radius:5px;white-space:nowrap;letter-spacing:.5px;}
+.report-priority.immediate{background:rgba(255,45,85,.15);color:#ff2d55;border:1px solid rgba(255,45,85,.35);}
+.report-priority.days{background:rgba(255,179,0,.15);color:#ffb300;border:1px solid rgba(255,179,0,.35);}
+.report-priority.quarter{background:rgba(41,121,255,.15);color:#2979ff;border:1px solid rgba(41,121,255,.35);}
+.report-skill-line{display:grid;grid-template-columns:minmax(160px,1fr) 92px;gap:10px;align-items:center;margin:10px 0;padding:12px 14px;border-radius:9px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.08);}
+.report-skill-main strong{display:block;color:var(--white);font-size:13px;margin-bottom:2px;}
+.report-skill-main small{display:block;color:var(--muted);font-size:12px;line-height:1.5;}
+.report-skill-score{font-family:var(--mono);font-size:16px;font-weight:900;text-align:right;}
+.report-skill-score span{display:block;font-size:9px;letter-spacing:.8px;margin-top:2px;}
+.report-skill-score.pass{color:var(--green);}.report-skill-score.warn{color:var(--amber);}.report-skill-score.fail{color:var(--red);}
+.report-skill-bar{grid-column:1/-1;height:6px;background:rgba(255,255,255,.10);border-radius:999px;overflow:hidden;}
+.report-skill-bar i{display:block;height:100%;border-radius:999px;}
+.report-skill-bar i.pass{background:var(--green);}.report-skill-bar i.warn{background:var(--amber);}.report-skill-bar i.fail{background:var(--red);}
+@media(max-width:800px){.report-rec-line{flex-direction:column;gap:6px}.report-skill-line{grid-template-columns:1fr}.report-skill-score{text-align:left}}
 
 </style>
 <script>
