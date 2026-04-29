@@ -1323,7 +1323,7 @@ body.theme-light #screen-login > div > div:nth-child(2),body.theme-light .card,b
 .replay-badge.weak{color:var(--red);background:rgba(255,45,85,.08);border-color:rgba(255,45,85,.28);}
 .replay-timeline{position:relative;display:flex;flex-direction:column;gap:14px;padding:18px 18px 18px 42px;}
 .replay-timeline:before{content:'';position:absolute;left:29px;top:26px;bottom:26px;width:1px;background:linear-gradient(to bottom,rgba(0,229,255,.45),rgba(41,121,255,.18));}
-.replay-step{position:relative;display:grid;grid-template-columns:0 1fr;}
+.replay-step{position:relative;display:block;width:100%;min-width:0;}
 .replay-step-marker{position:absolute;left:-28px;top:14px;width:25px;height:25px;border-radius:999px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:10px;font-weight:800;background:#071426;border:1px solid rgba(0,229,255,.32);color:var(--cyan);z-index:2;}
 .replay-step.strong .replay-step-marker{border-color:rgba(0,230,118,.36);color:var(--green);}
 .replay-step.ok .replay-step-marker{border-color:rgba(255,179,0,.36);color:var(--amber);}
@@ -1451,6 +1451,55 @@ body.theme-light #screen-login > div > div:nth-child(2),body.theme-light .card,b
 @media(max-width:980px){.report-screen-v2 .report-shell{padding-left:18px!important;padding-right:18px!important}.premium-business-impact-card .business-impact-grid{grid-template-columns:1fr!important}.tbl-two-col{padding:0 18px!important}.tbl-section{margin-left:18px!important;margin-right:18px!important}.tbl-head,.tbl-kpis{padding-left:18px!important;padding-right:18px!important}.report-tabs-v2{top:0}}
 </style>
 
+<style id="replay-width-hard-fix">
+/* Hard fix for Decision Replay vertical wrapping */
+#decision-replay,
+#decision-replay * { box-sizing: border-box; }
+#decision-replay .replay-shell,
+#decision-replay .replay-participant,
+#decision-replay .replay-timeline,
+#decision-replay .replay-step,
+#decision-replay .replay-step-card {
+  width: 100% !important;
+  max-width: none !important;
+  min-width: 0 !important;
+}
+#decision-replay .replay-step {
+  display: block !important;
+  grid-template-columns: none !important;
+}
+#decision-replay .replay-step-card {
+  display: block !important;
+  margin-left: 0 !important;
+}
+#decision-replay .replay-step-head {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  align-items: start !important;
+  gap: 16px !important;
+}
+#decision-replay .replay-step-head > div:first-child,
+#decision-replay .replay-step h4,
+#decision-replay .replay-field,
+#decision-replay .replay-field p {
+  width: 100% !important;
+  max-width: none !important;
+  min-width: 0 !important;
+  white-space: normal !important;
+  word-break: normal !important;
+  overflow-wrap: anywhere !important;
+}
+#decision-replay .replay-field-grid {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  width: 100% !important;
+}
+#decision-replay .replay-field.wide { grid-column: 1 / -1 !important; }
+@media(max-width:900px){
+  #decision-replay .replay-step-head{grid-template-columns:1fr!important;}
+  #decision-replay .replay-field-grid{grid-template-columns:1fr!important;}
+}
+</style>
 </head>
 <body>
 
@@ -5113,6 +5162,55 @@ function exportPDF(){
 @media(max-width:980px){.report-screen-v2 .report-shell{padding-left:18px!important;padding-right:18px!important}.premium-business-impact-card .business-impact-grid{grid-template-columns:1fr!important}.tbl-two-col{padding:0 18px!important}.tbl-section{margin-left:18px!important;margin-right:18px!important}.tbl-head,.tbl-kpis{padding-left:18px!important;padding-right:18px!important}.report-tabs-v2{top:0}}
 </style>
 
+<style id="replay-width-hard-fix">
+/* Hard fix for Decision Replay vertical wrapping */
+#decision-replay,
+#decision-replay * { box-sizing: border-box; }
+#decision-replay .replay-shell,
+#decision-replay .replay-participant,
+#decision-replay .replay-timeline,
+#decision-replay .replay-step,
+#decision-replay .replay-step-card {
+  width: 100% !important;
+  max-width: none !important;
+  min-width: 0 !important;
+}
+#decision-replay .replay-step {
+  display: block !important;
+  grid-template-columns: none !important;
+}
+#decision-replay .replay-step-card {
+  display: block !important;
+  margin-left: 0 !important;
+}
+#decision-replay .replay-step-head {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  align-items: start !important;
+  gap: 16px !important;
+}
+#decision-replay .replay-step-head > div:first-child,
+#decision-replay .replay-step h4,
+#decision-replay .replay-field,
+#decision-replay .replay-field p {
+  width: 100% !important;
+  max-width: none !important;
+  min-width: 0 !important;
+  white-space: normal !important;
+  word-break: normal !important;
+  overflow-wrap: anywhere !important;
+}
+#decision-replay .replay-field-grid {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  width: 100% !important;
+}
+#decision-replay .replay-field.wide { grid-column: 1 / -1 !important; }
+@media(max-width:900px){
+  #decision-replay .replay-step-head{grid-template-columns:1fr!important;}
+  #decision-replay .replay-field-grid{grid-template-columns:1fr!important;}
+}
+</style>
 </head><body><section class="cover"><div class="brand">NexaCyberSim Confidential Report</div><div class="title">Cyber Crisis Simulation Report</div><div class="sub">${client?esc(client.name)+' · ':''}${esc(s.title)} · ${esc(String(simState.level||'').toUpperCase())} Level<br>${date}</div><div class="grade-row"><div class="badge">${grade}</div><div class="grade-text"><strong>${pct}% Overall Readiness — ${gradeLabel}</strong><span>Team readiness view · ${correct}/${decs.length} decisions passed · ${execMetrics.participantCount||1} participant(s) · ${execMetrics.submissions} submissions</span></div></div></section><main class="content"><div class="metrics"><div class="metric"><div class="mv">${pct}%</div><div class="ml">Team Readiness</div></div><div class="metric"><div class="mv">${grade}</div><div class="ml">Grade</div></div><div class="metric"><div class="mv">${correct}/${decs.length}</div><div class="ml">Decisions Passed</div></div><div class="metric"><div class="mv">${execMetrics.participantCount||1}</div><div class="ml">Participants</div></div></div>${sectionHtml}<section class="section"><div class="section-kicker">APPENDIX A</div><h2>Skill Readiness Matrix</h2><table><thead><tr><th>Capability</th><th>Readiness</th><th class="num">Score</th><th>Status</th></tr></thead><tbody>${skillRows}</tbody></table></section><section class="section"><div class="section-kicker">APPENDIX B</div><h2>Decision Breakdown</h2><table><thead><tr><th class="num">#</th><th>Decision / Response</th><th class="num">Score</th><th>Assessment</th><th>Finding</th></tr></thead><tbody>${decisionRows}</tbody></table></section><section class="section"><div class="section-kicker">APPENDIX C</div><h2>Framework Alignment</h2><div>${(FW||[]).map(f=>`<span class="chip">${esc(f)}</span>`).join('')}</div></section><div class="footer">Generated by NexaCyberSim · Internal training report only · Not a penetration test or formal audit.</div></main><script>window.onload=()=>setTimeout(()=>window.print(),300)<\/script><style>
 /* Participant drill-down Decision Replay */
 .participant-replay-accordion{display:flex;flex-direction:column;gap:12px;padding:24px 28px;}
