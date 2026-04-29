@@ -1253,6 +1253,28 @@ body.theme-light #screen-login > div > div:nth-child(2),body.theme-light .card,b
 .ent-readiness-bar{height:8px;background:var(--border);border-radius:999px;overflow:hidden;margin-top:8px;}
 .ent-readiness-bar span{height:100%;display:block;border-radius:999px;background:linear-gradient(90deg,var(--cyan),var(--blue));}
 
+
+
+/* FIX: give the executive report header breathing room below the fixed navbar */
+.report-screen-v2 .report-shell{
+  padding-top:112px!important;
+}
+.report-screen-v2 .report-topbar-v2{
+  margin-bottom:24px!important;
+}
+.report-screen-v2 .report-title-row h1{
+  line-height:1.18!important;
+}
+.report-screen-v2 .report-tabs-v2{
+  margin-top:18px!important;
+}
+@media(max-width:900px){
+  .report-screen-v2 .report-shell{padding-top:104px!important;}
+}
+@media(max-width:600px){
+  .report-screen-v2 .report-shell{padding-top:94px!important;}
+}
+
 </style>
 
 <style id="premium-hybrid-report-css">
@@ -4112,48 +4134,7 @@ function formatContent(html){
     .replace(/<\/li>/g, '</span></li>');
 }
 
-async 
-function splitReportLayersClient(raw){
-  const text = String(raw || '');
-  const execHeadings = ['C-Suite Executive Summary','Business Impact Assessment','Top Executive Risks','Executive Recommendations'];
-  const detailHeadings = ['Cyber Resilience Posture Assessment','Skill Domain Readiness','Decision Quality Review','Decision Failures & Consequences','Validated Responses','Team & Participant Insights','Threat Behaviour / Framework Mapping',"Consultant's Verdict"];
-  function pick(headings){
-    return headings.map(h=>{
-      const escaped=h.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
-      const re=new RegExp(`<strong>\\s*${escaped}\\s*<\\/strong>\\s*<br>`,'i');
-      const m=text.match(re);
-      if(!m) return '';
-      const start=(m.index||0)+m[0].length;
-      const next=text.slice(start).search(/<strong>[^<]+<\\/strong>\\s*<br>/i);
-      const body=next>=0 ? text.slice(start,start+next) : text.slice(start);
-      return `<strong>${h}</strong><br>${body.trim()}`;
-    }).filter(Boolean).join('<br><br>');
-  }
-  return { executive: pick(execHeadings), details: pick(detailHeadings) };
-}
-function renderLayeredConclusion(raw, layers){
-  layers = layers || splitReportLayersClient(raw);
-  const exec = layers.executive || '';
-  const details = layers.details || '';
-  if(!exec && !details) return renderConclusionHTML(raw);
-  return `
-    <div class="report-layer-tabs">
-      <button type="button" class="active" onclick="switchConclusionLayer(event,'exec')">C-Suite Summary</button>
-      <button type="button" onclick="switchConclusionLayer(event,'details')">Simulation Details</button>
-    </div>
-    <div id="conclusion-layer-exec" class="conclusion-layer active">${renderConclusionHTML(exec || raw)}</div>
-    <div id="conclusion-layer-details" class="conclusion-layer">${renderConclusionHTML(details || raw)}</div>`;
-}
-function switchConclusionLayer(event, layer){
-  const root = event.target.closest('.ai-report-body-v2') || document;
-  root.querySelectorAll('.report-layer-tabs button').forEach(b=>b.classList.remove('active'));
-  event.target.classList.add('active');
-  root.querySelectorAll('.conclusion-layer').forEach(el=>el.classList.remove('active'));
-  const target = root.querySelector(layer === 'details' ? '#conclusion-layer-details' : '#conclusion-layer-exec');
-  if(target) target.classList.add('active');
-}
-
-function fetchAIConclusion(scenario, simState, decisions, resultId){
+async function fetchAIConclusion(scenario, simState, decisions, resultId){
   const conclusionEl = document.getElementById('rpt-conclusion');
   const titleEl = document.getElementById('rpt-conclusion-title');
   titleEl.style.display = 'flex';
@@ -4161,12 +4142,10 @@ function fetchAIConclusion(scenario, simState, decisions, resultId){
 
   // ── If viewing a past result with saved conclusion — show immediately, no API call ──
   if(simState.savedConclusionForView){
-    simState.reportLayers = simState.savedReportLayersForView || splitReportLayersClient(simState.savedConclusionForView);
-    conclusionEl.innerHTML = renderLayeredConclusion(simState.savedConclusionForView, simState.reportLayers);
+    conclusionEl.innerHTML = renderConclusionHTML(simState.savedConclusionForView);
     // Reset flags now that we're done
     simState.isViewingPastResult = false;
     simState.savedConclusionForView = null;
-    simState.savedReportLayersForView = null;
     simState.viewingResultId = null;
     return;
   }
@@ -4184,7 +4163,7 @@ function fetchAIConclusion(scenario, simState, decisions, resultId){
   conclusionEl.innerHTML = `
     <div style="display:flex;align-items:center;gap:10px;color:var(--muted);">
       <div style="width:14px;height:14px;border:2px solid var(--cyan);border-top-color:transparent;border-radius:50%;animation:spin 0.8s linear infinite;flex-shrink:0;"></div>
-      <span style="font-family:var(--mono);font-size:11px;letter-spacing:0.5px;">Generating consultant assessment...</span>
+      <span style="font-family:var(--mono);font-size:11px;letter-spacing:0.5px;">Generating AI consultant report...</span>
     </div>`;
 
   // Build skill scores as percentages. Only include domains actually tested by decisions.
@@ -4244,20 +4223,18 @@ function fetchAIConclusion(scenario, simState, decisions, resultId){
     }
     const data = await response.json();
     const rawConclusion = data.conclusion;
-    simState.reportLayers = data.reportLayers || splitReportLayersClient(rawConclusion);
 
     // Save the conclusion into the result record — works for both new runs and old results
     if(saveToId){
       const savedResult = DB.simResults.find(r => r.id === saveToId);
       if(savedResult){
         savedResult.savedConclusion = rawConclusion;
-        savedResult.reportLayers = simState.reportLayers;
         saveData();
-        console.log(`Conclusion saved to result ${saveToId} — future views won't call consultant service`);
+        console.log(`Conclusion saved to result ${saveToId} — future views won't call AI`);
       }
     }
 
-    conclusionEl.innerHTML = renderLayeredConclusion(rawConclusion, simState.reportLayers);
+    conclusionEl.innerHTML = renderConclusionHTML(rawConclusion);
 
   } catch(err) {
     console.error('AI conclusion error:', err);
@@ -4265,7 +4242,7 @@ function fetchAIConclusion(scenario, simState, decisions, resultId){
     const worstSkill = Object.entries(skillScores).sort((a,b)=>a[1]-b[1])[0];
     conclusionEl.innerHTML = `
       <div style="background:rgba(255,179,0,0.06);border-left:3px solid var(--amber);border-radius:0 8px 8px 0;padding:14px 16px;margin-bottom:12px;">
-        <div style="font-family:var(--mono);font-size:10px;color:var(--amber);letter-spacing:1px;margin-bottom:6px;">⚠ CONSULTANT REPORT UNAVAILABLE</div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--amber);letter-spacing:1px;margin-bottom:6px;">⚠ AI REPORT UNAVAILABLE</div>
         <div style="font-size:12px;color:var(--text);margin-bottom:6px;">Error: <strong style="color:var(--white)">${err.message}</strong></div>
         <div style="font-size:11px;color:var(--muted);">Check browser console (F12) for details. Make sure server is running and you are logged in.</div>
       </div>
@@ -4536,7 +4513,6 @@ function viewResult(resultId){
   simState.isViewingPastResult=true;
   simState.viewingResultId=resultId;  // track which result we're viewing
   simState.savedConclusionForView=r.savedConclusion||null;
-  simState.savedReportLayersForView=r.reportLayers||null;
   simState.scenario=DB.scenarios.find(s=>s.id===r.scenarioId);
   simState.client=DB.clients.find(c=>c.id===r.clientId)||null;
   simState.score=r.score;
@@ -4727,76 +4703,8 @@ function exportPDF(){
 .ai-summary-card{max-height:none!important;}
 .ai-report-body-v2{font-size:12px!important;line-height:1.65!important;}
 @media(max-width:1150px){.report-grid-v2{grid-template-columns:1fr!important}.exec-story-grid,.exec-mini-list,.business-impact-grid{grid-template-columns:1fr!important}}
-
-
-/* === Report top spacing fix === */
-#screen-report .report-shell,
-#screen-report .report-wrap,
-.report-screen-v2 .report-shell {
-  padding-top: 96px !important;
-}
-
-.report-topbar-v2 {
-  margin-top: 0 !important;
-  padding-top: 8px !important;
-}
-
-.report-title-row h1 {
-  margin-top: 0 !important;
-  line-height: 1.15 !important;
-}
-
-.report-actions-v2 {
-  padding-top: 4px !important;
-}
-
-@media (max-width: 900px) {
-  #screen-report .report-shell,
-  #screen-report .report-wrap,
-  .report-screen-v2 .report-shell {
-    padding-top: 88px !important;
-  }
-}
-
-
-
-/* === Two-layer consultant assessment === */
-.report-layer-tabs {
-  display:flex;
-  gap:8px;
-  margin:0 0 14px;
-  border-bottom:1px solid rgba(0,229,255,.12);
-  padding-bottom:8px;
-}
-.report-layer-tabs button {
-  border:1px solid rgba(0,229,255,.18);
-  background:rgba(10,20,37,.72);
-  color:var(--muted);
-  border-radius:8px;
-  padding:8px 12px;
-  font-family:var(--head);
-  font-size:12px;
-  font-weight:700;
-  cursor:pointer;
-}
-.report-layer-tabs button.active {
-  color:var(--cyan);
-  border-color:rgba(0,229,255,.45);
-  background:rgba(0,229,255,.12);
-}
-.conclusion-layer { display:none; }
-.conclusion-layer.active { display:block; }
-
 </style>
-</head><body><section class="cover"><div class="brand">NexaCyberSim Confidential Report</div><div class="title">Cyber Crisis Simulation Report</div><div class="sub">${client?esc(client.name)+' · ':''}${esc(s.title)} · ${esc(String(simState.level||'').toUpperCase())} Level<br>${date}</div><div class="grade-row"><div class="badge">${grade}</div><div class="grade-text"><strong>${pct}% Overall Readiness — ${gradeLabel}</strong><span>Team readiness view · ${correct}/${decs.length} decisions passed · ${execMetrics.participantCount||1} participant(s) · ${execMetrics.submissions} submissions</span></div></div></section><main class="content"><div class="metrics"><div class="metric"><div class="mv">${pct}%</div><div class="ml">Team Readiness</div></div><div class="metric"><div class="mv">${grade}</div><div class="ml">Grade</div></div><div class="metric"><div class="mv">${correct}/${decs.length}</div><div class="ml">Decisions Passed</div></div><div class="metric"><div class="mv">${execMetrics.participantCount||1}</div><div class="ml">Participants</div></div></div>${sectionHtml}<section class="section"><div class="section-kicker">APPENDIX A</div><h2>Skill Readiness Matrix</h2><table><thead><tr><th>Capability</th><th>Readiness</th><th class="num">Score</th><th>Status</th></tr></thead><tbody>${skillRows}</tbody></table></section><section class="section"><div class="section-kicker">APPENDIX B</div><h2>Decision Breakdown</h2><table><thead><tr><th class="num">#</th><th>Decision / Response</th><th class="num">Score</th><th>Assessment</th><th>Finding</th></tr></thead><tbody>${decisionRows}</tbody></table></section><section class="section"><div class="section-kicker">APPENDIX C</div><h2>Framework Alignment</h2><div>${(FW||[]).map(f=>`<span class="chip">${esc(f)}</span>`).join('')}</div></section><div class="footer">Generated by NexaCyberSim · Internal training report only · Not a penetration test or formal audit.</div></main><script>window.onload=()=>setTimeout(()=>window.print(),300)<\/script>
-<script>
-
-
-
-<script>
-
-
-</body></html>`;
+</head><body><section class="cover"><div class="brand">NexaCyberSim Confidential Report</div><div class="title">Cyber Crisis Simulation Report</div><div class="sub">${client?esc(client.name)+' · ':''}${esc(s.title)} · ${esc(String(simState.level||'').toUpperCase())} Level<br>${date}</div><div class="grade-row"><div class="badge">${grade}</div><div class="grade-text"><strong>${pct}% Overall Readiness — ${gradeLabel}</strong><span>Team readiness view · ${correct}/${decs.length} decisions passed · ${execMetrics.participantCount||1} participant(s) · ${execMetrics.submissions} submissions</span></div></div></section><main class="content"><div class="metrics"><div class="metric"><div class="mv">${pct}%</div><div class="ml">Team Readiness</div></div><div class="metric"><div class="mv">${grade}</div><div class="ml">Grade</div></div><div class="metric"><div class="mv">${correct}/${decs.length}</div><div class="ml">Decisions Passed</div></div><div class="metric"><div class="mv">${execMetrics.participantCount||1}</div><div class="ml">Participants</div></div></div>${sectionHtml}<section class="section"><div class="section-kicker">APPENDIX A</div><h2>Skill Readiness Matrix</h2><table><thead><tr><th>Capability</th><th>Readiness</th><th class="num">Score</th><th>Status</th></tr></thead><tbody>${skillRows}</tbody></table></section><section class="section"><div class="section-kicker">APPENDIX B</div><h2>Decision Breakdown</h2><table><thead><tr><th class="num">#</th><th>Decision / Response</th><th class="num">Score</th><th>Assessment</th><th>Finding</th></tr></thead><tbody>${decisionRows}</tbody></table></section><section class="section"><div class="section-kicker">APPENDIX C</div><h2>Framework Alignment</h2><div>${(FW||[]).map(f=>`<span class="chip">${esc(f)}</span>`).join('')}</div></section><div class="footer">Generated by NexaCyberSim · Internal training report only · Not a penetration test or formal audit.</div></main><script>window.onload=()=>setTimeout(()=>window.print(),300)<\/script></body></html>`;
   const w=window.open('', '_blank');
   if(!w){ alert('Popup blocked. Please allow popups to export PDF.'); return; }
   w.document.write(html); w.document.close();
@@ -6467,17 +6375,126 @@ function buildManagementThemes(results, good){
   }
 }
 
-
-
-
-
-
+</style>
 <script>
+(function(){
+  function $id(id){return document.getElementById(id);}
+  function esc(v){return (window.escapeHTML?escapeHTML(String(v??'')):String(v??'').replace(/[&<>\"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[m])));}
+  function sScore(r){ if(typeof window.scoreOfResult==='function') return scoreOfResult(r); if(typeof r.aiScore==='number') return r.aiScore; if(typeof r.score==='number') return r.score; return r.correct?100:0; }
+  function avg(rows){ const a=(rows||[]).map(sScore).filter(Number.isFinite); return a.length?Math.round(a.reduce((x,y)=>x+y,0)/a.length):0; }
+  function group(rows,keyFn){ return (rows||[]).reduce((m,r,i)=>{ const k=keyFn(r,i)||'Unassigned'; (m[k]||(m[k]=[])).push(r); return m; },{}); }
+  function band(p){return p>=80?['Strong','var(--green)','✓']:p>=50?['Partial','var(--amber)','!']:['Weak','var(--red)','×'];}
+  function timeFmt(v){ return (typeof window.formatReportLocalTime==='function') ? formatReportLocalTime(v) : {main:'—',alt:'',full:''}; }
+  function questionOf(r,i){return r.question || r.decisionTitle || ('Decision '+(Number(r.decisionIndex??r.step??i)+1));}
+  function roleOf(r){return r.role || r.level || r.participantRole || (window.simState && simState.level) || 'participant';}
 
+  window.renderExecutiveStory = function(results, pct){
+    const host=$id('consultant-executive-story');
+    if(!host) return;
+    results=results||[];
+    const weak=results.filter(r=>sScore(r)<50).length;
+    const partial=results.filter(r=>sScore(r)>=50&&sScore(r)<80).length;
+    const strong=results.filter(r=>sScore(r)>=80).length;
+    const people=Object.keys(group(results,r=>r.participantName||r.name||'Participant')).length || 1;
+    const finalLabel=pct>=80?'Strong':pct>=60?'Moderate':pct>=40?'Developing':'Critical';
+    const headline=pct>=80
+      ? 'Strong readiness observed, with evidence of effective decision-making across the exercise.'
+      : pct>=60
+        ? 'Moderate readiness observed, with effective response capability but clear improvement areas.'
+        : 'Readiness requires improvement, with decision gaps that could increase business and regulatory exposure.';
+    const keyFinding = weak>0 ? weak+' weak decision submission(s) created potential response risk.' : 'No weak decision submissions were recorded in the captured evidence.';
+    host.innerHTML=`<div class="exec-story-grid">
+      <div class="exec-story-card">
+        <div class="exec-story-pill">EXECUTIVE HEADLINE · ${esc(finalLabel.toUpperCase())} READINESS</div>
+        <h2>${esc(finalLabel)} (${pct}%) — ${esc(headline)}</h2>
+        <p>This report prioritises consultant interpretation before raw data. The exercise evidence is summarised at team level first, with participant history available through drill-down for facilitator review.</p>
+      </div>
+      <div class="exec-mini-list">
+        <div class="exec-mini-item"><strong>Key finding</strong><span>${esc(keyFinding)} Strong: ${strong}, Partial: ${partial}, Weak: ${weak}.</span></div>
+        <div class="exec-mini-item"><strong>Business impact lens</strong><span>${weak>0?'Weak decisions may delay containment, escalation, or breach-notification workflow.':'Captured decisions indicate low immediate business impact from decision quality.'}</span></div>
+        <div class="exec-mini-item"><strong>Evidence coverage</strong><span>${people} participant(s) assessed. Use the participant drill-down section for individual decision history.</span></div>
+      </div>
+    </div>`;
+  };
 
+  window.renderAggregateEvidence = function(results){
+    const host=$id('aggregate-evidence');
+    if(!host) return;
+    results=results||[];
+    if(!results.length){host.innerHTML='<div style="color:var(--muted);font-size:12px;">No evidence captured.</div>';return;}
+    const by=group(results,(r,i)=>String(Number(r.decisionIndex??r.step??i)+1));
+    host.innerHTML=Object.entries(by).sort((a,b)=>Number(a[0])-Number(b[0])).map(([n,rows])=>{
+      const scores=rows.map(sScore); const total=rows.length||1;
+      const strong=scores.filter(x=>x>=80).length, partial=scores.filter(x=>x>=50&&x<80).length, weak=scores.filter(x=>x<50).length;
+      const pStrong=Math.round(strong/total*100), pPartial=Math.round(partial/total*100), pWeak=Math.max(0,100-pStrong-pPartial);
+      const avgScore=avg(rows); const [label,color]=band(avgScore);
+      const q=questionOf(rows[0],Number(n)-1);
+      const branches=Object.entries(group(rows,r=>r.branch||'n/a')).sort((a,b)=>b[1].length-a[1].length).slice(0,2).map(([k,v])=>`${k.toUpperCase()} ${v.length}`).join(' · ');
+      return `<div class="aggregate-evidence-card">
+        <div class="aggregate-evidence-top"><div><div class="aggregate-evidence-title">Decision ${n}: ${esc(q)}</div><div class="aggregate-evidence-stats" style="margin-top:4px;">${esc(branches||'No branch data')}</div></div><div class="aggregate-evidence-meta" style="color:${color}">${avgScore}% · ${label}</div></div>
+        <div class="aggregate-stack"><span style="width:${pStrong}%;background:var(--green)"></span><span style="width:${pPartial}%;background:var(--amber)"></span><span style="width:${pWeak}%;background:var(--red)"></span></div>
+        <div class="aggregate-evidence-stats"><span>Strong ${strong}/${total}</span><span>Partial ${partial}/${total}</span><span>Weak ${weak}/${total}</span></div>
+      </div>`;
+    }).join('');
+  };
 
-<script>
+  window.renderParticipantDrilldown = function(results){
+    const list=$id('participant-drill-list'), panel=$id('participant-history-panel');
+    if(!list||!panel) return;
+    results=results||[];
+    const people=group(results,r=>r.participantName||r.name||'Participant');
+    const entries=Object.entries(people).sort((a,b)=>avg(b[1])-avg(a[1]));
+    if(!entries.length){list.innerHTML='<div style="color:var(--muted);font-size:12px;">No participant data captured.</div>'; panel.innerHTML='<span style="color:var(--muted);font-size:12px;">Select a participant to view history.</span>'; return;}
+    list.innerHTML=entries.map(([name,rows],idx)=>{ const p=avg(rows); const [label,color]=band(p); return `<button class="participant-drill-card ${idx===0?'active':''}" data-participant="${esc(name)}" onclick="showParticipantHistory('${encodeURIComponent(name)}')"><div><div class="participant-drill-name">${esc(name)}</div><div class="participant-drill-role">${esc(rows[0]?.team||'Unassigned')} · ${esc(roleOf(rows[0]))}</div></div><div class="participant-drill-score" style="color:${color}">${p}%</div></button>`; }).join('');
+    window.__participantEvidenceMap=people;
+    window.showParticipantHistory(encodeURIComponent(entries[0][0]));
+  };
 
+  window.showParticipantHistory = function(encodedName){
+    const name=decodeURIComponent(encodedName||'');
+    const panel=$id('participant-history-panel'); if(!panel) return;
+    document.querySelectorAll('.participant-drill-card').forEach(b=>b.classList.toggle('active', b.dataset.participant===name));
+    const rows=((window.__participantEvidenceMap||{})[name]||[]).slice().sort((a,b)=>(Number(a.decisionIndex??a.step??0)-Number(b.decisionIndex??b.step??0)) || String(a.submittedAt||'').localeCompare(String(b.submittedAt||'')) );
+    if(!rows.length){panel.innerHTML='<span style="color:var(--muted);font-size:12px;">No history available.</span>';return;}
+    const p=avg(rows); const [label,color]=band(p);
+    panel.innerHTML=`<div class="participant-history-head"><div><h4>${esc(name)}</h4><span>${esc(rows[0]?.team||'Unassigned')} · ${rows.length} submission(s)</span></div><div style="font-family:var(--head);font-size:22px;font-weight:850;color:${color}">${p}%</div></div>`+
+      rows.map((r,i)=>{ const score=sScore(r); const [lbl,col,ic]=band(score); const t=timeFmt(r.submittedAt||r.createdAt||r.at); const dNo=Number(r.decisionIndex??r.step??i)+1; const taken=Number(r.responseTimeSec||r.timeTakenSec||0); return `<div class="participant-history-item"><div class="participant-history-time">D${dNo}<br>${esc(t.main)}<br>${esc(t.alt)}</div><div class="participant-history-status" style="background:${col}22;color:${col};border:1px solid ${col}55">${ic}</div><div class="participant-history-copy"><strong>${esc(questionOf(r,i))}</strong><p>${esc(r.aiFeedback||r.feedback||r.freeTextAnswer||'Decision submitted.')}</p><small>Score: ${score}% · ${lbl} · Branch: ${esc((r.branch||'n/a').toUpperCase())} · Time taken: ${taken}s</small></div></div>`; }).join('');
+  };
+
+  const oldParticipantTeam=window.renderParticipantTeamReport;
+  window.renderParticipantTeamReport=function(results){
+    if(typeof oldParticipantTeam==='function') oldParticipantTeam(results);
+    const tbody=$id('individual-breakdown');
+    if(tbody){
+      const people=group(results||[],r=>r.participantName||r.name||'Participant');
+      tbody.innerHTML=Object.entries(people).map(([name,rows])=>`<tr class="drill-row" onclick="document.getElementById('report-timeline').scrollIntoView({behavior:'smooth'});setTimeout(()=>showParticipantHistory('${encodeURIComponent(name)}'),250)"><td>${esc(name)}</td><td>${esc(rows[0]?.team||'Unassigned')}</td><td>${avg(rows)}%</td><td>${esc(typeof strongestSkill==='function'?strongestSkill(rows):'—')}</td><td>${esc(typeof weakestSkill==='function'?weakestSkill(rows):'—')}</td></tr>`).join('') || '<tr><td colspan="5" style="color:var(--muted);">No participant data captured.</td></tr>';
+    }
+    renderParticipantDrilldown(results||[]);
+  };
+
+  window.renderExerciseTimeline=function(results){
+    const note=$id('timeline-note'); if(note && typeof localTimezoneLabel==='function') note.textContent=localTimezoneLabel();
+    renderAggregateEvidence(results||[]);
+    renderParticipantDrilldown(results||[]);
+  };
+
+  const prevShow=window.showReport;
+  if(typeof prevShow==='function'){
+    window.showReport=function(){
+      prevShow.apply(this,arguments);
+      try{
+        const s=window.simState?.scenario||{};
+        const decs=(s.decisions&&s.decisions[window.simState.level])||[];
+        const metrics=(typeof calculateExecutiveMetrics==='function')?calculateExecutiveMetrics(window.simState.results||[],decs.length):null;
+        const pct=metrics?metrics.pct:avg(window.simState.results||[]);
+        renderExecutiveStory(window.simState.results||[],pct);
+        renderAggregateEvidence(window.simState.results||[]);
+        renderParticipantDrilldown(window.simState.results||[]);
+      }catch(e){console.warn('Consultant report restructure skipped',e);}
+    };
+  }
+})();
+</script>
 
 </body>
 </html>
