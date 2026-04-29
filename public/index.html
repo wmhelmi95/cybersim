@@ -2191,7 +2191,7 @@ body.theme-light #screen-login > div > div:nth-child(2),body.theme-light .card,b
 
         <div class="report-card">
           <div class="report-card-head"><h3>Key Insights</h3><span>Observed issues</span></div>
-          <div id="rpt-findings" class="report-insight-row"></div>
+          <div id="rpt-findings" class="report-findings-list"></div>
         </div>
 
         <div class="report-card" id="report-performance-detail">
@@ -7074,4 +7074,15 @@ function buildManagementThemes(results, good){
   .tbl-kpi-value{font-size:32px!important;line-height:40px!important;}
   .tbl-section-title,.report-ai-title,.report-card-head h3{font-size:16px!important;line-height:24px!important;}
 }
+</style>
+<style>
+/* FINAL FIX: remove duplicate AI consultant summary card and repair Key Insights layout */
+.ai-summary-card{display:none!important;}
+.report-findings-list{display:flex!important;flex-direction:column!important;gap:12px!important;padding:24px 28px!important;}
+.report-findings-list .finding-row{display:grid!important;grid-template-columns:44px minmax(0,1fr)!important;gap:14px!important;align-items:flex-start!important;width:100%!important;margin:0!important;padding:16px 18px!important;border:1px solid rgba(26,52,96,.95)!important;border-radius:14px!important;background:rgba(255,255,255,.025)!important;}
+.report-findings-list .fi-icon{width:32px!important;height:32px!important;border-radius:10px!important;display:flex!important;align-items:center!important;justify-content:center!important;font-size:18px!important;background:rgba(255,255,255,.045)!important;flex-shrink:0!important;}
+.report-findings-list .fi-text{min-width:0!important;font-size:15px!important;line-height:1.65!important;color:var(--text)!important;}
+.report-findings-list .fi-text strong{display:block!important;color:var(--white)!important;font-family:var(--head)!important;font-size:15px!important;font-weight:800!important;margin-bottom:6px!important;white-space:normal!important;}
+.report-findings-list .fi-text br{display:block!important;margin-bottom:4px!important;}
+@media(max-width:760px){.report-findings-list{padding:16px!important}.report-findings-list .finding-row{grid-template-columns:1fr!important}}
 </style>
