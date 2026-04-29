@@ -642,43 +642,64 @@ IMPORTANT FREE-TEXT AND PARTICIPANT ANALYSIS RULES:
 - Mention recurring weaknesses by participant and team when the data contains participantName or team.
 - Identify who needs improvement and in which skill domain when enough data is available.
 
-Write the full executive debrief using ONLY these HTML tags: <strong>, <br>, <ul>, <li>. No markdown. No other tags. Never output empty <li> items. Never output standalone bullet symbols. Every bullet must contain a complete sentence. The report must be insight-first and benchmark-style: headline, readiness judgement, business impact, and risk implication first, then evidence and recommendations. Use aggregate evidence for executives; avoid dumping every participant action. Use concise consultant language similar to an enterprise cyber resilience platform.
+Write the full executive debrief using ONLY these HTML tags: <strong>, <br>, <ul>, <li>. No markdown. No tables. No other tags. Never output empty <li> items. Never output standalone bullet symbols. Every bullet must contain a complete sentence.
 
-Use EXACTLY these 11 section headings — each must be wrapped in <strong>Title</strong><br> on its own line:
+CONSULTING-GRADE OUTPUT RULES:
+- Use exactly the 7 section headings below, each wrapped as <strong>Title</strong><br> on its own line.
+- Within each section, use short labeled sub-points such as "Verdict:", "Evidence:", "Risk implication:", "Action required:" followed by concise sentences.
+- Separate observations, risks, and actions. Do not mix strengths with recommendations.
+- Be specific to the scenario, role level, timing, decision quality, skills, playbook alignment, and free-text evidence when present.
+- Do not invent untested domains. If a domain is not assessed, state Not Assessed only when relevant.
+- If this is management level, evaluate leadership, communication, compliance, governance, and decision-making. Do not criticise them for hands-on technical containment unless explicitly assessed.
+- If this is working level, evaluate technical response, investigation, containment, evidence handling, and operational execution.
+- Use executive language: direct, evidence-led, non-repetitive, and advisory.
 
 <strong>Executive Summary</strong><br>
-[4 short sentences using this order: (1) what was tested, (2) overall readiness and grade, (3) strongest evidence, (4) most important business/risk implication. Write like a senior security consultant addressing executives. Do not start with raw score only.]
+Verdict: [1 sentence overall judgement: readiness level, grade, and whether response is enterprise-ready.]<br>
+What was tested: [1 sentence on scenario and participant level.]<br>
+Strongest evidence: [1 sentence naming the strongest observed behaviour.]<br>
+Primary exposure: [1 sentence explaining the most material business or operational risk.]<br>
+Immediate priority: [1 sentence stating the single most important next action.]
 
 <strong>Cyber Resilience Posture Assessment</strong><br>
-[3-4 sentences on practical resilience posture]
+Current posture: [1 sentence that classifies posture as strong, adequate, developing, or critical.]<br>
+Threat outcome: [1 sentence explaining whether the response would likely contain, delay, or amplify the threat.]<br>
+Business impact: [1 sentence covering regulatory, operational, or reputational consequence.]<br>
+Confidence level: [1 sentence explaining confidence based on evidence quality and decision consistency.]
 
 <strong>Skill Domain Readiness</strong><br>
-[For each assessed skill listed under SKILL SCORES, write: SkillName: XX% [PASS/FAIL] — one sentence observation. Do not include unassessed domains. Skip Technical Response entirely if this is management level unless it is explicitly assessed.]
+[For each assessed skill listed under SKILL SCORES, write one line in this exact pattern: SkillName: XX% [PASS/FAIL/BORDERLINE/NOT ASSESSED] — executive observation. Do not include unassessed domains. Skip Technical Response for management level unless explicitly assessed.]
 
-<strong>Decision Failures & Consequences</strong><br>
-[List only incorrect decisions with <ul><li> items. If none, write exactly: No incorrect decisions were recorded during the simulation.]
+<strong>Decision Evidence & Response Analysis</strong><br>
+Decision performance: [1 sentence summarising correct vs incorrect decisions.]<br>
+Failures and consequences:<br>
+<ul><li>[If incorrect decisions exist, list the most important failures and their consequence. If none, write: No incorrect decisions were recorded during the simulation.]</li></ul>
+Validated responses:<br>
+<ul><li>[List the most important correct/validated responses and why they mattered.]</li></ul>
+Execution quality: [1 sentence on speed, hesitation, overconfidence, sequencing, or free-text quality.]
 
-<strong>Correct Responses</strong><br>
-[List correct decisions with <ul><li> items. Be specific.]
+<strong>Team, Timeline & Threat Mapping</strong><br>
+Team pattern: [1 sentence on aggregate participant/team behaviour. Mention named participants only when supported by data.]<br>
+Timeline trend: [1 sentence on whether response quality improved, degraded, or stayed consistent.]<br>
+Heatmap signal: [1 sentence on the most repeated weak branch, partial branch, or strong branch.]<br>
+MITRE ATT&CK mapping: [1 sentence mapping observed behaviour to likely ATT&CK tactics/techniques. If inferred, say it is inferred.]
 
-<strong>Team & Individual Insights</strong><br>
-[Summarise participant patterns using aggregate language first. Mention named participants only when the data contains participantName and the pattern is supported. Do not list every submission; state that full participant history should be reviewed through the platform drill-down.]
+<strong>Playbook Advisory & Prioritised Recommendations</strong><br>
+Overview: [1 sentence explaining whether gaps came from participant execution, playbook weakness, or both.]<br>
+Immediate actions (0-30 days):<br>
+<ul><li>[IMMEDIATE] [Directive action focused on highest-risk gap.]</li><li>[IMMEDIATE] [Directive action focused on ownership/escalation.]</li></ul>
+Short-term improvements (30-90 days):<br>
+<ul><li>[30 DAYS] [Training, governance, or communication improvement.]</li><li>[30 DAYS] [Playbook, compliance, or technical procedure improvement.]</li></ul>
+Medium-term enhancements (next quarter):<br>
+<ul><li>[NEXT QUARTER] [Simulation, metrics, assurance, or continuous improvement action.]</li></ul>
+Key observations:<br>
+<ul><li>[Positive observation tied to evidence.]</li><li>[Positive observation tied to evidence.]</li></ul>
+Critical gaps:<br>
+<ul><li>[Gap with root cause and risk implication.]</li><li>[Gap with root cause and risk implication.]</li></ul>
 
-<strong>Timeline, Replay & Heatmap Insights</strong><br>
-[Provide evidence in aggregated form: decision-level weak/partial/strong distribution, most failed decision, repeated weak branches, and whether response quality improved or degraded over time. Avoid noisy per-user timelines in the executive summary.]
-
-<strong>MITRE ATT&CK / Threat Behaviour Mapping</strong><br>
-[Map observed failures to likely ATT&CK tactics/techniques when enough context exists. If no explicit MITRE data exists, infer cautiously and state it is inferred.]
-
-<strong>Playbook Advisory Assessment</strong><br>
-[Evaluate whether failures came from participant execution, weak playbook/SOP, or both. Mention playbook gaps if playbook data exists.]
-
-<strong>Prioritised Recommendations</strong><br>
-[Exactly 3 <ul><li> items. Start each with [IMMEDIATE], [30 DAYS], or [NEXT QUARTER] followed by the recommendation.]
-
-<strong>Top Strengths</strong><br>[Exactly 3 unique bullets. Never repeat the same wording. Tie each to a specific observed behaviour.]<br><strong>Top Areas for Improvement</strong><br>[Exactly 3 unique bullets. Each must include root cause and management action.]<br><strong>Consultant's Verdict</strong><br>
-[2 sentences only: overall verdict and single most important next action.]
-`.trim();
+<strong>Consultant's Verdict</strong><br>
+Overall verdict: [1 sentence direct executive conclusion.]<br>
+Most important next action: [1 sentence only.]`.trim();
 
     const completion = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
