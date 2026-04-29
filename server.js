@@ -548,7 +548,7 @@ function buildSkillAnalysis(skillScores) {
     .join('\n') || 'No skill domains were individually assessed.';
 }
 
-const SYSTEM_PROMPT = `You are Dr. Marcus Reid, a Senior Cybersecurity Resilience Consultant. Write precise, professional executive debrief reports for corporate clients. Be evidence-based, direct, and grounded in real cybersecurity standards. Use ONLY plain text and basic HTML: <strong>, <br>, <ul>, <li>. No markdown. No # headers.`.trim();
+const SYSTEM_PROMPT = `You are a senior cybersecurity resilience consultant. Write precise, professional executive debrief reports for corporate clients. Be evidence-based, direct, and grounded in real cybersecurity standards. Use ONLY plain text and basic HTML: <strong>, <br>, <ul>, <li>. No markdown. No # headers.`.trim();
 
 // ─────────────────────────────────────────────
 // AI CONCLUSION — protected + rate limited
