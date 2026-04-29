@@ -548,82 +548,11 @@ function buildSkillAnalysis(skillScores) {
     .join('\n') || 'No skill domains were individually assessed.';
 }
 
-const SYSTEM_PROMPT = `You are Dr. Marcus Reid, a Senior Cybersecurity Resilience Consultant. Write precise, professional executive debrief reports for corporate clients. Be evidence-based, direct, and grounded in real cybersecurity standards. Use ONLY plain text and basic HTML: <strong>, <br>, <ul>, <li>. No markdown. No # headers.
-IMPORTANT OUTPUT STRUCTURE OVERRIDE:
-Use these exact headings and meanings:
-<strong>C-Suite Executive Summary</strong><br>
-[4 short sentences only: scenario tested, readiness judgement and score, strongest capability, most material business risk.]
-
-<strong>Business Impact Assessment</strong><br>
-[3 bullets only. Regulatory Risk, Operational Impact, Reputational Impact. Each includes Low/Medium/High and why.]
-
-<strong>Top Executive Risks</strong><br>
-[Exactly 3 bullets focused on board/C-suite risk.]
-
-<strong>Executive Recommendations</strong><br>
-[Exactly 3 bullets. Start with [IMMEDIATE], [30 DAYS], [NEXT QUARTER].]
-
-<strong>Cyber Resilience Posture Assessment</strong><br>
-[3-4 sentences on practical resilience posture.]
-
-<strong>Skill Domain Readiness</strong><br>
-[Only assessed skills. Unassessed domains must not appear as failure.]
-
-<strong>Decision Quality Review</strong><br>
-[Strongest decision, weakest decision, trend across decisions.]
-
-<strong>Decision Failures & Consequences</strong><br>
-[Only weak/incorrect decisions. If none: No incorrect decisions were recorded during the simulation.]
-
-<strong>Validated Responses</strong><br>
-[Correct/strong decisions and what was done well.]
-
-<strong>Team & Participant Insights</strong><br>
-[Aggregate patterns first; named participants only if supported.]
-
-<strong>Threat Behaviour / Framework Mapping</strong><br>
-[MITRE or framework mapping if supported; infer cautiously.]
-
-<strong>Consultant's Verdict</strong><br>
-[2 sentences only.]
-
-`.trim();
+const SYSTEM_PROMPT = `You are Dr. Marcus Reid, a Senior Cybersecurity Resilience Consultant. Write precise, professional executive debrief reports for corporate clients. Be evidence-based, direct, and grounded in real cybersecurity standards. Use ONLY plain text and basic HTML: <strong>, <br>, <ul>, <li>. No markdown. No # headers.`.trim();
 
 // ─────────────────────────────────────────────
 // AI CONCLUSION — protected + rate limited
 // ─────────────────────────────────────────────
-
-function splitExecutiveReportLayers(html) {
-  const text = String(html || '');
-  const execHeadings = [
-    'C-Suite Executive Summary',
-    'Business Impact Assessment',
-    'Top Executive Risks',
-    'Executive Recommendations'
-  ];
-  const detailHeadings = [
-    'Cyber Resilience Posture Assessment',
-    'Skill Domain Readiness',
-    'Decision Quality Review',
-    'Decision Failures & Consequences',
-    'Validated Responses',
-    'Team & Participant Insights',
-    'Threat Behaviour / Framework Mapping',
-    "Consultant's Verdict"
-  ];
-  const pick = (headings) => headings.map(h => {
-    const escaped = h.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const re = new RegExp(`<strong>\\s*${escaped}\\s*<\\/strong>\\s*<br>`, 'i');
-    const m = text.match(re);
-    if (!m) return '';
-    const start = (m.index || 0) + m[0].length;
-    const next = text.slice(start).search(/<strong>[^<]+<\\/strong>\\s*<br>/i);
-    const body = next >= 0 ? text.slice(start, start + next) : text.slice(start);
-    return `<strong>${h}</strong><br>${body.trim()}`;
-  }).filter(Boolean).join('<br><br>');
-  return { executive: pick(execHeadings), details: pick(detailHeadings) };
-}
-
 app.post('/api/generate-conclusion', requireAuth, aiLimiter, async (req, res) => {
   try {
     const {
@@ -713,32 +642,9 @@ IMPORTANT FREE-TEXT AND PARTICIPANT ANALYSIS RULES:
 - Mention recurring weaknesses by participant and team when the data contains participantName or team.
 - Identify who needs improvement and in which skill domain when enough data is available.
 
-Never mention AI, OpenAI, model-generated, AI verified, or automated generation in any client-facing text. Use Consultant Assessment, Executive Assessment, Decision Quality, Assessment Feedback, Advisory Recommendations, and Simulation Findings instead.
-
 Write the full executive debrief using ONLY these HTML tags: <strong>, <br>, <ul>, <li>. No markdown. No other tags. Never output empty <li> items. Never output standalone bullet symbols. Every bullet must contain a complete sentence. The report must be insight-first and benchmark-style: headline, readiness judgement, business impact, and risk implication first, then evidence and recommendations. Use aggregate evidence for executives; avoid dumping every participant action. Use concise consultant language similar to an enterprise cyber resilience platform.
 
-AUDIENCE LAYERS:
-Produce the report in two clear audience layers:
-1) C-Suite Executive Layer — short, risk-led, business-impact focused, no operational noise.
-2) Simulation Details Layer — evidence-led, decision-level, participant/team patterns, and improvement actions.
-
-CLIENT-FACING LANGUAGE RULES:
-- Never mention AI, OpenAI, model-generated, or automated generation.
-- Use these terms instead: Executive Assessment, Consultant Assessment, Decision Quality, Assessment Feedback, Simulation Findings, Advisory Recommendations.
-- Avoid generic language. Every observation must connect to observed decisions, scores, timing, skill domains, or participant/team patterns.
-
-C-SUITE STYLE RULES:
-- Write like a senior cyber crisis / tabletop exercise consultant.
-- Be decisive and concise.
-- Prioritise: readiness judgement, business impact, top risk, and action required.
-- Do not dump timeline logs or participant-by-participant details in the executive layer.
-
-SIMULATION DETAILS STYLE RULES:
-- Use evidence, but aggregate first.
-- Mention participant names only if supported by the data.
-- Use decision-level details, expected actions, missing actions, and skill-domain trends.
-
-Use EXACTLY these 12 section headings — each must be wrapped in <strong>Title</strong><br> on its own line:
+Use EXACTLY these 11 section headings — each must be wrapped in <strong>Title</strong><br> on its own line:
 
 <strong>Executive Summary</strong><br>
 [4 short sentences using this order: (1) what was tested, (2) overall readiness and grade, (3) strongest evidence, (4) most important business/risk implication. Write like a senior security consultant addressing executives. Do not start with raw score only.]
@@ -784,8 +690,7 @@ Use EXACTLY these 12 section headings — each must be wrapped in <strong>Title<
       max_tokens: 2200,
     });
 
-    const conclusion = completion.choices[0].message.content;
-    res.json({ conclusion, reportLayers: splitExecutiveReportLayers(conclusion) });
+    res.json({ conclusion: completion.choices[0].message.content });
 
   } catch (err) {
     console.error('AI error:', err.message);
