@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Nexa-CyberSim — Enterprise Crisis Simulation Platform</title>
+<title>NexaCyberSim</title>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -2104,7 +2104,7 @@ body.theme-light #screen-login > div > div:nth-child(2),body.theme-light .card,b
         </div>
 
         <div class="report-card two-list-card">
-          <div class="side-list success"><h4>Management Strengths</h4><ul id="rpt-strengths"><li>Strong containment decisions</li><li>Good incident awareness</li><li>Evidence preserved</li></ul></div>
+          <div class="side-list success"><h4>Strength</h4><ul id="rpt-strengths"><li>Strong containment decisions</li><li>Good incident awareness</li><li>Evidence preserved</li></ul></div>
           <div class="side-list danger"><h4>Priority Improvement Areas</h4><ul id="rpt-improvements"><li>Escalation timing</li><li>Legal notification workflow</li><li>Cross-team coordination</li></ul></div>
         </div>
 
@@ -5540,7 +5540,7 @@ function liveSummaryHtml(sess){
       <div class="live-mgmt-card"><label class="lbl">Decision Heatmap</label><table class="live-mgmt-table"><thead><tr><th>Decision</th><th>Quality</th><th>Submissions</th></tr></thead><tbody>${heatmap.length?heatmap.map(h=>`<tr><td>D${Number(h.step)+1}</td><td><div class="live-readiness-bar"><span style="width:${Number(h.avgScore||0)}%"></span></div><span style="font-family:var(--mono);font-size:10px;color:var(--muted)">${Number(h.avgScore||0)}%</span></td><td>${Number(h.submissions||0)}</td></tr>`).join(''):'<tr><td colspan="3" style="color:var(--muted)">No heatmap data.</td></tr>'}</tbody></table></div>
       <div class="live-mgmt-card"><label class="lbl">Management Risk Themes</label>${riskThemes.length?riskThemes.map(r=>`<div class="live-risk-theme"><strong>${esc(r.title)}</strong><span>${esc(r.text)}</span></div>`).join(''):'<div style="color:var(--muted);font-size:12px;">No critical risk theme detected.</div>'}</div>
     </div>
-    <div class="live-mgmt-card" style="margin-top:12px;"><label class="lbl">Management Strengths</label>${strengths.length?strengths.map(r=>`<div class="live-risk-theme"><strong>${esc(r.title)}</strong><span>${esc(r.text)}</span></div>`).join(''):'<div style="color:var(--muted);font-size:12px;">No validated strength pattern yet.</div>'}</div>
+    <div class="live-mgmt-card" style="margin-top:12px;"><label class="lbl">Strength</label>${strengths.length?strengths.map(r=>`<div class="live-risk-theme"><strong>${esc(r.title)}</strong><span>${esc(r.text)}</span></div>`).join(''):'<div style="color:var(--muted);font-size:12px;">No validated strength pattern yet.</div>'}</div>
     <div class="live-mgmt-card" style="margin-top:12px;"><label class="lbl">Timeline</label>${timeline.length?timeline.slice(0,8).map(t=>`<div class="tl-item"><div class="tl-time">${esc(t.label||'')}</div><div class="tl-content">${esc(t.text||'')} <span style="color:${scoreColor(t.score)}">${t.score??''}${t.score!==undefined?'%':''}</span></div></div>`).join(''):'<div style="color:var(--muted);font-size:12px;">No timeline yet.</div>'}</div>
   </div>`;
 }
