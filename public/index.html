@@ -4575,14 +4575,69 @@ function renderDecisionReplay(results){
   const el=document.getElementById('decision-replay');
   if(!el) return;
   const note=document.getElementById('timeline-note'); if(note) note.textContent=localTimezoneLabel();
-  if(!results || !results.length){el.innerHTML='<div style="color:var(--muted);font-size:12px;">No replay data available.</div>';return;}
-  el.innerHTML=results.map((r,i)=>{
-    const score=scoreOfResult(r);
-    const icon=score>=80?'✅':score>=50?'⚠️':'❌';
-    const dNo=Number(r.decisionIndex ?? r.step ?? i)+1;
-    return `<div class="finding-row"><div class="fi-icon">${icon}</div><div class="fi-text"><strong>Decision ${dNo}: ${escapeHTML(r.question||'Decision')}</strong><div style="margin-top:6px;"><strong>Participant:</strong> ${escapeHTML(r.participantName||r.name||'Participant')} · <strong>Team:</strong> ${escapeHTML(r.team||'Unassigned')}</div>${r.mcqAnswer?`<div style="margin-top:6px;"><strong>MCQ Answer:</strong> ${escapeHTML(r.mcqAnswer)}</div>`:''}${r.freeTextAnswer?`<div style="margin-top:6px;"><strong>Free-text Response:</strong><br>${escapeHTML(r.freeTextAnswer)}</div>`:''}${r.expectedActions?`<div style="margin-top:6px;color:var(--muted);"><strong>Expected Actions:</strong><br>${escapeHTML(r.expectedActions)}</div>`:''}${r.aiFeedback||r.feedback?`<div style="margin-top:6px;"><strong>Assessment Feedback:</strong><br>${escapeHTML(r.aiFeedback||r.feedback)}</div>`:''}<div style="margin-top:8px;font-family:var(--mono);font-size:11px;color:var(--muted);">Score: ${score}% · Branch: ${(r.branch||'n/a').toUpperCase()}</div></div></div>`;
-  }).join('');
+  if(!results || !results.length){
+    el.innerHTML='<div style="color:var(--muted);font-size:12px;">No replay data available.</div>';
+    return;
+  }
+
+  const byParticipant={};
+  results.forEach((r,i)=>{
+    const name=(r.participantName||r.name||r.userName||r.user||'Participant').trim();
+    const team=(r.team||r.department||'Unassigned').trim();
+    const key=name+'__'+team;
+    if(!byParticipant[key]) byParticipant[key]={name,team,rows:[]};
+    byParticipant[key].rows.push({...r,_originalIndex:i});
+  });
+
+  const groups=Object.values(byParticipant).sort((a,b)=>a.name.localeCompare(b.name));
+  el.innerHTML=`<div class="participant-replay-accordion">${groups.map((g,idx)=>{
+    const scores=g.rows.map(scoreOfResult);
+    const avg=Math.round(scores.reduce((a,b)=>a+b,0)/Math.max(1,scores.length));
+    const passed=scores.filter(s=>s>=80).length;
+    const needs=scores.length-passed;
+    const status=avg>=80?'Strong':avg>=60?'Adequate':'Needs Review';
+    const statusClass=avg>=80?'strong':avg>=60?'ok':'weak';
+    return `<details class="participant-replay-group" ${idx===0?'open':''}>
+      <summary>
+        <div class="participant-replay-main">
+          <div class="participant-avatar">${escapeHTML((g.name||'P').slice(0,1).toUpperCase())}</div>
+          <div>
+            <div class="participant-name">${escapeHTML(g.name)}</div>
+            <div class="participant-meta">${escapeHTML(g.team)} · ${g.rows.length} decision${g.rows.length===1?'':'s'} replayed</div>
+          </div>
+        </div>
+        <div class="participant-replay-stats">
+          <span class="replay-pill ${statusClass}">${status}</span>
+          <span>${avg}% avg</span>
+          <span>${passed} passed</span>
+          <span>${needs} review</span>
+        </div>
+      </summary>
+      <div class="participant-replay-decisions">
+        ${g.rows.sort((a,b)=>Number(a.decisionIndex ?? a.step ?? a._originalIndex)-Number(b.decisionIndex ?? b.step ?? b._originalIndex)).map((r,i)=>{
+          const score=scoreOfResult(r);
+          const icon=score>=80?'✅':score>=50?'⚠️':'❌';
+          const dNo=Number(r.decisionIndex ?? r.step ?? i)+1;
+          const answer=r.mcqAnswer||r.answer||r.selectedOption||'';
+          const feedback=r.aiFeedback||r.feedback||r.consultantFeedback||'';
+          return `<div class="replay-decision-card">
+            <div class="replay-decision-top">
+              <div class="replay-decision-title"><span>${icon}</span><strong>Decision ${dNo}</strong><span>${escapeHTML(r.question||'Decision')}</span></div>
+              <div class="replay-score" style="color:${scoreColor(score)}">${score}%</div>
+            </div>
+            <div class="replay-decision-grid">
+              ${answer?`<div><label>Answer</label><p>${escapeHTML(answer)}</p></div>`:''}
+              ${r.freeTextAnswer?`<div><label>Free-text Response</label><p>${escapeHTML(r.freeTextAnswer)}</p></div>`:''}
+              ${r.expectedActions?`<div><label>Expected Actions</label><p>${escapeHTML(r.expectedActions)}</p></div>`:''}
+              ${feedback?`<div><label>AI Feedback</label><p>${escapeHTML(feedback)}</p></div>`:''}
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+    </details>`;
+  }).join('')}</div>`;
 }
+
 function renderDecisionHeatmap(results){
   const el=document.getElementById('decision-heatmap');
   if(!el) return;
@@ -4998,7 +5053,37 @@ function exportPDF(){
 @media(max-width:980px){.report-screen-v2 .report-shell{padding-left:18px!important;padding-right:18px!important}.premium-business-impact-card .business-impact-grid{grid-template-columns:1fr!important}.tbl-two-col{padding:0 18px!important}.tbl-section{margin-left:18px!important;margin-right:18px!important}.tbl-head,.tbl-kpis{padding-left:18px!important;padding-right:18px!important}.report-tabs-v2{top:0}}
 </style>
 
-</head><body><section class="cover"><div class="brand">NexaCyberSim Confidential Report</div><div class="title">Cyber Crisis Simulation Report</div><div class="sub">${client?esc(client.name)+' · ':''}${esc(s.title)} · ${esc(String(simState.level||'').toUpperCase())} Level<br>${date}</div><div class="grade-row"><div class="badge">${grade}</div><div class="grade-text"><strong>${pct}% Overall Readiness — ${gradeLabel}</strong><span>Team readiness view · ${correct}/${decs.length} decisions passed · ${execMetrics.participantCount||1} participant(s) · ${execMetrics.submissions} submissions</span></div></div></section><main class="content"><div class="metrics"><div class="metric"><div class="mv">${pct}%</div><div class="ml">Team Readiness</div></div><div class="metric"><div class="mv">${grade}</div><div class="ml">Grade</div></div><div class="metric"><div class="mv">${correct}/${decs.length}</div><div class="ml">Decisions Passed</div></div><div class="metric"><div class="mv">${execMetrics.participantCount||1}</div><div class="ml">Participants</div></div></div>${sectionHtml}<section class="section"><div class="section-kicker">APPENDIX A</div><h2>Skill Readiness Matrix</h2><table><thead><tr><th>Capability</th><th>Readiness</th><th class="num">Score</th><th>Status</th></tr></thead><tbody>${skillRows}</tbody></table></section><section class="section"><div class="section-kicker">APPENDIX B</div><h2>Decision Breakdown</h2><table><thead><tr><th class="num">#</th><th>Decision / Response</th><th class="num">Score</th><th>Assessment</th><th>Finding</th></tr></thead><tbody>${decisionRows}</tbody></table></section><section class="section"><div class="section-kicker">APPENDIX C</div><h2>Framework Alignment</h2><div>${(FW||[]).map(f=>`<span class="chip">${esc(f)}</span>`).join('')}</div></section><div class="footer">Generated by NexaCyberSim · Internal training report only · Not a penetration test or formal audit.</div></main><script>window.onload=()=>setTimeout(()=>window.print(),300)<\/script></body></html>`;
+</head><body><section class="cover"><div class="brand">NexaCyberSim Confidential Report</div><div class="title">Cyber Crisis Simulation Report</div><div class="sub">${client?esc(client.name)+' · ':''}${esc(s.title)} · ${esc(String(simState.level||'').toUpperCase())} Level<br>${date}</div><div class="grade-row"><div class="badge">${grade}</div><div class="grade-text"><strong>${pct}% Overall Readiness — ${gradeLabel}</strong><span>Team readiness view · ${correct}/${decs.length} decisions passed · ${execMetrics.participantCount||1} participant(s) · ${execMetrics.submissions} submissions</span></div></div></section><main class="content"><div class="metrics"><div class="metric"><div class="mv">${pct}%</div><div class="ml">Team Readiness</div></div><div class="metric"><div class="mv">${grade}</div><div class="ml">Grade</div></div><div class="metric"><div class="mv">${correct}/${decs.length}</div><div class="ml">Decisions Passed</div></div><div class="metric"><div class="mv">${execMetrics.participantCount||1}</div><div class="ml">Participants</div></div></div>${sectionHtml}<section class="section"><div class="section-kicker">APPENDIX A</div><h2>Skill Readiness Matrix</h2><table><thead><tr><th>Capability</th><th>Readiness</th><th class="num">Score</th><th>Status</th></tr></thead><tbody>${skillRows}</tbody></table></section><section class="section"><div class="section-kicker">APPENDIX B</div><h2>Decision Breakdown</h2><table><thead><tr><th class="num">#</th><th>Decision / Response</th><th class="num">Score</th><th>Assessment</th><th>Finding</th></tr></thead><tbody>${decisionRows}</tbody></table></section><section class="section"><div class="section-kicker">APPENDIX C</div><h2>Framework Alignment</h2><div>${(FW||[]).map(f=>`<span class="chip">${esc(f)}</span>`).join('')}</div></section><div class="footer">Generated by NexaCyberSim · Internal training report only · Not a penetration test or formal audit.</div></main><script>window.onload=()=>setTimeout(()=>window.print(),300)<\/script><style>
+/* Participant drill-down Decision Replay */
+.participant-replay-accordion{display:flex;flex-direction:column;gap:12px;padding:24px 28px;}
+.participant-replay-group{border:1px solid rgba(26,52,96,.95);border-radius:14px;background:rgba(255,255,255,.025);overflow:hidden;}
+.participant-replay-group summary{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:18px;padding:16px 18px;cursor:pointer;background:rgba(7,18,34,.75);border-bottom:1px solid transparent;}
+.participant-replay-group[open] summary{border-bottom-color:rgba(26,52,96,.75);}
+.participant-replay-group summary::-webkit-details-marker{display:none;}
+.participant-replay-group summary:after{content:'▾';font-family:var(--mono);font-size:12px;color:var(--cyan);transition:transform .2s ease;}
+.participant-replay-group[open] summary:after{transform:rotate(180deg);}
+.participant-replay-main{display:flex;align-items:center;gap:12px;min-width:0;}
+.participant-avatar{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:rgba(0,229,255,.08);border:1px solid rgba(0,229,255,.22);color:var(--cyan);font-family:var(--head);font-weight:800;flex-shrink:0;}
+.participant-name{font-family:var(--head);font-size:15px;font-weight:800;color:var(--white);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.participant-meta{font-family:var(--mono);font-size:10px;letter-spacing:.4px;color:var(--muted);margin-top:2px;text-transform:uppercase;}
+.participant-replay-stats{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-family:var(--mono);font-size:10px;color:var(--muted);text-transform:uppercase;}
+.replay-pill{padding:4px 9px;border-radius:999px;border:1px solid rgba(255,255,255,.12);font-weight:800;}
+.replay-pill.strong{color:var(--green);background:rgba(0,230,118,.08);border-color:rgba(0,230,118,.25);}
+.replay-pill.ok{color:var(--amber);background:rgba(255,179,0,.08);border-color:rgba(255,179,0,.25);}
+.replay-pill.weak{color:var(--red);background:rgba(255,45,85,.08);border-color:rgba(255,45,85,.25);}
+.participant-replay-decisions{padding:14px;display:flex;flex-direction:column;gap:10px;}
+.replay-decision-card{border:1px solid rgba(26,52,96,.75);border-radius:12px;background:rgba(3,7,15,.35);padding:14px;}
+.replay-decision-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px;}
+.replay-decision-title{display:flex;gap:8px;align-items:flex-start;min-width:0;color:var(--text);font-size:13px;line-height:1.45;}
+.replay-decision-title strong{font-family:var(--head);color:var(--white);white-space:nowrap;}
+.replay-score{font-family:var(--mono);font-size:12px;font-weight:800;white-space:nowrap;}
+.replay-decision-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;}
+.replay-decision-grid label{display:block;font-family:var(--mono);font-size:9px;letter-spacing:1px;color:var(--cyan);text-transform:uppercase;margin-bottom:4px;}
+.replay-decision-grid p{margin:0;color:var(--text);font-size:12px;line-height:1.55;}
+@media(max-width:780px){.participant-replay-accordion{padding:16px}.participant-replay-group summary{align-items:flex-start;flex-direction:column}.participant-replay-stats{width:100%}.replay-decision-grid{grid-template-columns:1fr}}
+</style>
+
+</body></html>`;
   const w=window.open('', '_blank');
   if(!w){ alert('Popup blocked. Please allow popups to export PDF.'); return; }
   w.document.write(html); w.document.close();
