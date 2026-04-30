@@ -918,6 +918,17 @@ input[type=text],input[type=email],input[type=password],input[type=number],texta
 .side-list ul{margin:0;padding-left:16px;font-size:12px;line-height:1.75;}
 .side-list.success h4{color:var(--green);}.side-list.danger h4{color:var(--red);}
 .next-steps-v2{margin:0;padding-left:18px;color:var(--text);font-size:12px;line-height:1.85;}
+.next-steps-grid-v2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;padding:22px 24px;}
+.next-step-card-v2{position:relative;background:linear-gradient(180deg,rgba(255,255,255,.028),rgba(255,255,255,.012));border:1px solid rgba(0,229,255,.14);border-radius:14px;padding:14px 14px 13px;min-height:132px;box-shadow:0 12px 26px rgba(0,0,0,.14);}
+.next-step-card-v2.high{border-color:rgba(255,45,85,.26);background:linear-gradient(180deg,rgba(255,45,85,.07),rgba(255,255,255,.01));}
+.next-step-card-v2.medium{border-color:rgba(0,229,255,.16);}
+.next-step-card-v2.low{border-color:rgba(255,179,0,.18);background:linear-gradient(180deg,rgba(255,179,0,.05),rgba(255,255,255,.01));}
+.next-step-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;}
+.next-step-index{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:9px;background:rgba(0,229,255,.1);border:1px solid rgba(0,229,255,.22);font-family:var(--head);font-size:13px;font-weight:800;color:var(--cyan);}
+.next-step-priority{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#7bbcff;background:rgba(41,121,255,.08);border:1px solid rgba(41,121,255,.16);padding:5px 8px;border-radius:999px;}
+.next-step-card-v2 strong{display:block;font-family:var(--head);font-size:14px;line-height:1.45;color:var(--white);margin:0 0 8px;}
+.next-step-card-v2 p{margin:0;color:var(--text);font-size:12px;line-height:1.7;}
+@media(max-width:860px){.next-steps-grid-v2{grid-template-columns:1fr;}}
 body.theme-light .report-card,body.theme-light .report-client-header-v2,body.theme-light .report-kpi-grid .rm{background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,251,255,.96))!important;border-color:rgba(0,84,160,.14)!important;box-shadow:0 18px 55px rgba(16,42,75,.10)!important;}
 body.theme-light .readiness-trend-viz,body.theme-light .side-list,body.theme-light .report-insight-row .finding-row,body.theme-light .report-timeline-v2 .tl-item{background:rgba(16,42,75,.03)!important;border-color:rgba(0,84,160,.12)!important;}
 body.theme-light .mini-ring:after{background:#fff;}
@@ -2375,12 +2386,28 @@ body.theme-light #screen-login > div > div:nth-child(2),body.theme-light .card,b
 
         <div class="report-card" id="report-recommendations">
           <div class="report-card-head"><h3>Next Steps</h3><span>Priority actions</span></div>
-          <ol class="next-steps-v2">
-            <li>Review weak decisions and update escalation procedure.</li>
-            <li>Run focused training for low-scoring departments.</li>
-            <li>Update playbook gaps identified by AI advisor.</li>
-            <li>Re-assess in 30–90 days.</li>
-          </ol>
+          <div id="rpt-next-steps" class="next-steps-grid-v2">
+            <div class="next-step-card-v2 high">
+              <div class="next-step-top"><span class="next-step-index">1</span><span class="next-step-priority">High priority</span></div>
+              <strong>Review weak decisions and update escalation procedure.</strong>
+              <p>Focus first on the lowest-scoring decision points and align the escalation workflow with expected response actions.</p>
+            </div>
+            <div class="next-step-card-v2 medium">
+              <div class="next-step-top"><span class="next-step-index">2</span><span class="next-step-priority">Training</span></div>
+              <strong>Run focused training for low-scoring departments.</strong>
+              <p>Use participant and team-level results to target the groups that need extra coaching or tabletop practice.</p>
+            </div>
+            <div class="next-step-card-v2 medium">
+              <div class="next-step-top"><span class="next-step-index">3</span><span class="next-step-priority">Playbook</span></div>
+              <strong>Update playbook gaps identified by AI advisor.</strong>
+              <p>Translate repeated AI feedback into concrete revisions across incident response, comms, and coordination playbooks.</p>
+            </div>
+            <div class="next-step-card-v2 low">
+              <div class="next-step-top"><span class="next-step-index">4</span><span class="next-step-priority">Follow-up</span></div>
+              <strong>Re-assess in 30–90 days.</strong>
+              <p>Schedule a follow-up run to validate improvements and measure readiness changes over time.</p>
+            </div>
+          </div>
         </div>
       </aside>
     </div>
@@ -4624,6 +4651,14 @@ function scoreOfResult(r){
   if(typeof r.score === 'number' && !Number.isNaN(r.score)) return r.score;
   return r.correct ? 100 : 0;
 }
+function formatResponseDuration(value){
+  const sec=Number(value||0);
+  if(!Number.isFinite(sec) || sec<=0) return '—';
+  if(sec<60) return `${sec}s`;
+  const min=Math.floor(sec/60);
+  const rem=sec%60;
+  return rem?`${min}m ${rem}s`:`${min}m`;
+}
 function renderExerciseTimeline(results){
   const el=document.getElementById('exercise-timeline');
   if(!el) return;
@@ -4642,7 +4677,7 @@ function renderExerciseTimeline(results){
     const statusClass=score>=80?'ok':score>=50?'mid':'';
     const statusIcon=score>=80?'✓':score>=50?'!':'×';
     const taken=Number(r.responseTimeSec||r.timeTakenSec||0);
-    return `<div class="tl-item"><div class="tl-time"><span>D${dNo}</span><strong>${escapeHTML(t.main)}</strong><span>${escapeHTML(t.alt)}</span></div><div class="timeline-status ${statusClass}">${statusIcon}</div><div class="tl-content"><strong>${escapeHTML(r.participantName||r.name||'Participant')}</strong> <span style="color:var(--muted)">(${escapeHTML(r.team||'Unassigned')})</span><br>${escapeHTML(r.question||'Decision submitted')}<br><span style="color:${color};font-family:var(--mono);font-size:10px;">Score: ${score}%</span> · <span style="font-family:var(--mono);font-size:10px;color:var(--muted);">Branch: ${(r.branch||'n/a').toUpperCase()} · Time Taken: ${taken}s</span></div></div>`;
+    return `<div class="tl-item"><div class="tl-time"><span>D${dNo}</span><strong>${escapeHTML(t.main)}</strong><span>${escapeHTML(t.alt)}</span></div><div class="timeline-status ${statusClass}">${statusIcon}</div><div class="tl-content"><strong>${escapeHTML(r.participantName||r.name||'Participant')}</strong> <span style="color:var(--muted)">(${escapeHTML(r.team||'Unassigned')})</span><br>${escapeHTML(r.question||'Decision submitted')}<br><span style="color:${color};font-family:var(--mono);font-size:10px;">Score: ${score}%</span> · <span style="font-family:var(--mono);font-size:10px;color:var(--muted);">Branch: ${(r.branch||'n/a').toUpperCase()} · Response time: ${formatResponseDuration(taken)}</span></div></div>`;
   }).join('');
 }
 
@@ -4728,7 +4763,7 @@ function renderDecisionReplay(results){
           const expected=r.expectedActions||r.expected||'';
           const feedback=r.aiFeedback||r.feedback||r.consultantFeedback||r.participantFeedback||'';
           const branch=(r.branch||r.result||'').toString();
-          const timeTaken=r.timeTaken||r.secondsTaken||r.duration||'';
+          const timeTaken=r.responseTimeSec||r.timeTakenSec||r.timeTaken||r.secondsTaken||r.duration||'';
           return `<article class="replay-step ${tone}">
             <div class="replay-step-marker">${dNo}</div>
             <div class="replay-step-card">
@@ -4741,7 +4776,7 @@ function renderDecisionReplay(results){
               </div>
               <div class="replay-step-meta">
                 ${branch?`<span>Branch: ${escapeHTML(branch.toUpperCase())}</span>`:''}
-                ${timeTaken?`<span>Time: ${escapeHTML(String(timeTaken))}${String(timeTaken).match(/s|min|m/i)?'':'s'}</span>`:''}
+                ${timeTaken?`<span>Response time: ${escapeHTML(formatResponseDuration(timeTaken))}</span>`:''}
                 <span>${score>=80?'Validated':score>=50?'Partial review':'Needs review'}</span>
               </div>
               <div class="replay-field-grid">
@@ -6144,7 +6179,7 @@ async function renderLiveAdmin(){
   if(!sessions.length){box.innerHTML='<div style="color:var(--muted);font-size:13px;">No live sessions yet. Create one from a scenario.</div>';return;}
   box.innerHTML=sessions.map(sess=>{
     const progress=liveSessionProgress(sess), pLink=liveLink(sess.id,'participant'), oLink=liveLink(sess.id,'observer'), avg=liveAverageScore(sess.answers||[]);
-    const answers=(sess.answers||[]).slice(-5).reverse().map(a=>{ const showScore=sess.status==='ended'; return `<div style="padding:8px 0;border-bottom:1px solid var(--border);"><strong>${escapeHTML(a.participantName)}</strong> <span style="color:var(--muted)">(${escapeHTML(a.team||'Unassigned')})</span> — ${escapeHTML(a.mcqAnswer||'Typed response')} ${showScore?`<span style="color:${scoreColor(a.score??a.aiScore??0)}">${a.score??a.aiScore??'-'}%</span>`:'<span style="color:var(--muted)">submitted</span>'}<br><span style="color:var(--muted)">${escapeHTML((a.freeText||'').slice(0,160))}</span></div>`; }).join('') || '<span style="color:var(--muted)">No answers yet.</span>';
+    const answers=(sess.answers||[]).slice(-5).reverse().map(a=>{ const showScore=sess.status==='ended'; const rt=formatResponseDuration(a.responseTimeSec||a.timeTakenSec||a.timeTaken||0); return `<div style="padding:8px 0;border-bottom:1px solid var(--border);"><strong>${escapeHTML(a.participantName)}</strong> <span style="color:var(--muted)">(${escapeHTML(a.team||'Unassigned')})</span> — ${escapeHTML(a.mcqAnswer||'Typed response')} ${showScore?`<span style="color:${scoreColor(a.score??a.aiScore??0)}">${a.score??a.aiScore??'-'}%</span>`:'<span style="color:var(--muted)">submitted</span>'}<br><span style="color:var(--muted)">${escapeHTML((a.freeText||'').slice(0,160))}</span>${rt!=='—'?`<br><span style="color:var(--muted);font-family:var(--mono);font-size:10px;">Response time: ${rt}</span>`:''}</div>`; }).join('') || '<span style="color:var(--muted)">No answers yet.</span>';
     const notes=(sess.notes||[]).slice(-5).reverse().map(n=>`<div style="padding:8px 0;border-bottom:1px solid var(--border);"><strong>${escapeHTML(n.tag)}</strong> — ${escapeHTML(n.observerName)}<br><span style="color:var(--muted)">${escapeHTML(n.note)}</span></div>`).join('') || '<span style="color:var(--muted)">No notes yet.</span>';
     return `<div class="card-sm" id="live-card-${sess.id}" style="background:linear-gradient(180deg,rgba(10,20,37,.98),rgba(3,7,15,.86));border:1px solid rgba(0,229,255,.14);border-radius:14px;padding:18px;box-shadow:0 18px 45px rgba(0,0,0,.22);">
       <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap;"><div><div style="font-family:var(--head);font-size:16px;font-weight:800;color:var(--white);">${escapeHTML(sess.title)}</div><div style="font-family:var(--mono);font-size:11px;color:var(--cyan);margin-top:2px;">SESSION ${sess.id} · ${escapeHTML(sess.status)}${sess.locked?' · LOCKED':''}</div></div><div style="display:flex;gap:6px;flex-wrap:wrap;"><button class="btn btn-sm btn-outline" onclick="controlLive('${sess.id}','start',this)">Start</button><button class="btn btn-sm btn-ghost" onclick="controlLive('${sess.id}','previous',this)">Prev</button><button class="btn btn-sm btn-primary" onclick="controlLive('${sess.id}','next',this)">Next</button><button class="btn btn-sm btn-ghost" onclick="controlLive('${sess.id}','${sess.locked?'unlock':'lock'}',this)">${sess.locked?'Unlock':'Lock'}</button><button class="btn btn-sm btn-danger" onclick="controlLive('${sess.id}','end',this)">End</button><button class="btn btn-sm btn-danger" onclick="deleteLiveSession('${sess.id}',this)">Delete</button></div></div>
@@ -6782,9 +6817,30 @@ function buildManagementThemes(results, good){
           strengths.innerHTML=(items.length?items:['Strong responses were observed in selected decisions.']).map(x=>`<li>${escapeHTML(String(x)).slice(0,120)}</li>`).join('');
         }
         const improvements=document.getElementById('rpt-improvements');
+        let improvementItems=[];
         if(improvements){
-          const items=extractTopText(simState.results||[], false);
-          improvements.innerHTML=(items.length?items:['No major weakness identified from available data.']).map(x=>`<li>${escapeHTML(String(x)).slice(0,120)}</li>`).join('');
+          improvementItems=extractTopText(simState.results||[], false);
+          improvements.innerHTML=(improvementItems.length?improvementItems:['No major weakness identified from available data.']).map(x=>`<li>${escapeHTML(String(x)).slice(0,120)}</li>`).join('');
+        }
+        const nextSteps=document.getElementById('rpt-next-steps');
+        if(nextSteps){
+          const baseSteps=[
+            {tag:'High priority', tone:'high', title:'Review weak decisions and update escalation procedure.', desc:'Focus first on the lowest-scoring decisions and tighten the escalation workflow around validated expected actions.'},
+            {tag:'Training', tone:'medium', title:'Run focused training for low-scoring departments.', desc:'Use the individual and team breakdowns to target the groups that need extra practice and coaching.'},
+            {tag:'Playbook', tone:'medium', title:'Update playbook gaps identified by AI advisor.', desc:'Convert repeated AI feedback and missed actions into concrete changes in the playbook and response SOPs.'},
+            {tag:'Follow-up', tone:'low', title:'Re-assess in 30–90 days.', desc:'Schedule a repeat exercise to validate remediation and measure readiness improvement over time.'}
+          ];
+          if(improvementItems.length){
+            baseSteps[0].title=String(improvementItems[0]).slice(0,120);
+            baseSteps[0].desc='Make this the immediate remediation item because it surfaced most clearly in the decision review.';
+          }
+          if(improvementItems.length>1){
+            baseSteps[1].title='Run targeted training on: '+String(improvementItems[1]).slice(0,90);
+          }
+          if(improvementItems.length>2){
+            baseSteps[2].title='Close playbook gap: '+String(improvementItems[2]).slice(0,96);
+          }
+          nextSteps.innerHTML=baseSteps.map((step,idx)=>`<div class="next-step-card-v2 ${step.tone}"><div class="next-step-top"><span class="next-step-index">${idx+1}</span><span class="next-step-priority">${escapeHTML(step.tag)}</span></div><strong>${escapeHTML(step.title)}</strong><p>${escapeHTML(step.desc)}</p></div>`).join('');
         }
       }catch(e){ console.warn('Report UI enhancement skipped:', e); }
     };
@@ -7051,7 +7107,7 @@ function buildManagementThemes(results, good){
     if(!rows.length){panel.innerHTML='<span style="color:var(--muted);font-size:12px;">No history available.</span>';return;}
     const p=avg(rows); const [label,color]=band(p);
     panel.innerHTML=`<div class="participant-history-head"><div><h4>${esc(name)}</h4><span>${esc(rows[0]?.team||'Unassigned')} · ${rows.length} submission(s)</span></div><div style="font-family:var(--head);font-size:22px;font-weight:850;color:${color}">${p}%</div></div>`+
-      rows.map((r,i)=>{ const score=sScore(r); const [lbl,col,ic]=band(score); const t=timeFmt(r.submittedAt||r.createdAt||r.at); const dNo=Number(r.decisionIndex??r.step??i)+1; const taken=Number(r.responseTimeSec||r.timeTakenSec||0); return `<div class="participant-history-item"><div class="participant-history-time">D${dNo}<br>${esc(t.main)}<br>${esc(t.alt)}</div><div class="participant-history-status" style="background:${col}22;color:${col};border:1px solid ${col}55">${ic}</div><div class="participant-history-copy"><strong>${esc(questionOf(r,i))}</strong><p>${esc(r.aiFeedback||r.feedback||r.freeTextAnswer||'Decision submitted.')}</p><small>Score: ${score}% · ${lbl} · Branch: ${esc((r.branch||'n/a').toUpperCase())} · Time taken: ${taken}s</small></div></div>`; }).join('');
+      rows.map((r,i)=>{ const score=sScore(r); const [lbl,col,ic]=band(score); const t=timeFmt(r.submittedAt||r.createdAt||r.at); const dNo=Number(r.decisionIndex??r.step??i)+1; const taken=Number(r.responseTimeSec||r.timeTakenSec||r.timeTaken||0); return `<div class="participant-history-item"><div class="participant-history-time">D${dNo}<br>${esc(t.main)}<br>${esc(t.alt)}</div><div class="participant-history-status" style="background:${col}22;color:${col};border:1px solid ${col}55">${ic}</div><div class="participant-history-copy"><strong>${esc(questionOf(r,i))}</strong><p>${esc(r.aiFeedback||r.feedback||r.freeTextAnswer||'Decision submitted.')}</p><small>Score: ${score}% · ${lbl} · Branch: ${esc((r.branch||'n/a').toUpperCase())} · Response time: ${formatResponseDuration(taken)}</small></div></div>`; }).join('');
   };
 
   const oldParticipantTeam=window.renderParticipantTeamReport;
