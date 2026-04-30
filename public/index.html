@@ -1342,6 +1342,17 @@ body.theme-light #screen-login > div > div:nth-child(2),body.theme-light .card,b
 .replay-field label{display:block;font-family:var(--mono);font-size:9px;letter-spacing:1px;color:var(--cyan);text-transform:uppercase;margin-bottom:4px;}
 .replay-field p{margin:0!important;padding:0!important;color:var(--text);font-size:13px!important;line-height:1.65!important;}
 @media(max-width:800px){.replay-shell{padding:16px}.replay-participant-summary{align-items:flex-start;flex-direction:column}.replay-summary-metrics{white-space:normal}.replay-timeline{padding-left:36px}.replay-field-grid{grid-template-columns:1fr}.replay-step-head{flex-direction:column}.replay-step-marker{left:-25px}}
+
+/* ── Live Exercise link fields fix ── */
+.live-link-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:12px;}
+.live-link-field{min-width:0;}
+.live-link-field .lbl{display:block;margin-bottom:6px;}
+.live-link-wrap{display:flex;align-items:center;gap:8px;min-width:0;}
+.live-link-input{flex:1;min-width:0;width:100%;font-family:var(--mono);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;background:#070e1c!important;color:var(--white)!important;border:1px solid var(--border2)!important;}
+.live-copy-btn{flex:0 0 auto;padding:9px 12px;border-radius:8px;font-family:var(--head);font-size:11px;font-weight:800;cursor:pointer;background:rgba(0,229,255,.08);color:var(--cyan);border:1px solid rgba(0,229,255,.3);}
+.live-copy-btn:hover{background:var(--cyan);color:#000;}
+@media(max-width:760px){.live-link-grid{grid-template-columns:1fr;}.live-link-wrap{align-items:stretch;}.live-copy-btn{padding-left:14px;padding-right:14px;}}
+
 </style>
 
 <style id="premium-hybrid-report-css">
@@ -6001,6 +6012,16 @@ function liveLink(sessionId, role){
   const base = location.origin + location.pathname;
   return `${base}?session=${encodeURIComponent(sessionId)}&role=${encodeURIComponent(role)}`;
 }
+
+function copyLiveLink(url, btn){
+  try{
+    navigator.clipboard?.writeText(url);
+    if(btn){ const old=btn.textContent; btn.textContent='Copied'; setTimeout(()=>btn.textContent=old,1200); }
+  }catch(e){
+    const input=btn?.parentElement?.querySelector('input');
+    if(input){ input.select(); document.execCommand('copy'); }
+  }
+}
 function openLiveCreatePanel(){
   const panel=document.getElementById('live-create-panel');
   panel.style.display='block';
@@ -6129,7 +6150,7 @@ async function renderLiveAdmin(){
       <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap;"><div><div style="font-family:var(--head);font-size:16px;font-weight:800;color:var(--white);">${escapeHTML(sess.title)}</div><div style="font-family:var(--mono);font-size:11px;color:var(--cyan);margin-top:2px;">SESSION ${sess.id} · ${escapeHTML(sess.status)}${sess.locked?' · LOCKED':''}</div></div><div style="display:flex;gap:6px;flex-wrap:wrap;"><button class="btn btn-sm btn-outline" onclick="controlLive('${sess.id}','start',this)">Start</button><button class="btn btn-sm btn-ghost" onclick="controlLive('${sess.id}','previous',this)">Prev</button><button class="btn btn-sm btn-primary" onclick="controlLive('${sess.id}','next',this)">Next</button><button class="btn btn-sm btn-ghost" onclick="controlLive('${sess.id}','${sess.locked?'unlock':'lock'}',this)">${sess.locked?'Unlock':'Lock'}</button><button class="btn btn-sm btn-danger" onclick="controlLive('${sess.id}','end',this)">End</button><button class="btn btn-sm btn-danger" onclick="deleteLiveSession('${sess.id}',this)">Delete</button></div></div>
       <div style="margin-top:14px;display:grid;grid-template-columns:repeat(4,1fr);gap:10px;"><div class="stat-card card-sm"><div class="stat-val" style="font-size:20px;color:${scoreColor(avg)}">${avg}%</div><div class="stat-label">Readiness Index</div></div><div class="stat-card card-sm"><div class="stat-val" style="font-size:20px;">${(sess.participants||[]).filter(p=>p.role==='participant').length}</div><div class="stat-label">Participants</div></div><div class="stat-card card-sm"><div class="stat-val" style="font-size:20px;">${(sess.answers||[]).length}</div><div class="stat-label">Submissions</div></div><div class="stat-card card-sm"><div class="stat-val" style="font-size:20px;">${progress.current}/${progress.total}</div><div class="stat-label">Progress</div></div></div>
       <div style="margin-top:12px;height:6px;background:var(--border);border-radius:4px;overflow:hidden;"><div style="height:100%;width:${progress.pct}%;background:var(--cyan);transition:width .25s ease;"></div></div>
-      <div class="grid-2" style="margin-top:12px;"><div><label class="lbl">Participant Link</label><input readonly value="${pLink}" onclick="this.select();navigator.clipboard?.writeText(this.value)"></div><div><label class="lbl">Observer Link</label><input readonly value="${oLink}" onclick="this.select();navigator.clipboard?.writeText(this.value)"></div></div>
+      <div class="live-link-grid"><div class="live-link-field"><label class="lbl">Participant Link</label><div class="live-link-wrap"><input class="live-link-input" readonly value="${pLink}" title="${pLink}" onclick="this.select();navigator.clipboard?.writeText(this.value)"><button type="button" class="live-copy-btn" onclick="copyLiveLink('${pLink}',this)">Copy</button></div></div><div class="live-link-field"><label class="lbl">Observer Link</label><div class="live-link-wrap"><input class="live-link-input" readonly value="${oLink}" title="${oLink}" onclick="this.select();navigator.clipboard?.writeText(this.value)"><button type="button" class="live-copy-btn" onclick="copyLiveLink('${oLink}',this)">Copy</button></div></div></div>
       ${sess.state?`<div style="font-family:var(--mono);font-size:11px;color:var(--text);margin-top:10px;">💰 ${Number(sess.state.money).toLocaleString()} · Reputation ${sess.state.reputation}/100</div>`:''}
       <div class="grid-2" style="margin-top:12px;"><div><label class="lbl">Recent Answers</label>${answers}</div><div><label class="lbl">Observer Notes</label>${notes}</div></div>
       ${sess.status==='ended' ? liveSummaryHtml(sess) : ''}
