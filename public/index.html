@@ -4764,6 +4764,8 @@ function renderDecisionReplay(results){
           const feedback=r.aiFeedback||r.feedback||r.consultantFeedback||r.participantFeedback||'';
           const branch=(r.branch||r.result||'').toString();
           const timeTaken=r.responseTimeSec||r.timeTakenSec||r.timeTaken||r.secondsTaken||r.duration||'';
+          const submitTime=formatReportLocalTime(r.submittedAt||r.createdAt||r.at);
+          const submitLabel=(submitTime.main && submitTime.main!=='—') ? `${submitTime.main} ${submitTime.alt}`.trim() : '';
           return `<article class="replay-step ${tone}">
             <div class="replay-step-marker">${dNo}</div>
             <div class="replay-step-card">
@@ -4776,6 +4778,7 @@ function renderDecisionReplay(results){
               </div>
               <div class="replay-step-meta">
                 ${branch?`<span>Branch: ${escapeHTML(branch.toUpperCase())}</span>`:''}
+                ${submitLabel?`<span>Submitted: ${escapeHTML(submitLabel)}</span>`:''}
                 ${timeTaken?`<span>Response time: ${escapeHTML(formatResponseDuration(timeTaken))}</span>`:''}
                 <span>${score>=80?'Validated':score>=50?'Partial review':'Needs review'}</span>
               </div>
